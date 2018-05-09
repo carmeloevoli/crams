@@ -2,9 +2,9 @@
 #define INCLUDE_PID_H_
 
 #include <cassert>
+#include <cmath>
 #include <iostream>
 #include <fstream>
-#include <map>
 #include <string>
 
 class PID {
@@ -13,7 +13,7 @@ public:
 		set(0, 0);
 	}
 	PID(const int& Z_, const int& A_) {
-		assert(A_ >= 0);
+		assert(A_ > 0);
 		assert(Z_ <= A_);
 		set(Z_, A_);
 	}
