@@ -19,6 +19,7 @@ static const double mole = 1;
 static const double joule = kilogram * pow2(meter) / pow2(second);
 static const double tesla = kilogram / ampere / pow2(second);
 static const double coulomb = ampere * second;
+static const double sr = 1;
 
 // derived units
 static const double centimeter = 1e-2 * meter;
@@ -33,7 +34,7 @@ static const double barn = 1e-28 * pow2(meter);
 static const double mbarn = 1e-3 * barn;
 
 // abbreviations
-static const double s = second;
+static const double sec = second;
 static const double K = kelvin;
 static const double kg = kilogram;
 static const double cm = centimeter;
@@ -91,7 +92,7 @@ static const double proton_mass_c = proton_mass * c_light;
 static const double proton_mass_c2 = proton_mass * c_squared;
 static const double sun_mass = 1.989e30 * kg;
 static const double sigma_th = 6.6524e-29 * pow2(meter);
-static const double h_planck = 6.62607004e-34 * pow2(meter) * kg / s;
+static const double h_planck = 6.62607004e-34 * pow2(meter) * kg / sec;
 static const double k_boltzmann = 1.3806488e-23 * joule / kelvin;
 static const double elementary_charge = 1.60217662e-19 * coulomb;
 static const double vacuum_permeability = 4e-7 * M_PI * tesla * meter / ampere;
