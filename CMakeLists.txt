@@ -16,6 +16,7 @@ set( CRAMS_SRCS
      src/main.cpp
      src/crams.cpp
      src/inelastic.cpp
+     src/nucleilist.cpp
      src/utilities.cpp
      src/primary.cpp
      src/losses.cpp
