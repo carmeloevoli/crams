@@ -1,7 +1,8 @@
 #include "utilities.h"
 
-double beta(const double& E) {
-	double beta_squared = 1. - pow2(proton_mass_c2 / (E + proton_mass_c2));
+double beta(const double& T) {
+	double E = T + proton_mass_c2;
+	double beta_squared = 1. - pow2(proton_mass_c2 / E);
 	return std::sqrt(beta_squared);
 }
 

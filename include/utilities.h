@@ -7,7 +7,7 @@
 
 #include "mks.h"
 
-double beta(const double& E);
+double beta(const double& T);
 
 double Gamma_Integrand(double x, void * params);
 
