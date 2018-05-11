@@ -11,13 +11,12 @@ Particle::Particle(PID pid_, double efficiency_, double slope_, Params par) :
 	Q = PrimarySource(pid, par.mu.get(), efficiency_, slope_);
 	sigma_in = InelasticXsec(pid);
 	b = Losses(pid, par);
-	modulation_potential = par.potential.get();
 }
 
 Particle::~Particle() {
 }
 
-void Particle::dump_inputs() const {
+void Particle::dump_timescales() const {
 	std::cout << std::scientific;
 	for (double E = 0.1 * GeV; E < 10 * PeV; E *= 1.1) {
 		std::cout << E / GeV << "\t";
@@ -30,18 +29,6 @@ void Particle::dump_inputs() const {
 		std::cout << sigma_in.get(E) / mbarn << "\t";
 		std::cout << "\n";
 	}
-}
-
-PID Particle::get_pid() const {
-	return pid;
-}
-
-double Particle::get_I(const size_t& i) const {
-	return I_T.at(i);
-}
-
-double Particle::get_modulated(const size_t& i) const {
-	return I_R_TOA.at(i);
 }
 
 double compute_integral_qags(gsl_integration_workspace * w, gsl_function * F, double x_lo, double x_hi) {
@@ -128,32 +115,32 @@ void Particle::compute_spectrum(const std::vector<double>& T) {
 }
 
 void Particle::modulate(const std::vector<double>& T, const std::vector<double>& R) {
-	auto T_size = T.size();
-	double log_T[T_size];
-	double log_I[T_size];
+	/*auto T_size = T.size();
+	 double log_T[T_size];
+	 double log_I[T_size];
 
-	for (int i = 0; i < T_size; ++i) {
-		log_T[i] = std::log(T.at(i));
-		log_I[i] = (I_T.at(i) > 0) ? std::log(I_T.at(i)) : -100.;
-	}
+	 for (int i = 0; i < T_size; ++i) {
+	 log_T[i] = std::log(T.at(i));
+	 log_I[i] = (I_T.at(i) > 0) ? std::log(I_T.at(i)) : -100.;
+	 }
 
-	double Phi = pid.get_Z_over_A() * modulation_potential;
+	 double Phi = pid.get_Z_over_A() * modulation_potential;
 
-	gsl_interp_accel * acc = gsl_interp_accel_alloc();
-	gsl_spline * spline = gsl_spline_alloc(gsl_interp_cspline, T_size);
-	gsl_spline_init(spline, log_T, log_I, T_size);
+	 gsl_interp_accel * acc = gsl_interp_accel_alloc();
+	 gsl_spline * spline = gsl_spline_alloc(gsl_interp_cspline, T_size);
+	 gsl_spline_init(spline, log_T, log_I, T_size);
 
-	for (int i = 0; i < R.size(); ++i) {
-		double T_ = std::sqrt(pow2(pid.get_Z_over_A() * R.at(i)) + pow2(proton_mass_c2)) - proton_mass_c2;
-		const double T_phi = std::min(T_ + Phi, T.back());
-		double factor = pid.get_Z_over_A();
-		factor *= std::sqrt(T_ * (T_ + 2. * proton_mass_c2)) / (T_ + proton_mass_c2);
-		factor *= T_ * (T_ + 2.0 * proton_mass_c2) / T_phi / (T_phi + 2.0 * proton_mass_c2);
-		I_R_TOA.push_back(factor * std::exp(gsl_spline_eval(spline, std::log(T_phi), acc)));
-	}
+	 for (int i = 0; i < R.size(); ++i) {
+	 double T_ = std::sqrt(pow2(pid.get_Z_over_A() * R.at(i)) + pow2(proton_mass_c2)) - proton_mass_c2;
+	 const double T_phi = std::min(T_ + Phi, T.back());
+	 double factor = pid.get_Z_over_A();
+	 factor *= std::sqrt(T_ * (T_ + 2. * proton_mass_c2)) / (T_ + proton_mass_c2);
+	 factor *= T_ * (T_ + 2.0 * proton_mass_c2) / T_phi / (T_phi + 2.0 * proton_mass_c2);
+	 I_R_TOA.push_back(factor * std::exp(gsl_spline_eval(spline, std::log(T_phi), acc)));
+	 }
 
-	gsl_spline_free(spline);
-	gsl_interp_accel_free(acc);
+	 gsl_spline_free(spline);
+	 gsl_interp_accel_free(acc);*/
 }
 
 #undef LIMIT

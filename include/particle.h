@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <vector>
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_spline.h>
@@ -21,15 +22,22 @@ public:
 	Particle();
 	Particle(PID pid_, double efficiency_, double slope_, Params par);
 	virtual ~Particle();
-	void dump_inputs() const;
-	double get_I(const size_t& i) const;
-	double get_modulated(const size_t& i) const;
-	PID get_pid() const;
+	void dump_timescales() const;
 	void compute_spectrum(const std::vector<double>& T);
 	void modulate(const std::vector<double>& T, const std::vector<double>& R);
 	double external_integrand(const double& E_prime, const double& E);
 	double internal_integrand(const double& E_second);
 	double ExpIntegral(const double& E, const double& E_prime);
+
+	const std::vector<double>& get_I() const {
+		return I_T;
+	}
+	PID get_pid() const {
+		return pid;
+	}
+	double get_I(const size_t& i) const {
+		return I_T.at(i);
+	}
 
 private:
 	double compute_integral(const double& E);
@@ -38,13 +46,13 @@ private:
 
 protected:
 	std::vector<double> I_T;
-	std::vector<double> I_R_TOA;
 	PID pid;
 	Grammage X;
 	InelasticXsec sigma_in;
 	PrimarySource Q;
 	Losses b;
-	double modulation_potential = 0;
+//	double modulation_potential = 0;
+//	std::vector<double> I_R_TOA;
 };
 
 #endif /* INCLUDE_PARTICLE_H_ */

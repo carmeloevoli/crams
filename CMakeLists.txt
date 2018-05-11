@@ -14,6 +14,7 @@ include_directories( include/ )
 
 set( CRAMS_SRCS 
      src/main.cpp
+     src/chi2.cpp
      src/crams.cpp
      src/inelastic.cpp
      src/nucleilist.cpp

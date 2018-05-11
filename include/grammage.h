@@ -18,14 +18,13 @@ public:
 
 protected:
 	PID pid;
-	double mu_c_o_2_v_A = 0;
+	double mu = 0;
 	double v_A = 0;
 	double H = 0;
-	double v_A_H = 0;
 	double R_b = 0;
 	double delta_hi = 0;
 	double delta_low = 0;
-	double s = 0;
+	double delta_s = 0;
 	double D_0 = 0;
 	double rho_0 = 0;
 };

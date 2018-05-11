@@ -13,14 +13,13 @@ PrimarySource::PrimarySource(const PID& pid_, const double& mu_, const double& e
 PrimarySource::~PrimarySource() {
 }
 
-double PrimarySource::get(const double& E) const {
+double PrimarySource::get(const double& T) const {
 	double value = 0;
 	if (efficiency > 0) {
-		double v = beta(E) * c_light;
-		double p = beta(E) * pid.get_A() * (E + proton_mass_c2) / c_light;
-		value = pid.get_A() * pow2(p) * efficiency * L_SN_surface;
-		value /= mu * v * Gamma_Integral(slope) * c_light * pow4(proton_mass_c);
-		value *= std::pow(p / proton_mass_c, -slope);
+		double p_c = beta(T) * pid.get_A() * (T + proton_mass_c2);
+		value = pid.get_A() * pow2(p_c) * efficiency * L_SN_surface;
+		value /= mu * beta(T) * Gamma_Integral(slope) * pow4(proton_mass_c2);
+		value *= std::pow(p_c / proton_mass_c2, -slope);
 	}
 	return value;
 }

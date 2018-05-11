@@ -18,11 +18,20 @@ public:
 	void run();
 	void dump();
 
+	const std::vector<double>& get_T() const {
+		return T;
+	}
+
+	const std::vector<double>& get_spectrum(const PID& pid) const {
+		return particles.at(pid).get_I();
+//		if (particles.find(pid) == particles.end()) {
+//			std::cout << "particle not found in chi2!\n";
+	}
+
 protected:
 	Params par;
 	std::vector<double> T;
-	std::vector<double> R;
-	std::vector<Particle> particles; // TODO make it map?
+	std::map<PID, Particle> particles; // TODO make it map?
 };
 
 #endif /* INCLUDE_CRAMS_H_ */
