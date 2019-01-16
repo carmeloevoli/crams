@@ -9,6 +9,9 @@
 #include <vector>
 
 int main() {
+	//TODO read params from ini file
+	//TODO print the commit number
+
 	Params params;
 	params.set_H(4 * cgs::kpc);
 	params.print();
@@ -32,10 +35,10 @@ int main() {
 		std::cout << "running : " << particle.get_pid() << "\n";
 		particle.build_grammage(params);
 		particle.build_primary_source(params);
+		particle.build_secondary_source(params);
 		particle.build_inelastic_Xsec(params);
 		particle.build_losses(params);
-		particle.dump();
-		//TODO build secondary_source
+		//particle.dump();
 		particle.run_spectrum(T);
 		particle.clear();
 	}

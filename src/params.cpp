@@ -1,3 +1,6 @@
+#include <iostream>
+#include <string>
+
 #include "params.h"
 
 ParticleList::~ParticleList() {

@@ -1,12 +1,6 @@
 #ifndef INCLUDE_UTILITIES_H_
 #define INCLUDE_UTILITIES_H_
 
-#include <cmath>
-#include <vector>
-#include <gsl/gsl_integration.h>
-
-#include "cgs.h"
-
 #define pow2(A) ((A)*(A))
 #define pow3(A) ((A)*(A)*(A))
 #define pow4(A) ((A)*(A)*(A)*(A))

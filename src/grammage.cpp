@@ -1,4 +1,6 @@
+#include <cmath>
 #include "grammage.h"
+#include "utilities.h"
 
 Grammage::Grammage() {
 }

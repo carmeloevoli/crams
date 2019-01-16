@@ -1,11 +1,8 @@
 #ifndef INCLUDE_PRIMARY_H_
 #define INCLUDE_PRIMARY_H_
 
-#include <cmath>
-
 #include "params.h"
 #include "pid.h"
-#include "utilities.h"
 
 class PrimarySource {
 public:
@@ -15,7 +12,6 @@ public:
 	double get(const double& T) const;
 
 protected:
-	const double L_SN_surface = cgs::E_SN * cgs::sn_rate / M_PI / pow2(cgs::galaxy_size);
 	int A = 0;
 	int Z = 0;
 	double slope = 0.;

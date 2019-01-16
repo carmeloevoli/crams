@@ -1,10 +1,8 @@
 #ifndef INCLUDE_GRAMMAGE_H_
 #define INCLUDE_GRAMMAGE_H_
 
-#include <cmath>
 #include "pid.h"
 #include "params.h"
-#include "utilities.h"
 
 class Grammage {
 public:

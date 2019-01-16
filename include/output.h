@@ -2,7 +2,6 @@
 #define INCLUDE_OUTPUT_H_
 
 #include <vector>
-
 #include "axis.h"
 #include "particle.h"
 
@@ -16,8 +15,8 @@ public:
 //	void fill_particles(const NucleiList& nucleilist);
 //	void dump();
 private:
-	LogAxis T;
-	std::vector<Particle> particles;
+	LogAxis _T;
+	std::vector<Particle> _particles;
 };
 
 #endif /* INCLUDE_OUTPUT_H_ */

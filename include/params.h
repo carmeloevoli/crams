@@ -1,13 +1,10 @@
 #ifndef INCLUDE_PARAMS_H_
 #define INCLUDE_PARAMS_H_
 
-#include <iostream>
 #include <map>
-#include <string>
 
 #include "cgs.h"
 #include "pid.h"
-#include "utilities.h"
 
 typedef std::map<PID, double> List;
 
@@ -17,12 +14,12 @@ private:
 
 public:
 	ParticleList() {
-		insert(H1, 0.07);
-		insert(C12, 0.1);
-		insert(O16, 0.2);
-		//insert(N14, 0.01);
-		//insert(B11, 0.0);
-		//insert(B10, 0.0);
+		insert(H1, 0.);
+		insert(C12, 0.);
+		insert(N14, 0.);
+		insert(O16, 0.);
+		insert(B10, 0.);
+		insert(B11, 0.);
 	}
 
 	const List& get_list() {
@@ -80,7 +77,6 @@ public:
 //	Param<double> potential = Param<double>(100 * MeV);
 //	Param<int> E_size = Param<int>(6 * 32);
 //	double B_0 = muG;
-//	double ion_number_density = 0.02 / cm3; // TODO make param
 //	Param<double> v_A = Param<double>(
 //			B_0 / std::sqrt(vacuum_permeability * proton_mass * ion_number_density));
 //	Param<std::string> out_name = Param < std::string > ("test");

@@ -1,4 +1,9 @@
+#include <cmath>
+#include <string>
+#include <gsl/gsl_deriv.h>
+#include "cgs.h"
 #include "losses.h"
+#include "utilities.h"
 
 Losses::Losses() {
 }
@@ -25,11 +30,10 @@ double Losses::dE_dx_adiabatic(const double& T) const {
 }
 
 double Losses::dE_dx_ionization(const double& T) const {
-//Ionization energy losses in GeV/g/cm^2, Kinetic Energy per nucleon E [GeV]
 	double beta = beta_func(T);
 	double gamma = gamma_func(T);
-	double me_c2 = cgs::electron_mass_c2;
-	double two_PI_re2 = 2. * M_PI * pow2(cgs::electron_radius);
+	constexpr double me_c2 = cgs::electron_mass_c2;
+	constexpr double two_PI_re2 = 2. * M_PI * pow2(cgs::electron_radius);
 	double Q_max = 2. * cgs::electron_mass_c2 * pow2(beta) * pow2(gamma);
 	Q_max /= 1. + 2. * gamma * cgs::electron_mass / ((double) A * cgs::proton_mass);
 	double B_H = std::log(2. * me_c2 * (pow2(gamma) - 1.) * Q_max / pow2(cgs::Is_H));
@@ -38,7 +42,7 @@ double Losses::dE_dx_ionization(const double& T) const {
 	B_He -= 2. * pow2(beta);
 	double dEdx = two_PI_re2 * me_c2 * (double) pow2(Z) * (B_H + B_He * cgs::f_He);
 	dEdx /= cgs::proton_mass * (1. + 4. * cgs::f_He) * pow2(beta);
-	return -dEdx; // TODO check ion units
+	return -dEdx;
 }
 
 double Losses::dE_dt_adiabatic(const double& T) const {

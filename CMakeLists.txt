@@ -22,6 +22,7 @@ set( CRAMS_SRCS
 	 src/grammage.cpp
 	 src/params.cpp
 	 src/primary.cpp
+	 src/secondary.cpp
 )
 
 # GSL (external)
