@@ -4,8 +4,8 @@
 #include <cmath>
 #include <string>
 #include <gsl/gsl_deriv.h>
+#include "cgs.h"
 
-#include "mks.h"
 #include "params.h"
 #include "pid.h"
 #include "utilities.h"
@@ -13,25 +13,25 @@
 class Losses {
 public:
 	Losses();
-	Losses(const PID& pid_, const Params& par);
+	Losses(const PID& pid, const Params& params);
 	virtual ~Losses();
-	double adiabatic(const double& E) const;
-	double dE_dt_adiabatic(const double& E) const;
-	double dE_dt_ionization(const double& E) const;
-	double ionization(const double& E) const;
-	double dE_dx(const double& E) const;
-	double get_derivative(const double& E);
-
-private:
+	double get(const double& T) const;
+	double dE_dx_adiabatic(const double& T) const;
+	double dE_dx_ionization(const double& T) const;
+	double dE_dt_adiabatic(const double& T) const;
+	double dE_dt_ionization(const double& T) const;
+	double get_derivative(const double& T);
 
 protected:
-	PID pid;
-	double v_A = 0;
+	int A = 0;
+	int Z = 0;
+	double factor_ad = 0;
+//	double v_A = 0;
 	double mu = 0;
-	double rho_0 = 0;
-	double E_H = 19.e-6 * MeV;
-	double E_He = 44.e-6 * MeV;
-	double pi_re2_mc2_c = M_PI * pow2(electron_radius) * c_light * electron_mass_c2;
+//	double rho_0 = 0;
+//	double E_H = 19.e-6 * cgs::MeV;
+//	double E_He = 44.e-6 * cgs::MeV;
+//	double pi_re2_mc2_c = M_PI * pow2(cgs::electron_radius) * cgs::c_light * cgs::electron_mass_c2;
 };
 
 #endif /* INCLUDE_LOSSES_H_ */

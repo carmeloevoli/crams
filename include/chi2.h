@@ -9,8 +9,8 @@
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_spline.h>
+#include "cgs.h"
 
-#include "mks.h"
 #include "pid.h"
 
 struct data_point {

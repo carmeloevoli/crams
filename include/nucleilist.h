@@ -2,6 +2,7 @@
 #define INCLUDE_NUCLEILIST_H_
 
 #include <map>
+
 #include "pid.h"
 
 typedef std::map<PID, std::pair<double, double> > NucleiMap;

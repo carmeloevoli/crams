@@ -10,15 +10,16 @@
 class PrimarySource {
 public:
 	PrimarySource();
-	PrimarySource(const PID& pid_, const double& mu_, const double& efficiency_, const double& slope_);
+	PrimarySource(const PID& pid, const double& epsilon, const Params& params);
 	virtual ~PrimarySource();
-	double get(const double& E) const;
+	double get(const double& T) const;
 
 protected:
-	PID pid;
-	double mu = 0;
-	double efficiency = 0;
-	double slope = 0;
+	const double L_SN_surface = cgs::E_SN * cgs::sn_rate / M_PI / pow2(cgs::galaxy_size);
+	int A = 0;
+	int Z = 0;
+	double slope = 0.;
+	double factor = 0.;
 };
 
 #endif /* INCLUDE_PRIMARY_H_ */

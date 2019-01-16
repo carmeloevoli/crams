@@ -1,45 +1,47 @@
 #include <iostream>
 
-#include "chi2.h"
-#include "crams.h"
-#include "nucleilist.h"
+#include "axis.h"
+#include "cgs.h"
 #include "params.h"
-#include "pid.h"
+#include "particle.h"
+#include "output.h"
+
+#include <vector>
 
 int main() {
+	Params params;
+	params.set_H(4 * cgs::kpc);
+	params.print();
 
-	Params par;
-	par.potential.set(0.1 * GeV);
-	par.v_A.set(1 * km / sec);
-	par.D_0.set(3e29 * cm2 / sec);
-	par.R_b.set(100 * GeV);
-	par.delta_s.set(0.1);
-	par.delta_low.set(0.5);
-	par.print();
+	ParticleList particleList;
+	particleList.set_abundance(H1, 7e-2);
+	particleList.set_abundance(C12, 5e-3);
+	particleList.set_abundance(O16, 8e-3);
+	particleList.print();
 
-	NucleiList nucleilist;
-	//nucleilist.add_nucleus(PID(1, 1), 0.05, 4.2);
-	//nucleilist.add_nucleus(PID(2, 4), 0.1, 4.2);
-	nucleilist.add_nucleus(PID(6, 12), 0.01, 4.3);
-	nucleilist.add_nucleus(PID(8, 16), 0.01, 4.3);
+	std::vector<Particle> particles;
+	auto list = particleList.get_list();
+	for (auto it = list.rbegin(); it != list.rend(); ++it) {
+		Particle particle = Particle(it->first, it->second);
+		particles.push_back(particle);
+	}
 
-	Chi2 Carbon("C_AMS02_rigidity.txt");
-	Chi2 Oxygen("O_AMS02_rigidity.txt");
+	LogAxis T(params.T_min, params.T_max, params.T_size);
 
-	CRAMS crams(par);
-	crams.fill_particles(nucleilist);
-	crams.run();
-	crams.dump();
+	for (auto& particle : particles) {
+		std::cout << "running : " << particle.get_pid() << "\n";
+		particle.build_grammage(params);
+		particle.build_primary_source(params);
+		particle.build_inelastic_Xsec(params);
+		particle.build_losses(params);
+		particle.dump();
+		//TODO build secondary_source
+		particle.run_spectrum(T);
+		particle.clear();
+	}
 
-	PID C12 = PID(6, 12);
-	auto T = crams.get_T();
-
-	Carbon.calculate_chi2(C12, T, crams.get_spectrum(C12), par.potential.get());
-
-	std::cout << "\n" << Carbon.getChi2() << "\n";
-
+	OutputManager outputManager(T, particles);
+	outputManager.dump_spectra(10 * cgs::GeV, 100. * cgs::TeV, 50);
 	return 0;
 }
-
-
 

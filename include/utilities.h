@@ -5,12 +5,15 @@
 #include <vector>
 #include <gsl/gsl_integration.h>
 
-#include "mks.h"
+#include "cgs.h"
 
-double beta(const double& T);
+#define pow2(A) ((A)*(A))
+#define pow3(A) ((A)*(A)*(A))
+#define pow4(A) ((A)*(A)*(A)*(A))
 
-double Gamma_Integrand(double x, void * params);
-
+double gamma_func(const double& T);
+double beta_func(const double& T);
+double pc_func(const int& A, const double& T);
 double Gamma_Integral(double slope);
 
 #endif /* INCLUDE_UTILITIES_H_ */

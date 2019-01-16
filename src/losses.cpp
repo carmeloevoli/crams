@@ -3,66 +3,64 @@
 Losses::Losses() {
 }
 
-Losses::Losses(const PID& pid_, const Params& par) :
-		pid(pid_) {
-	v_A = par.v_A.get();
-	mu = par.mu.get();
-	rho_0 = mu / (2 * par.h_gas.get());
+Losses::Losses(const PID& pid, const Params& params) {
+	A = pid.get_A();
+	Z = pid.get_Z();
+	factor_ad = 2. * params.v_A / 3. / params.mu / cgs::c_light;
+	mu = params.mu;
 }
 
 Losses::~Losses() {
+	std::cout << "delete losses for particle " << A << " " << Z << "\n";
+
 }
 
-double Losses::adiabatic(const double& E) const {
-	double value = 2 * v_A / 3 / mu / c_light;
-	value *= std::sqrt(E * (E + proton_mass_c2));
+double Losses::get(const double& T) const {
+	return dE_dx_adiabatic(T) + dE_dx_ionization(T);
+}
+
+double Losses::dE_dx_adiabatic(const double& T) const {
+	double value = factor_ad * std::sqrt(T * (T + 2. * cgs::proton_mass_c2));
 	return -value;
 }
 
-double Losses::dE_dt_adiabatic(const double& E) const {
-	double v = beta(E) * c_light;
-	return v * adiabatic(E) * rho_0;
+double Losses::dE_dx_ionization(const double& T) const {
+//Ionization energy losses in GeV/g/cm^2, Kinetic Energy per nucleon E [GeV]
+	double beta = beta_func(T);
+	double gamma = gamma_func(T);
+	double me_c2 = cgs::electron_mass_c2;
+	double two_PI_re2 = 2. * M_PI * pow2(cgs::electron_radius);
+	double Q_max = 2. * cgs::electron_mass_c2 * pow2(beta) * pow2(gamma);
+	Q_max /= 1. + 2. * gamma * cgs::electron_mass / ((double) A * cgs::proton_mass);
+	double B_H = std::log(2. * me_c2 * (pow2(gamma) - 1.) * Q_max / pow2(cgs::Is_H));
+	B_H -= 2. * pow2(beta);
+	double B_He = std::log(2. * me_c2 * (pow2(gamma) - 1.) * Q_max / pow2(cgs::Is_He));
+	B_He -= 2. * pow2(beta);
+	double dEdx = two_PI_re2 * me_c2 * (double) pow2(Z) * (B_H + B_He * cgs::f_He);
+	dEdx /= cgs::proton_mass * (1. + 4. * cgs::f_He) * pow2(beta);
+	return -dEdx; // TODO check ion units
 }
 
-double Losses::dE_dt_ionization(const double& E) const {
-	double v = beta(E) * c_light;
-	return v * ionization(E) * rho_0;
+double Losses::dE_dt_adiabatic(const double& T) const {
+	double v = beta_func(T) * cgs::c_light;
+	return v * dE_dx_adiabatic(T) * cgs::rho_ism;
 }
 
-double Losses::ionization(const double& T) const {
-	double E_tot = double(pid.get_A()) * (T + proton_mass_c2);
-	double M_A = proton_mass_c2 * double(pid.get_A());
-	double p_c = std::sqrt(pow2(E_tot) - pow2(M_A));
-	double gamma_ = (T + proton_mass_c2) / proton_mass_c2;
-	double beta_ = p_c / E_tot;
-	double n_0 = rho_0 / proton_mass;
-	double IsH = 19. * eV;
-	double IsHe = 44. * eV;
-	double Q_max = 2 * electron_mass_c2 * pow2(beta_) * pow2(gamma_) / (1 + 2 * gamma_ * electron_mass_c2 / M_A); // GeV
-	double B_H = std::log(2 * electron_mass_c2 * (pow2(gamma_) - 1) * Q_max / IsH / IsH) - 2 * pow2(beta_);
-	double B_He = std::log(2 * electron_mass_c2 * (pow2(gamma_) - 1) * Q_max / IsHe / IsHe) - 2 * pow2(beta_);
-	double dEdx_ion = (2 * M_PI * pow2(electron_radius) * electron_mass_c2 * n_0) * (double(pow2(pid.get_Z())) / beta_) * (B_H + B_He * He_abundance);
-	dEdx_ion /= rho_0 / double(pid.get_A());
-	return -dEdx_ion;
-}
-
-double Losses::dE_dx(const double& E) const {
-	return adiabatic(E) + ionization(E);
+double Losses::dE_dt_ionization(const double& T) const {
+	double v = beta_func(T) * cgs::c_light;
+	return v * dE_dx_ionization(T) * cgs::rho_ism;
 }
 
 double gslLossesClassWrapper(double x, void * pp) {
 	Losses * losses = (Losses *) pp;
-	return losses->adiabatic(x) + losses->ionization(x);
+	return losses->dE_dx_adiabatic(x) + losses->dE_dx_ionization(x);
 }
 
-double Losses::get_derivative(const double& E) {
+double Losses::get_derivative(const double& T) {
 	double result, abserr;
-
 	gsl_function F;
 	F.function = &gslLossesClassWrapper;
 	F.params = this;
-
-	gsl_deriv_forward(&F, E, 1e-3, &result, &abserr);
-
+	gsl_deriv_forward(&F, T, 1e-3, &result, &abserr);
 	return result;
 }

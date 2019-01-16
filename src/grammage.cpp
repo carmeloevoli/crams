@@ -3,43 +3,35 @@
 Grammage::Grammage() {
 }
 
-Grammage::Grammage(const PID& pid_, const Params& par) {
-	pid = pid_;
-	mu = par.mu.get();
-	H = par.galaxy_H.get();
-	v_A = par.v_A.get();
-	R_b = par.R_b.get();
-	delta_hi = par.delta_hi.get();
-	delta_low = par.delta_low.get();
-	delta_s = par.delta_s.get();
-	D_0 = par.D_0.get();
-	rho_0 = par.mu.get() / (2 * par.h_gas.get());
+Grammage::Grammage(const PID& pid, const Params& params) {
+	A = pid.get_A();
+	Z = pid.get_Z();
+	factor = params.mu * cgs::c_light / 2. / params.v_A;
+	v_A = params.v_A;
+	H = params.H;
+	D_0 = params.D_0;
+	R_b = params.R_b;
+	delta = params.delta;
+	ddelta = params.ddelta;
+	s = params.smoothness;
 }
 
 Grammage::~Grammage() {
+	std::cout << "delete grammage for particle " << A << " " << Z << "\n";
 }
 
-double Grammage::D(const double& beta_, const double& E) const {
-	double pc = pid.get_A() * beta_ * (E + proton_mass_c2);
-	double R = pc / pid.get_Z();
+double Grammage::D(const double& T) const {
+	double pc = pc_func(A, T);
+	double R = pc / Z;
 	double x = R / R_b;
-	double value = D_0 * beta_ * std::pow(x, delta_low);
-	value *= std::pow(0.5 * (1. + std::pow(x, 1. / delta_s)), (delta_hi - delta_low) * delta_s);
-	return value;
-}
-
-double Grammage::diffusion_escape_time(const double& E) const {
-	return pow2(H) / D(beta(E), E);
-}
-
-double Grammage::advection_escape_time() const {
-	return H / v_A;
+	double value = beta_func(T) * std::pow(R / cgs::GeV, delta);
+	value /= std::pow(1. + std::pow(x, ddelta / s), s);
+	return D_0 * value;
 }
 
 double Grammage::get(const double& T) const {
-	double beta_ = beta(T);
-	double value = mu * beta_ * c_light / 2. / v_A;
-	value *= 1. - std::exp(-v_A * H / D(beta_, T));
+	double beta = beta_func(T);
+	double value = beta * factor;
+	value *= 1. - std::exp(-v_A * H / D(T));
 	return value;
 }
-
