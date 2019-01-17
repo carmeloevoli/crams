@@ -61,6 +61,10 @@ public:
 		this->_H = _H;
 	}
 
+	void set_D0(const double& _D_0) {
+		this->_D_0 = _D_0;
+	}
+
 	virtual ~Params();
 	void print();
 
