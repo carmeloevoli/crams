@@ -1,6 +1,8 @@
-project(CRAMS CXX)
+cmake_minimum_required(VERSION 3.2)
 
-cmake_minimum_required(VERSION 2.6)
+file(STRINGS ${CMAKE_SOURCE_DIR}/VERSION VERSION)
+set(LANGS CXX)
+project(CRAMS VERSION ${VERSION} LANGUAGES ${LANGS})
 
 set( CMAKE_VERBOSE_MAKEFILE off )
 set( CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
@@ -12,18 +14,25 @@ set( CRAMS_EXTRA_LIBRARIES )
 include_directories( "${CMAKE_SOURCE_DIR}" )
 include_directories( include/ )
 
+include(GetGitRevisionDescription)
+get_git_head_revision(GIT_REFSPEC GIT_SHA1)
+git_local_changes(GIT_HAS_LOCAL_CHANGES)
+set(git_revision_cpp "${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp")
+configure_file("src/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
+
 set( CRAMS_SRCS 
      src/main.cpp
-     src/output.cpp
-     src/utilities.cpp
-     src/particle.cpp
-	 src/losses.cpp
-	 src/inelastic.cpp
 	 src/grammage.cpp
+	 src/inelastic.cpp
+	 src/losses.cpp
+     src/output.cpp
 	 src/params.cpp
+     src/particle.cpp
 	 src/primary.cpp
 	 src/secondary.cpp
 	 src/spallation.cpp
+     src/utilities.cpp
+     "${git_revision_cpp}"
 )
 
 # GSL (external)

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include "cgs.h"
 #include "params.h"
@@ -6,24 +7,36 @@
 #include "output.h"
 #include "utilities.h"
 
-#include <vector>
+#include "git_revision.h"
+
+void log_startup_information() {
+	std::cout << "version: " << get_version() << "\n";
+	std::cout << "git version: " << git_sha1() << "\n";
+	std::cout << "has local changes: " << std::boolalpha << git_has_local_changes()
+			<< std::noboolalpha << "\n";
+	std::cout << "was built on: " << __DATE__ << " " __TIME__ <<"\n";
+}
 
 int main() {
+	log_startup_information();
+	exit(1);
+
 	//TODO read params from ini file
 	//TODO print the commit number
 
 	Params params;
 	params.set_H(4 * cgs::kpc);
+	params.set_D0(1.8e28 * cgs::cm2 / cgs::sec);
 	params.print();
 
 	ParticleList particleList;
 	particleList.set_abundance(H1, 7e-2);
 	particleList.set_abundance(C12, 5e-3);
 	particleList.set_abundance(O16, 8e-3);
-	particleList.set_abundance(Ne20, 1e-4);
-	particleList.set_abundance(Mg24, 1e-4);
-	particleList.set_abundance(Si28, 1e-4);
-	particleList.set_abundance(Fe56, 1e-4);
+	particleList.set_abundance(Ne20, 1e-3);
+	particleList.set_abundance(Mg24, 2e-3);
+	particleList.set_abundance(Si28, 2e-3);
+	particleList.set_abundance(Fe56, 8e-3);
 	particleList.print();
 
 	std::vector<Particle> particles;

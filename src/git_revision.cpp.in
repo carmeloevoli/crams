@@ -1,0 +1,13 @@
+#include <string>
+
+std::string git_sha1() {
+	return "@GIT_SHA1@";
+}
+
+bool git_has_local_changes() {
+	return std::string("@GIT_HAS_LOCAL_CHANGES@") == "DIRTY";
+}
+
+std::string get_version() {
+	return "@VERSION@";
+}
