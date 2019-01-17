@@ -7,6 +7,10 @@
 #include "params.h"
 #include "pid.h"
 
+namespace Tripathi99 {
+double inelastic_sigma(int A_p, int Z_p, int A_t, int Z_t, double T_n);
+} /* namespace Tripathi99 */
+
 class InelasticXsec {
 public:
 	InelasticXsec();
