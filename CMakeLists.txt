@@ -23,6 +23,7 @@ set( CRAMS_SRCS
 	 src/params.cpp
 	 src/primary.cpp
 	 src/secondary.cpp
+	 src/spallation.cpp
 )
 
 # GSL (external)

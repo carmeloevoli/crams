@@ -1,10 +1,10 @@
 #include <iostream>
 
-#include "axis.h"
 #include "cgs.h"
 #include "params.h"
 #include "particle.h"
 #include "output.h"
+#include "utilities.h"
 
 #include <vector>
 
@@ -29,21 +29,21 @@ int main() {
 		particles.push_back(particle);
 	}
 
-	LogAxis T(params.T_min, params.T_max, params.T_size);
+	auto T = LogAxis(params.T_min, params.T_max, params.T_size);
 
 	for (auto& particle : particles) {
 		std::cout << "running : " << particle.get_pid() << "\n";
 		particle.build_grammage(params);
 		particle.build_primary_source(params);
-		particle.build_secondary_source(params);
-		particle.build_inelastic_Xsec(params);
+		particle.build_secondary_source(particles);
+		particle.build_inelastic_Xsec();
 		particle.build_losses(params);
 		//particle.dump();
-		particle.run_spectrum(T);
+		particle.setDone() = particle.run(T);
 		particle.clear();
 	}
 
-	OutputManager outputManager(T, particles);
+	OutputManager outputManager(particles);
 	outputManager.dump_spectra(10 * cgs::GeV, 100. * cgs::TeV, 50);
 	return 0;
 }
