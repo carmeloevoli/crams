@@ -41,19 +41,19 @@ double Losses::dE_dx_ionization(const double& T) const {
 	double B_He = std::log(2. * me_c2 * (pow2(gamma) - 1.) * Q_max / pow2(cgs::Is_He));
 	B_He -= 2. * pow2(beta);
 	double dEdx = two_PI_re2 * me_c2 * (double) pow2(Z) * (B_H + B_He * cgs::f_He);
-	dEdx /= cgs::proton_mass * (1. + 4. * cgs::f_He) * pow2(beta);
+	dEdx /= cgs::proton_mass * (1. + 4. * cgs::f_He) * (double) A * pow2(beta);
 	return -dEdx;
 }
 
-double Losses::dE_dt_adiabatic(const double& T) const {
-	double v = beta_func(T) * cgs::c_light;
-	return v * dE_dx_adiabatic(T) * cgs::rho_ism;
-}
+/* double Losses::dE_dt_adiabatic(const double& T) const {
+ double v = beta_func(T) * cgs::c_light;
+ return v * dE_dx_adiabatic(T) * cgs::rho_ism;
+ }*/
 
-double Losses::dE_dt_ionization(const double& T) const {
-	double v = beta_func(T) * cgs::c_light;
-	return v * dE_dx_ionization(T) * cgs::rho_ism;
-}
+/* double Losses::dE_dt_ionization(const double& T) const {
+ double v = beta_func(T) * cgs::c_light;
+ return v * dE_dx_ionization(T) * cgs::rho_ism;
+ }*/
 
 double gslLossesClassWrapper(double x, void * pp) {
 	Losses * losses = (Losses *) pp;
@@ -65,6 +65,6 @@ double Losses::get_derivative(const double& T) {
 	gsl_function F;
 	F.function = &gslLossesClassWrapper;
 	F.params = this;
-	gsl_deriv_forward(&F, T, 1e-3, &result, &abserr);
+	gsl_deriv_central(&F, T, 1e-5, &result, &abserr);
 	return result;
 }

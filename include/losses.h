@@ -12,8 +12,8 @@ public:
 	double get(const double& T) const;
 	double dE_dx_adiabatic(const double& T) const;
 	double dE_dx_ionization(const double& T) const;
-	double dE_dt_adiabatic(const double& T) const;
-	double dE_dt_ionization(const double& T) const;
+	//double dE_dt_adiabatic(const double& T) const;
+	//double dE_dt_ionization(const double& T) const;
 	double get_derivative(const double& T);
 
 protected:
