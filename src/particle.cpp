@@ -6,11 +6,11 @@
 #include <gsl/gsl_integration.h>
 
 #include "particle.h"
-#include "axis.h"
 #include "cgs.h"
 #include "utilities.h"
 
-#define LIMIT 10000
+#define LIMIT 1000
+#define EPSREL 1e-4
 
 Particle::Particle() {
 }
@@ -116,7 +116,7 @@ double Particle::Lambda_2(const double& T) {
 double compute_integral_qags(gsl_integration_workspace * w, gsl_function * F, double x_lo,
 		double x_hi) {
 	double result, error;
-	gsl_integration_qags(F, x_lo, x_hi, 0, 1e-5, LIMIT, w, &result, &error);
+	gsl_integration_qags(F, x_lo, x_hi, 0, EPSREL, LIMIT, w, &result, &error);
 	return result;
 }
 
