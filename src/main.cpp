@@ -20,6 +20,10 @@ int main() {
 	particleList.set_abundance(H1, 7e-2);
 	particleList.set_abundance(C12, 5e-3);
 	particleList.set_abundance(O16, 8e-3);
+	particleList.set_abundance(Ne20, 1e-4);
+	particleList.set_abundance(Mg24, 1e-4);
+	particleList.set_abundance(Si28, 1e-4);
+	particleList.set_abundance(Fe56, 1e-4);
 	particleList.print();
 
 	std::vector<Particle> particles;
@@ -43,8 +47,10 @@ int main() {
 		particle.clear();
 	}
 
-	OutputManager outputManager(particles);
-	outputManager.dump_spectra(10 * cgs::GeV, 100. * cgs::TeV, 50);
+	OutputManager outputManager(particles, params.modulation_potential);
+	outputManager.dump_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
+	outputManager.dump_heavy_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
+	outputManager.dump_ratio(10 * cgs::GeV, 10. * cgs::TeV, 50);
 	return 0;
 }
 

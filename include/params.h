@@ -20,6 +20,10 @@ public:
 		insert(O16, 0.);
 		insert(B10, 0.);
 		insert(B11, 0.);
+		insert(Fe56, 0.);
+		insert(Ne20, 0.);
+		insert(Mg24, 0.);
+		insert(Si28, 0.);
 	}
 
 	const List& get_list() {
@@ -46,6 +50,7 @@ private:
 	double _D_0 = 1.8e28 * cgs::cm2 / cgs::sec;
 	double _H_slope = 4.25;
 	double _nuclei_slope = 4.25;
+	double _modulation_potential = 0.7 * cgs::GeV;
 	size_t _T_size = 100;
 
 public:
@@ -71,6 +76,7 @@ public:
 	const double& D_0 = _D_0;
 	const double& H_slope = _H_slope;
 	const double& nuclei_slope = _nuclei_slope;
+	const double& modulation_potential = _modulation_potential;
 	const size_t& T_size = _T_size;
 
 //	Param<double> h_gas = Param<double>(150 * pc);

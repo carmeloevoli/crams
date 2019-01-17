@@ -6,16 +6,14 @@
 
 class OutputManager {
 public:
-	OutputManager(const std::vector<Particle>& particles);
+	OutputManager(const std::vector<Particle>& particles, const double phi);
 	virtual ~OutputManager();
 	void dump_spectra(double R_min, double R_max, size_t R_size) const;
+	void dump_heavy_spectra(double R_min, double R_max, size_t R_size) const;
 	void dump_ratio(double R_min, double R_max, size_t R_size) const;
-//	void fill_rigidity(const double& R_min, const double& R_max, const size_t& R_size);
-//	void add_nucleus(const PID& pid, const double& efficiency, const double& gamma);
-//	void fill_particles(const NucleiList& nucleilist);
-//	void dump();
 private:
 	std::vector<Particle> _particles;
+	double _phi = 0;
 };
 
 #endif /* INCLUDE_OUTPUT_H_ */

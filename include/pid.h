@@ -129,6 +129,7 @@ static const PID Si32 = PID(14, 32);
 static const PID P31 = PID(15, 31);
 static const PID P32 = PID(15, 32);
 static const PID P33 = PID(15, 33);
+static const PID Fe56 = PID(26, 56);
 
 //33  	 15 	  2189376 2189376             	  B-      		  P
 //32  	 16 	  -1	-1	STABLE                 	          	  S
