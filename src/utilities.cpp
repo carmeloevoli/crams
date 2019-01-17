@@ -64,7 +64,7 @@ std::vector<double> LogAxis(const double& min, const double& max, const size_t& 
 double LinearInterpolator(const std::vector<double>& x, const std::vector<double>& y,
 		const double& x_new) {
 	auto value = double();
-	if (x_new > x.front() && x_new < x.back()) {
+	if (x_new >= x.front() && x_new <= x.back()) {
 		size_t const i = std::lower_bound(x.begin(), x.end(), x_new) - x.begin();
 		double t = (x_new - x.at(i - 1)) / (x.at(i) - x.at(i - 1));
 		value = y.at(i - 1) * (1. - t) + y.at(i) * t;
@@ -75,7 +75,7 @@ double LinearInterpolator(const std::vector<double>& x, const std::vector<double
 double LinearInterpolatorLog(const std::vector<double>& x, const std::vector<double>& y,
 		const double& x_new) {
 	auto value = double();
-	if (x_new > x.front() && x_new < x.back()) {
+	if (x_new >= x.front() && x_new <= x.back()) {
 		size_t const i = std::lower_bound(x.begin(), x.end(), x_new) - x.begin();
 		double t = std::log(x_new) - std::log(x.at(i - 1));
 		t /= std::log(x.at(i)) - std::log(x.at(i - 1));
