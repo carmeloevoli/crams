@@ -65,6 +65,7 @@ double Losses::get_derivative(const double& T) {
 	gsl_function F;
 	F.function = &gslLossesClassWrapper;
 	F.params = this;
-	gsl_deriv_central(&F, T, 1e-5, &result, &abserr);
+	double h_start = 0.01 * T;
+	gsl_deriv_central(&F, T, h_start, &result, &abserr);
 	return result;
 }
