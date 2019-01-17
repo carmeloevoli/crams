@@ -15,6 +15,7 @@ InelasticXsec::~InelasticXsec() {
 
 double InelasticXsec::get(const double& T) const {
 	double sigma = (Z == 1) ? sigma_pp(T) : sigma_ST(T);
+	sigma *= (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
 	return std::max(sigma, 1e-10 * cgs::mbarn);
 }
 
