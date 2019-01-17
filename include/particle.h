@@ -3,13 +3,14 @@
 
 #include <vector>
 
-#include "axis.h"
 #include "grammage.h"
 #include "inelastic.h"
 #include "losses.h"
 #include "pid.h"
 #include "primary.h"
+#include "spallation.h"
 #include "secondary.h"
+#include "utilities.h"
 
 class Particle {
 public:
@@ -39,47 +40,48 @@ public:
 	}
 
 	void build_primary_source(const Params& params) {
-		Q = new PrimarySource(_pid, _efficiency, params);
+		_Q = new PrimarySource(_pid, _efficiency, params);
 	}
 
-	void build_secondary_source(const Params& params) {
-		Q_sec = new SecondarySource();
+	inline bool isDone() const {
+		return _isDone;
 	}
 
-	void build_inelastic_Xsec(const Params& params) {
-		sigma = new InelasticXsec(_pid);
+	bool& setDone() {
+		return _isDone;
+	}
+
+	void build_secondary_source(const std::vector<Particle>& particles) {
+		auto xsecs = SpallationXsecs(_pid);
+		const size_t size = 100;
+		auto T_s = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, size);
+		std::vector<double> Q_s;
+		for (auto& T : T_s) {
+			double value = 0;
+			for (auto& particle : particles) {
+				if (particle.get_pid().get_A() > _pid.get_A() && particle.isDone()) {
+					value += xsecs.get(particle.get_pid(), T) * particle.get_I_T_interpol(T);
+				}
+			}
+			value /= cgs::mean_ism_mass;
+			Q_s.push_back(value);
+		}
+		_Q_sec = new SecondarySource(T_s, Q_s);
+	}
+
+	void build_inelastic_Xsec() {
+		_sigma = new InelasticXsec(_pid);
 	}
 
 	void build_losses(const Params& params) {
-		dEdx = new Losses(_pid, params);
+		_dEdx = new Losses(_pid, params);
 	}
 
-	double get_X(const double& T) const {
-		return X->get(T);
-	}
-
-	double get_Q(const double& T) const {
-		return Q->get(T) + Q_sec->get(T);
-	}
-
-	double get_sigma_m(const double& T) const {
-		return sigma->get(T);
-	}
-
-	double get_dEdx(const double& T) const {
-		return dEdx->get(T);
-	}
-
+	bool run(const std::vector<double>& T);
 	double get_I_T_interpol(const double& T) const;
 	double get_I_R_LIS(const double& R) const;
 	double get_I_R_TOA(const double& R, const double& modulation_potential) const;
 	void dump();
-
-	//odeint.cpp
-	double f(double T, double Y);
-	int run(const LogAxis& T);
-	int run_gsl(const LogAxis& T);
-	int run_spectrum(const LogAxis& T);
 
 public:
 	std::string make_filename();
@@ -91,15 +93,16 @@ public:
 	double compute_integral(const double& T);
 
 protected:
+	bool _isDone = false;
+	double _efficiency = 0;
 	std::vector<double> _T;
 	std::vector<double> _I_T;
 	PID _pid;
-	double _efficiency = 0;
 	Grammage* X = nullptr;
-	PrimarySource* Q = nullptr;
-	SecondarySource* Q_sec = nullptr;
-	InelasticXsec* sigma = nullptr;
-	Losses* dEdx = nullptr;
+	PrimarySource* _Q = nullptr;
+	SecondarySource* _Q_sec = nullptr;
+	InelasticXsec* _sigma = nullptr;
+	Losses* _dEdx = nullptr;
 };
 
 #endif /* INCLUDE_PARTICLE_H_ */

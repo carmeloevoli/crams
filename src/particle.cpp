@@ -4,7 +4,6 @@
 #include <string>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_integration.h>
-#include <gsl/gsl_spline.h>
 
 #include "particle.h"
 #include "axis.h"
@@ -36,10 +35,10 @@ void Particle::dump() {
 		double E = T_ + cgs::proton_mass_c2;
 		double R = pc_func(_pid.get_A(), T_) / (double) _pid.get_Z();
 		outfile << R / cgs::GeV << "\t";
-		outfile << Q->get(T_) << "\t";
+		outfile << _Q->get(T_) << "\t";
 		outfile << X->get(T_) / (cgs::gram / cgs::cm2) << "\t";
-		outfile << cgs::mean_ism_mass / sigma->get(T_) / (cgs::gram / cgs::cm2) << "\t";
-		outfile << T_ / -dEdx->get(T_) / (cgs::gram / cgs::cm2) << "\t";
+		outfile << cgs::mean_ism_mass / _sigma->get(T_) / (cgs::gram / cgs::cm2) << "\t";
+		outfile << T_ / -_dEdx->get(T_) / (cgs::gram / cgs::cm2) << "\t";
 		outfile << "\n";
 	}
 	outfile.close();
@@ -48,33 +47,21 @@ void Particle::dump() {
 void Particle::clear() {
 	if (X != nullptr)
 		delete X;
-	if (Q != nullptr)
-		delete Q;
-	if (Q_sec != nullptr)
-		delete Q_sec;
-	if (sigma != nullptr)
-		delete sigma;
-	if (dEdx != nullptr)
-		delete dEdx;
+	if (_Q != nullptr)
+		delete _Q;
+	if (_Q_sec != nullptr)
+		delete _Q_sec;
+	if (_sigma != nullptr)
+		delete _sigma;
+	if (_dEdx != nullptr)
+		delete _dEdx;
 }
 
 Particle::~Particle() {
 }
 
 double Particle::get_I_T_interpol(const double& T) const {
-	gsl_interp_accel *acc = gsl_interp_accel_alloc();
-	size_t size = _T.size();
-	gsl_spline *spline = gsl_spline_alloc(gsl_interp_cspline, size);
-	double logT[size], logI_T[size];
-	for (size_t i = 0; i < size; ++i) { // TODO make more efficient
-		logT[i] = std::log(_T[i]);
-		logI_T[i] = (_I_T[i] > 0.) ? std::log(_I_T[i]) : -30;
-	}
-	gsl_spline_init(spline, logT, logI_T, size);
-	double value = gsl_spline_eval(spline, std::log(T), acc);
-	gsl_spline_free(spline);
-	gsl_interp_accel_free(acc);
-	return std::exp(value);
+	return LinearInterpolatorLog(_T, _I_T, T);
 }
 
 double Particle::get_I_R_LIS(const double& R) const {
@@ -82,7 +69,7 @@ double Particle::get_I_R_LIS(const double& R) const {
 	constexpr double mp_2 = pow2(cgs::proton_mass_c2);
 	double E_2 = pow2(R * _pid.get_Z_over_A()) + mp_2;
 	double T_ = std::sqrt(E_2) - cgs::proton_mass_c2;
-	if (T_ > _T.front() && T_ < _T.back()) {
+	{
 		double Z_A_squared = pow2(_pid.get_Z_over_A());
 		double dTdR = R * Z_A_squared;
 		dTdR /= std::sqrt(Z_A_squared * pow2(R) + mp_2);
@@ -108,22 +95,21 @@ double Particle::get_I_R_TOA(const double& R, const double& modulation_potential
 	return value;
 }
 
-int Particle::run_spectrum(const LogAxis& T) {
-	_T = T.get_axis();
+bool Particle::run(const std::vector<double>& T) {
+	_T = std::vector<double>(T);
 	for (auto& T_now : _T) {
 		_I_T.push_back(compute_integral(T_now));
 	}
-	assert(_I_T.size() == _T.size());
-	return 0;
+	return _I_T.size() == _T.size();
 }
 
 double Particle::Lambda_1(const double& T) {
-	double value = 1. / X->get(T) + sigma->get(T) / cgs::mean_ism_mass + dEdx->get_derivative(T);
+	double value = 1. / X->get(T) + _sigma->get(T) / cgs::mean_ism_mass + _dEdx->get_derivative(T);
 	return value;
 }
 
 double Particle::Lambda_2(const double& T) {
-	double value = dEdx->get(T);
+	double value = _dEdx->get(T);
 	return std::fabs(value);
 }
 
@@ -156,7 +142,9 @@ double Particle::ExpIntegral(const double& T, const double& T_prime) {
 }
 
 double Particle::external_integrand(const double& T_prime, const double& T) {
-	return Q->get(T_prime) / Lambda_2(T_prime) * std::exp(-ExpIntegral(T, T_prime));
+	double value = (_Q->get(T_prime) + _Q_sec->get(T_prime)) * std::exp(-ExpIntegral(T, T_prime));
+	value /= Lambda_2(T_prime);
+	return value;
 }
 
 struct gsl_f_pars {

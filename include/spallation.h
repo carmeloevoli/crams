@@ -1,20 +1,24 @@
-#ifndef INCLUDE_SPALLATION_H_
-#define INCLUDE_SPALLATION_H_
+#ifndef _INCLUDE_SPALLATION_H_
+#define _INCLUDE_SPALLATION_H_
 
+#include <map>
+#include <string>
+#include <vector>
 #include "pid.h"
 
 class SpallationXsecs {
 public:
-	SpallationXsecs() {
-	}
+	SpallationXsecs(const PID& fragment);
+	virtual ~SpallationXsecs();
 
-	virtual ~SpallationXsecs() {
-	}
+	double get(const PID& projectile, const double& T) const;
 
-	double get(const Channel& channel, const double& T_) {
-		return 0;
-	}
+protected:
+	void read_table(std::string filename);
 
+protected:
+	PID _fragment;
+	std::map<PID, std::vector<double> > table;
 };
 
 #endif /* INCLUDE_SPALLATION_H_ */
