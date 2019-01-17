@@ -20,6 +20,8 @@ static constexpr double meter = 1e2 * centimeter;
 static constexpr double kilometer = 1e3 * meter;
 static constexpr double parsec = 3.086e16 * meter;
 static constexpr double kiloparsec = 1e3 * parsec;
+static constexpr double fm = 1e-13 * centimeter;
+
 
 // MASS UNITS
 static constexpr double mgram = 1e-3 * gram;
