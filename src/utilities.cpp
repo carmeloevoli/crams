@@ -17,7 +17,6 @@ double gamma_func(const double& T) {
 	return value;
 }
 
-
 double pc_func(const int& A, const double& T) {
 	double value = std::sqrt(T * (T + cgs::proton_mass_c2));
 	value *= (double) A;
@@ -40,6 +39,50 @@ double Gamma_Integral(double slope) {
 	gsl_integration_qagiu(&F, 0, 0, 1e-6, LIMIT, w, &result, &error);
 	gsl_integration_workspace_free(w);
 	return 4. * M_PI * result;
+}
+
+std::vector<double> LinAxis(const double& min, const double& max, const size_t& size) {
+	const double dx = (max - min) / (double) (size - 1);
+	std::vector<double> v(size);
+	for (size_t i = 0; i < size; ++i) {
+		double value = min + dx * i;
+		v[i] = value;
+	}
+	return v;
+}
+
+std::vector<double> LogAxis(const double& min, const double& max, const size_t& size) {
+	const double delta_log = std::exp(std::log(max / min) / (size - 1));
+	std::vector<double> v(size);
+	for (size_t i = 0; i < size; ++i) {
+		double value = std::exp(std::log(min) + (double) i * std::log(delta_log));
+		v[i] = value;
+	}
+	return v;
+}
+
+double LinearInterpolator(const std::vector<double>& x, const std::vector<double>& y,
+		const double& x_new) {
+	auto value = double();
+	if (x_new > x.front() && x_new < x.back()) {
+		size_t const i = std::lower_bound(x.begin(), x.end(), x_new) - x.begin();
+		double t = (x_new - x.at(i - 1)) / (x.at(i) - x.at(i - 1));
+		value = y.at(i - 1) * (1. - t) + y.at(i) * t;
+	}
+	return value;
+}
+
+double LinearInterpolatorLog(const std::vector<double>& x, const std::vector<double>& y,
+		const double& x_new) {
+	auto value = double();
+	if (x_new > x.front() && x_new < x.back()) {
+		size_t const i = std::lower_bound(x.begin(), x.end(), x_new) - x.begin();
+		double t = std::log(x_new) - std::log(x.at(i - 1));
+		t /= std::log(x.at(i)) - std::log(x.at(i - 1));
+		value = std::log(y.at(i - 1)) * (1. - t) + std::log(y.at(i)) * t;
+		value = std::exp(value);
+	}
+	return value;
 }
 
 #undef LIMIT
