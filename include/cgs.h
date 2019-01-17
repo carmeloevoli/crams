@@ -86,7 +86,7 @@ static constexpr double PeV_c = 1e15 * eV_c;
 static constexpr double E_SN = 1e51 * erg;
 static constexpr double sn_rate = 1. / (30. * year);
 static constexpr double galaxy_size = 10. * kpc;
-static constexpr double f_He = 0.15;
+static constexpr double f_He = 0.1;
 static constexpr double K_He = 4.;
 static constexpr double mean_ism_mass = proton_mass * (1. + 4 * f_He) / (1. + f_He);
 
