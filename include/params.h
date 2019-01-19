@@ -10,30 +10,37 @@ typedef std::map<PID, double> List;
 
 class ParticleList {
 private:
-	List list;
+	List _list;
 
 public:
 	ParticleList() {
-		insert(H1, 0.);
-		insert(C12, 0.);
-		insert(N14, 0.);
-		insert(O16, 0.);
+		insert(H1, 7e-2);
 		insert(B10, 0.);
 		insert(B11, 0.);
-		insert(Fe56, 0.);
-		insert(Ne20, 0.);
-		insert(Mg24, 0.);
-		insert(Si28, 0.);
+		insert(C12, 5e-3);
+		insert(C13, 0.);
+		insert(C14, 0.);
+		insert(N14, 1e-4);
+		insert(N15, 0.);
+		insert(O16, 8e-3);
+		insert(O17, 0.);
+		insert(O18, 0.);
+		insert(Ne20, 1e-3);
+		insert(Mg24, 2e-3);
+		insert(Si28, 2e-3);
+		insert(Fe56, 8e-3);
 	}
 
 	const List& get_list() {
-		return list;
+		const List& l = _list;
+		return l;
 	}
 
 	virtual ~ParticleList();
 	bool insert(const PID& key, const double& value);
 	void set_abundance(const PID& key, const double& value);
 	void print();
+	void read_ini_file(const std::string filename, char delimiter = ' ');
 };
 
 class Params {
@@ -82,14 +89,6 @@ public:
 	const double& nuclei_slope = _nuclei_slope;
 	const double& modulation_potential = _modulation_potential;
 	const size_t& T_size = _T_size;
-
-//	Param<double> h_gas = Param<double>(150 * pc);
-//	Param<double> potential = Param<double>(100 * MeV);
-//	Param<int> E_size = Param<int>(6 * 32);
-//	double B_0 = muG;
-//	Param<double> v_A = Param<double>(
-//			B_0 / std::sqrt(vacuum_permeability * proton_mass * ion_number_density));
-//	Param<std::string> out_name = Param < std::string > ("test");
 };
 
 #endif /* INCLUDE_PARAMS_H_ */

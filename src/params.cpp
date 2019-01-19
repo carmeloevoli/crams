@@ -1,15 +1,17 @@
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <vector>
 
 #include "params.h"
 
 ParticleList::~ParticleList() {
-	list.clear();
+	_list.clear();
 	std::cout << "released memory from ParticleList\n";
 }
 
 bool ParticleList::insert(const PID& key, const double& value) {
-	auto res = list.insert(std::make_pair(key, value));
+	auto res = _list.insert(std::make_pair(key, value));
 	if (!res.second) {
 		std::cout << "particle " << key << " already exists " << " with abundance "
 				<< (res.first)->second << std::endl;
@@ -20,8 +22,8 @@ bool ParticleList::insert(const PID& key, const double& value) {
 }
 
 void ParticleList::set_abundance(const PID& key, const double& value) {
-	auto it = list.find(key);
-	if (it != list.end()) {
+	auto it = _list.find(key);
+	if (it != _list.end()) {
 		it->second = value;
 		std::cout << "PID : " << key << " abundance modified to " << value << ".\n";
 	} else
@@ -29,8 +31,8 @@ void ParticleList::set_abundance(const PID& key, const double& value) {
 }
 
 void ParticleList::print() {
-	std::cout << "Particle list contains " << list.size() << " nuclei.\n";
-	for (auto& particle : list)
+	std::cout << "Particle list contains " << _list.size() << " nuclei.\n";
+	for (auto& particle : _list)
 		std::cout << particle.first << "\n";
 }
 
