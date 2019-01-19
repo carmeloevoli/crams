@@ -60,7 +60,7 @@ public:
 			double value = 0;
 			for (auto& particle : particles) {
 				if (particle.get_pid().get_A() > _pid.get_A() && particle.isDone()) {
-					value += xsecs.get(particle.get_pid(), T) * particle.get_I_T_interpol(T);
+					value += xsecs.get(particle.get_pid(), T) * particle.I_T_interpol(T);
 				}
 			}
 			value /= cgs::mean_ism_mass;
@@ -78,9 +78,9 @@ public:
 	}
 
 	bool run(const std::vector<double>& T);
-	double get_I_T_interpol(const double& T) const;
-	double get_I_R_LIS(const double& R) const;
-	double get_I_R_TOA(const double& R, const double& modulation_potential) const;
+	double I_T_interpol(const double& T) const;
+	double I_R_LIS(const double& R) const;
+	double I_R_TOA(const double& R, const double& modulation_potential) const;
 	void dump();
 
 public:
@@ -103,6 +103,13 @@ protected:
 	SecondarySource* _Q_sec = nullptr;
 	InelasticXsec* _sigma = nullptr;
 	Losses* _dEdx = nullptr;
+};
+
+typedef std::vector<Particle> Particles;
+
+struct ptr_Particle {
+	bool isPresent;
+	std::vector<Particle>::iterator it;
 };
 
 #endif /* INCLUDE_PARTICLE_H_ */

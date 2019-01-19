@@ -10,7 +10,7 @@
 #include "utilities.h"
 
 #define LIMIT 1000
-#define EPSREL 1e-4
+#define EPSREL 1e-5
 
 Particle::Particle() {
 }
@@ -60,11 +60,11 @@ void Particle::clear() {
 Particle::~Particle() {
 }
 
-double Particle::get_I_T_interpol(const double& T) const {
+double Particle::I_T_interpol(const double& T) const {
 	return LinearInterpolatorLog(_T, _I_T, T);
 }
 
-double Particle::get_I_R_LIS(const double& R) const {
+double Particle::I_R_LIS(const double& R) const {
 	double value = 0;
 	constexpr double mp_2 = pow2(cgs::proton_mass_c2);
 	double E_2 = pow2(R * _pid.get_Z_over_A()) + mp_2;
@@ -73,12 +73,12 @@ double Particle::get_I_R_LIS(const double& R) const {
 		double Z_A_squared = pow2(_pid.get_Z_over_A());
 		double dTdR = R * Z_A_squared;
 		dTdR /= std::sqrt(Z_A_squared * pow2(R) + mp_2);
-		value = get_I_T_interpol(T_) * dTdR;
+		value = I_T_interpol(T_) * dTdR;
 	}
 	return value;
 }
 
-double Particle::get_I_R_TOA(const double& R, const double& modulation_potential) const {
+double Particle::I_R_TOA(const double& R, const double& modulation_potential) const {
 	double value = 0;
 	constexpr double mp_2 = pow2(cgs::proton_mass_c2);
 	double E_2 = pow2(R * _pid.get_Z_over_A()) + pow2(cgs::proton_mass_c2);
@@ -90,7 +90,7 @@ double Particle::get_I_R_TOA(const double& R, const double& modulation_potential
 		double dTdR = R * Z_A_squared;
 		dTdR /= std::sqrt(Z_A_squared * pow2(R) + mp_2);
 		double factor = (pow2(T_now) - mp_2) / (pow2(T_ISM) - mp_2);
-		value = factor * get_I_T_interpol(T_ISM) * dTdR;
+		value = factor * I_T_interpol(T_ISM) * dTdR;
 	}
 	return value;
 }
@@ -117,6 +117,14 @@ double compute_integral_qags(gsl_integration_workspace * w, gsl_function * F, do
 		double x_hi) {
 	double result, error;
 	gsl_integration_qags(F, x_lo, x_hi, 0, EPSREL, LIMIT, w, &result, &error);
+	return result;
+}
+
+double compute_integral_qag(gsl_integration_workspace * w, gsl_function * F, double x_lo,
+		double x_hi) {
+	double result, error;
+	int key = 3;
+	gsl_integration_qag(F, x_lo, x_hi, 0, EPSREL, LIMIT, key, w, &result, &error);
 	return result;
 }
 
