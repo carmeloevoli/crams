@@ -8,6 +8,7 @@ static constexpr double second = 1;
 static constexpr double centimeter = 1.;
 static constexpr double gram = 1;
 static constexpr double kelvin = 1;
+static constexpr double sr = 1;
 
 // TIME UNITS
 static constexpr double year = 3.154e+7 * second;
@@ -21,7 +22,6 @@ static constexpr double kilometer = 1e3 * meter;
 static constexpr double parsec = 3.086e16 * meter;
 static constexpr double kiloparsec = 1e3 * parsec;
 static constexpr double fm = 1e-13 * centimeter;
-
 
 // MASS UNITS
 static constexpr double mgram = 1e-3 * gram;
@@ -52,6 +52,7 @@ static constexpr double PeV = petaelectronvolt;
 static constexpr double cm = centimeter;
 static constexpr double cm2 = cm * cm;
 static constexpr double cm3 = cm * cm * cm;
+static constexpr double m2 = meter * meter;
 
 // PHYSICAL CONSTANTS
 static constexpr double c_light = 2.99792458e10 * centimeter / second;
