@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "cgs.h"
+#include "chi2.h"
 #include "params.h"
 #include "particle.h"
 #include "output.h"
@@ -14,56 +15,58 @@ void log_startup_information() {
 	std::cout << "git version: " << git_sha1() << "\n";
 	std::cout << "has local changes: " << std::boolalpha << git_has_local_changes()
 			<< std::noboolalpha << "\n";
-	std::cout << "was built on: " << __DATE__ << " " __TIME__ <<"\n";
+	std::cout << "was built on: " << __DATE__ << " " __TIME__ << "\n";
 }
 
-int main() {
-	log_startup_information();
-	exit(1);
+int main(int argc, char * argv[]) {
+	if (argc == 2) {
+		log_startup_information();
 
-	//TODO read params from ini file
-	//TODO print the commit number
+		//TODO read params from ini file
 
-	Params params;
-	params.set_H(4 * cgs::kpc);
-	params.set_D0(1.8e28 * cgs::cm2 / cgs::sec);
-	params.print();
+		Params params;
+		params.set_H(4 * cgs::kpc);
+		params.set_D0(1.8e28 * cgs::cm2 / cgs::sec);
+		params.print();
 
-	ParticleList particleList;
-	particleList.set_abundance(H1, 7e-2);
-	particleList.set_abundance(C12, 5e-3);
-	particleList.set_abundance(O16, 8e-3);
-	particleList.set_abundance(Ne20, 1e-3);
-	particleList.set_abundance(Mg24, 2e-3);
-	particleList.set_abundance(Si28, 2e-3);
-	particleList.set_abundance(Fe56, 8e-3);
-	particleList.print();
+		ParticleList particleList;
+		particleList.print();
 
-	std::vector<Particle> particles;
-	auto list = particleList.get_list();
-	for (auto it = list.rbegin(); it != list.rend(); ++it) {
-		Particle particle = Particle(it->first, it->second);
-		particles.push_back(particle);
+		Particles particles;
+		auto list = particleList.get_list();
+		for (auto it = list.rbegin(); it != list.rend(); ++it) {
+			Particle particle = Particle(it->first, it->second);
+			particles.push_back(particle);
+		}
+
+		auto T = LogAxis(params.T_min, params.T_max, params.T_size);
+
+		for (auto& particle : particles) {
+			std::cout << "running : " << particle.get_pid() << "\n";
+			particle.build_grammage(params);
+			particle.build_primary_source(params);
+			particle.build_secondary_source(particles);
+			particle.build_inelastic_Xsec();
+			particle.build_losses(params);
+			//particle.dump();
+			particle.setDone() = particle.run(T);
+			particle.clear();
+		}
+
+		OutputManager outputManager(particles, params.modulation_potential);
+		outputManager.dump_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
+		outputManager.dump_heavy_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
+		outputManager.dump_ratio(10 * cgs::GeV, 10. * cgs::TeV, 50);
+
+		Chi2_C chi2_C(particles, params.modulation_potential, "data/C_AMS02_rig.txt");
+		std::cout << "C Chi2 : " << chi2_C.compute_chi2(20. * cgs::GeV) << "\n";
+
+		Chi2_O chi2_O(particles, params.modulation_potential, "data/O_AMS02_rig.txt");
+		std::cout << "O Chi2 : " << chi2_O.compute_chi2(20. * cgs::GeV) << "\n";
+
+	} else {
+		std::cout << "Usage: ./CRAMS params.ini\n";
 	}
-
-	auto T = LogAxis(params.T_min, params.T_max, params.T_size);
-
-	for (auto& particle : particles) {
-		std::cout << "running : " << particle.get_pid() << "\n";
-		particle.build_grammage(params);
-		particle.build_primary_source(params);
-		particle.build_secondary_source(particles);
-		particle.build_inelastic_Xsec();
-		particle.build_losses(params);
-		//particle.dump();
-		particle.setDone() = particle.run(T);
-		particle.clear();
-	}
-
-	OutputManager outputManager(particles, params.modulation_potential);
-	outputManager.dump_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
-	outputManager.dump_heavy_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
-	outputManager.dump_ratio(10 * cgs::GeV, 10. * cgs::TeV, 50);
 	return 0;
 }
 

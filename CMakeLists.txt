@@ -22,6 +22,7 @@ configure_file("src/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
 
 set( CRAMS_SRCS 
      src/main.cpp
+     src/chi2.cpp
 	 src/grammage.cpp
 	 src/inelastic.cpp
 	 src/losses.cpp
