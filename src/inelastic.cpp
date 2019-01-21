@@ -10,7 +10,7 @@ InelasticXsec::InelasticXsec(const PID& pid) {
 }
 
 InelasticXsec::~InelasticXsec() {
-	std::cout << "delete inelastic sigma for particle " << A << " " << Z << "\n";
+	//std::cout << "delete inelastic sigma for particle " << A << " " << Z << "\n";
 }
 
 double InelasticXsec::get(const double& T) const {

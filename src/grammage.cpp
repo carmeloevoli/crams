@@ -19,7 +19,7 @@ Grammage::Grammage(const PID& pid, const Params& params) {
 }
 
 Grammage::~Grammage() {
-	std::cout << "delete grammage for particle " << A << " " << Z << "\n";
+	//std::cout << "delete grammage for particle " << A << " " << Z << "\n";
 }
 
 double Grammage::D(const double& T) const {

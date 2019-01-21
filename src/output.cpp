@@ -71,7 +71,7 @@ void OutputManager::dump_ratio(double R_min, double R_max, size_t R_size) const 
 		outfile << R / cgs::GeV << "\t";
 		outfile << B(R) / C(R) << "\t";
 		outfile << C(R) / O(R) << "\t";
-		outfile << C12_C13(R) << "\t";
+		outfile << B(R) / O(R) << "\t";
 		outfile << "\n";
 	}
 	outfile.close();

@@ -16,7 +16,7 @@ Losses::Losses(const PID& pid, const Params& params) {
 }
 
 Losses::~Losses() {
-	std::cout << "delete losses for particle " << A << " " << Z << "\n";
+	//std::cout << "delete losses for particle " << A << " " << Z << "\n";
 
 }
 

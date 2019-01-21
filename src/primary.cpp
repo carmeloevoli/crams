@@ -5,6 +5,10 @@
 PrimarySource::PrimarySource() {
 }
 
+PrimarySource::~PrimarySource() {
+	//std::cout << "delete primary source for particle " << A << " " << Z << "\n";
+}
+
 PrimarySource::PrimarySource(const PID& pid, const double& epsilon, const Params& params) {
 	A = pid.get_A();
 	Z = pid.get_Z();
@@ -14,10 +18,6 @@ PrimarySource::PrimarySource(const PID& pid, const double& epsilon, const Params
 		factor = (double) A * epsilon * L_SN_surface;
 		factor /= params.mu * Gamma_Integral(slope) * pow2(cgs::proton_mass_c2);
 	}
-}
-
-PrimarySource::~PrimarySource() {
-	std::cout << "delete primary source for particle " << A << " " << Z << "\n";
 }
 
 double PrimarySource::get(const double& T) const {
