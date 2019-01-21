@@ -22,14 +22,14 @@ int main(int argc, char * argv[]) {
 	if (argc == 2) {
 		log_startup_information();
 
-		//TODO read params from ini file
-
 		Params params;
 		params.set_H(4 * cgs::kpc);
 		params.set_D0(1.8e28 * cgs::cm2 / cgs::sec);
+		params.set_from_file(argv[1]);
 		params.print();
 
 		ParticleList particleList;
+		particleList.set_from_file(argv[1]);
 		particleList.print();
 
 		Particles particles;
@@ -55,14 +55,17 @@ int main(int argc, char * argv[]) {
 
 		OutputManager outputManager(particles, params.modulation_potential);
 		outputManager.dump_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
-		outputManager.dump_heavy_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
+		//outputManager.dump_heavy_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
 		outputManager.dump_ratio(10 * cgs::GeV, 10. * cgs::TeV, 50);
 
-		Chi2_C chi2_C(particles, params.modulation_potential, "data/C_AMS02_rig.txt");
+		Chi2_C chi2_C(particles, params.modulation_potential);
 		std::cout << "C Chi2 : " << chi2_C.compute_chi2(20. * cgs::GeV) << "\n";
 
-		Chi2_O chi2_O(particles, params.modulation_potential, "data/O_AMS02_rig.txt");
+		Chi2_O chi2_O(particles, params.modulation_potential);
 		std::cout << "O Chi2 : " << chi2_O.compute_chi2(20. * cgs::GeV) << "\n";
+
+		Chi2_BC chi2_BC(particles, params.modulation_potential);
+		std::cout << "BC Chi2 : " << chi2_BC.compute_chi2(20. * cgs::GeV, 200. * cgs::GeV) << "\n";
 
 	} else {
 		std::cout << "Usage: ./CRAMS params.ini\n";
