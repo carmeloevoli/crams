@@ -40,7 +40,7 @@ public:
 	bool insert(const PID& key, const double& value);
 	void set_abundance(const PID& key, const double& value);
 	void print();
-	void read_ini_file(const std::string filename, char delimiter = ' ');
+	void set_from_file(const std::string& filename);
 };
 
 class Params {
@@ -74,6 +74,8 @@ public:
 
 	virtual ~Params();
 	void print();
+	void set_from_file(const std::string& filename);
+	void set_params(const std::string& key, const double& value);
 
 	const double& T_min = _T_min;
 	const double& T_max = _T_max;
