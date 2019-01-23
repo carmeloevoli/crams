@@ -90,6 +90,7 @@ static constexpr double galaxy_size = 10. * kpc;
 static constexpr double f_He = 0.1;
 static constexpr double K_He = 4.;
 static constexpr double mean_ism_mass = proton_mass * (1. + 4 * f_He) / (1. + f_He);
+static constexpr double inelasticity = 0.5;
 
 } // namespace cgs
 
