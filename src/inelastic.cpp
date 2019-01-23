@@ -7,15 +7,16 @@ InelasticXsec::InelasticXsec() {
 InelasticXsec::InelasticXsec(const PID& pid) {
 	A = pid.get_A();
 	Z = pid.get_Z();
+	table = Tripathi99(pid);
 }
 
 InelasticXsec::~InelasticXsec() {
 	//std::cout << "delete inelastic sigma for particle " << A << " " << Z << "\n";
 }
 
-double InelasticXsec::get(const double& T) const {
+double InelasticXsec::get_ISM(const double& T) const {
 	//double sigma = (Z == 1) ? sigma_pp(T) : sigma_ST(T);
-	double sigma = (Z == 1) ? sigma_pp(T) : Tripathi99::inelastic_sigma(A, Z, 1, 1, T);
+	double sigma = (Z == 1) ? sigma_pp(T) : table.get_H(T);
 	sigma *= (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
 	return std::max(sigma, 1e-10 * cgs::mbarn);
 }
@@ -39,171 +40,46 @@ double InelasticXsec::sigma_ST(const double& T) const {
 	return value * cgs::mbarn;
 }
 
-namespace Tripathi99 {
+InelasticXsecTable::InelasticXsecTable() {
+}
 
-double get_wilson_rms_radius(const int& A) {
-	double factor = std::sqrt(5. / 3.) * cgs::fm;
+InelasticXsecTable::InelasticXsecTable(const PID& projectile) :
+		_projectile(projectile) {
+	double T = _T_min;
+	for (size_t i = 0; i < _T_size; ++i) {
+		_T.push_back(T);
+		T *= _T_ratio;
+	}
+}
 
-	double radius;
-	if (A > 26) {
-		radius = factor * (0.84 * pow((double) A, 1. / 3.) + 0.55);
+InelasticXsecTable::~InelasticXsecTable() {
+}
+
+double InelasticXsecTable::get_H(const double& T) const {
+	double T_now = std::min(T, _T.back());
+	return LinearInterpolator(_T, _table, T_now);
+}
+
+void InelasticXsecTable::read_table(const std::string& filename) {
+	std::ifstream inf(filename.c_str());
+	if (!inf.is_open()) {
+		std::cout << "filename " << filename << " cannot be open.\n";
+		exit(2);
 	} else {
-		std::vector<double> r = { 0.0, 0.85, 2.095, 1.976, 1.671, 1.986, 2.57, 2.41, 2.23, 2.519,
-				2.45, 2.42, 2.471, 2.440, 2.58, 2.611, 2.730, 2.662, 2.727, 2.9, 3.040, 2.867,
-				2.969, 2.94, 3.075, 3.11, 3.06 };
-		radius = factor * r.at(A);
-	}
-	return radius;
-}
-
-double get_wilson_radius(const int& A) {
-	double r_0 = 0.85 * cgs::fm;
-	double r = get_wilson_rms_radius(A);
-	return 1.29 * std::sqrt(r * r - r_0 * r_0);
-}
-
-double inelastic_sigma(int A_p, int Z_p, int A_t, int Z_t, double T_n) {
-	assert(A_p > 0 && A_t > 0);
-	const double r_0 = 1.1 * cgs::fm;
-	double f_A = pow2(A_p) + pow2(A_t) + 2 * A_p * A_t * (1. + T_n / cgs::proton_mass_c2);
-	double E_cm_mev = cgs::proton_mass_c2 * std::sqrt(f_A);
-	E_cm_mev /= cgs::MeV;
-	double Tn_mev = T_n / cgs::MeV;
-
-	if (E_cm_mev <= (0.8 + 0.04 * Z_t) * A_p) {
-		return 0.;
-	}
-
-	double r_rms_p = get_wilson_rms_radius(A_p);
-	double r_rms_t = get_wilson_rms_radius(A_t);
-	double r_p = 1.29 * r_rms_p;
-	double r_t = 1.29 * r_rms_t;
-	double Radius = (r_p + r_t) / cgs::fm;
-	Radius += 1.2 * (pow(A_p, 1. / 3.) + pow(A_t, 1. / 3.)) / pow(E_cm_mev, 1. / 3.);
-	double B = 1.44 * Z_p * Z_t / Radius;
-
-	double D = 2.05;
-	double T_1 = 40;
-	double G;
-	if ((A_t == 1 && Z_t == 1) || (A_p == 1 && Z_p == 1)) {
-		T_1 = 23.0;
-		D = 1.85 + 0.16 / (1. + exp((500. - Tn_mev) / 200.));
-	} else if ((A_t == 1 && Z_t == 0) || (A_p == 1 && Z_p == 0)) {
-		T_1 = 18.0;
-		D = 1.85 + 0.16 / (1. + exp((500. - Tn_mev) / 200.));
-	} else if ((A_t == 2 && Z_t == 1) || (A_p == 2 && Z_p == 1)) {
-		T_1 = 23.0;
-		D = 1.65 + 0.1 / (1. + exp((500. - Tn_mev) / 200.));
-	} else if ((A_t == 3 && Z_t == 2) || (A_p == 3 && Z_p == 2)) {
-		T_1 = 40.0;
-		D = 1.55;
-	} else if (A_p == 4 && Z_p == 2) {
-		if (A_t == 4 && Z_t == 2) {
-			T_1 = 40.0;
-			G = 300.0;
-		} else if (Z_t == 4) {
-			T_1 = 25.0;
-			G = 300.0;
-		} else if (Z_t == 7) {
-			T_1 = 40.0;
-			G = 500.0;
-		} else if (Z_t == 13) {
-			T_1 = 25.0;
-			G = 300.0;
-		} else if (Z_t == 26) {
-			T_1 = 40.0;
-			G = 300.0;
-		} else {
-			T_1 = 40.0;
-			G = 75.0;
+		int Z_proj, A_proj;
+		double x_temp;
+		while (inf) {
+			inf >> Z_proj >> A_proj;
+			std::vector<double> x;
+			x.reserve(_T_size);
+			for (size_t i = 0; i < _T_size; ++i) {
+				inf >> x_temp;
+				x.emplace_back(x_temp * cgs::mbarn);
+			}
+			if (PID(Z_proj, A_proj) == _projectile)
+				copy(x.begin(), x.end(), back_inserter(_table));
 		}
-		D = 2.77 - 8e-3 * A_t + 1.8e-5 * pow2(A_t) - 0.8 / (1. + exp((250. - Tn_mev) / G));
-	} else if (A_t == 4 && Z_t == 2) {
-		if (A_p == 4 && Z_p == 2) {
-			T_1 = 40.0;
-			G = 300.0;
-		} else if (Z_p == 4) {
-			T_1 = 25.0;
-			G = 300.0;
-		} else if (Z_p == 7) {
-			T_1 = 40.0;
-			G = 500.0;
-		} else if (Z_p == 13) {
-			T_1 = 25.0;
-			G = 300.0;
-		} else if (Z_p == 26) {
-			T_1 = 40.0;
-			G = 300.0;
-		} else {
-			T_1 = 40.0;
-			G = 75.0;
-		}
-		D = 2.77 - 8e-3 * A_t + 1.8e-5 * pow2(A_t) - 0.8 / (1. + exp((250. - Tn_mev) / G));
+		inf.close();
 	}
-
-	double C_E = D * (1 - exp(-Tn_mev / T_1));
-	C_E -= 0.292 * exp(-Tn_mev / 792.) * std::cos(0.229 * pow(Tn_mev, 0.453));
-
-	double S = pow(A_p, 1. / 3.) * pow(A_t, 1. / 3.);
-	S /= pow(A_p, 1. / 3.) + pow(A_t, 1. / 3.);
-
-	double delta_E = 0;
-	double X_1 = 0;
-	delta_E = 1.85 * S;
-	delta_E += 0.16 * S / pow(E_cm_mev, 1. / 3.);
-	delta_E -= C_E;
-	if (A_t >= A_p) {
-		delta_E += 0.91 * (A_t - 2. * Z_t) * Z_p / A_t / A_p;
-		X_1 = 2.83 - 3.1e-2 * A_t + 1.7e-4 * A_t * A_t;
-	} else {
-		delta_E += 0.91 * (A_p - 2. * Z_p) * Z_t / A_t / A_p;
-		X_1 = 2.83 - 3.1e-2 * A_p + 1.7e-4 * A_p * A_p;
-	}
-
-	double S_L = 1.2 + 1.6 * (1 - exp(-Tn_mev / 15));
-	double X_m = 1 - X_1 * exp(-Tn_mev / X_1 / S_L);
-
-	double R_c = 1.0;
-	if (A_p == 1 && Z_p == 1) {
-		if (A_t == 2 && Z_t == 1)
-			R_c = 13.5;
-		else if (A_t == 3 && Z_t == 2)
-			R_c = 21.0;
-		else if (A_t == 4 && Z_t == 2)
-			R_c = 27.0;
-		else if (Z_t == 3)
-			R_c = 2.2;
-	} else if (A_t == 1 && Z_t == 1) {
-		if (A_p == 2 && Z_p == 1)
-			R_c = 13.5;
-		else if (A_p == 3 && Z_p == 2)
-			R_c = 21.0;
-		else if (A_p == 4 && Z_p == 2)
-			R_c = 27.0;
-		else if (Z_p == 3)
-			R_c = 2.2;
-	} else if (A_p == 2 && Z_p == 1) {
-		if (A_t == 2 && Z_t == 1)
-			R_c = 13.5;
-		else if (A_t == 4 && Z_t == 2)
-			R_c = 13.5;
-		else if (A_t == 12 && Z_t == 6)
-			R_c = 6.0;
-	} else if (A_t == 2 && Z_t == 1) {
-		if (A_p == 2 && Z_p == 1)
-			R_c = 13.5;
-		else if (A_p == 4 && Z_p == 2)
-			R_c = 13.5;
-		else if (A_p == 12 && Z_p == 6)
-			R_c = 6.0;
-	} else if ((A_p == 4 && Z_p == 2 && (Z_t == 73 || Z_t == 79))
-			|| (A_t == 4 && Z_t == 2 && (Z_p == 73 || Z_p == 79)))
-		R_c = 0.6;
-
-	double value = M_PI * pow2(r_0);
-	value *= pow2(pow(A_p, 1. / 3.) + pow(A_t, 1. / 3.) + delta_E);
-	value *= (1. - R_c * B / E_cm_mev) * X_m;
-	return std::max(0., value);
+	std::cout << "inelastic table read with " << _table.size() << " points.\n";
 }
-
-} /* namespace Tripathi99 */
