@@ -55,6 +55,12 @@ double Chi2_C::get_model(const double& R, const double& phi) const {
 	return value;
 }
 
+double Chi2_N::get_model(const double& R, const double& phi) const {
+	double value = (ptr_N14.isPresent) ? ptr_N14.it->I_R_TOA(R, phi) : 0.;
+	value += (ptr_N15.isPresent) ? ptr_N15.it->I_R_TOA(R, phi) : 0.;
+	return value;
+}
+
 double Chi2_O::get_model(const double& R, const double& phi) const {
 	double value = (ptr_O16.isPresent) ? ptr_O16.it->I_R_TOA(R, phi) : 0.;
 	value += (ptr_O17.isPresent) ? ptr_O17.it->I_R_TOA(R, phi) : 0.;
@@ -69,4 +75,14 @@ double Chi2_BC::get_model(const double& R, const double& phi) const {
 	C += (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, phi) : 0.;
 	C += (ptr_C14.isPresent) ? ptr_C14.it->I_R_TOA(R, phi) : 0.;
 	return B / C;
+}
+
+double Chi2_CO::get_model(const double& R, const double& phi) const {
+	double O = (ptr_O16.isPresent) ? ptr_O16.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O17.isPresent) ? ptr_O17.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O18.isPresent) ? ptr_O18.it->I_R_TOA(R, phi) : 0.;
+	double C = (ptr_C12.isPresent) ? ptr_C12.it->I_R_TOA(R, phi) : 0.;
+	C += (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, phi) : 0.;
+	C += (ptr_C14.isPresent) ? ptr_C14.it->I_R_TOA(R, phi) : 0.;
+	return C / O;
 }
