@@ -10,70 +10,73 @@
 class PID {
 public:
 	PID() {
-		set(0, 0);
+		set(0, 0, false);
 	}
 
-	PID(const int& Z_, const int& A_) {
-		assert(A_ > 0);
-		assert(Z_ <= A_);
-		set(Z_, A_);
+	PID(const int& Z, const int& A, const bool& isTertiary = false) {
+		assert(A > 0);
+		assert(Z <= A);
+		set(Z, A, isTertiary);
 	}
 
 	virtual ~PID() {
 	}
 
-	void set(const int& Z_, const int& A_) {
-		Z = Z_;
-		A = A_;
-		id = A * 1000 + Z;
+	void set(const int& Z, const int& A, const bool& isTertiary) {
+		_Z = Z;
+		_A = A;
+		_id = A * 1000 + Z;
+		_isTertiary = isTertiary;
 	}
 
 	int get_Z() const {
-		return Z;
+		return _Z;
 	}
 
 	int get_A() const {
-		return A;
+		return _A;
 	}
 
 	double get_Z_over_A() const {
-		return (A > 0) ? fabs((double) Z / (double) A) : 0;
+		return (_A > 0) ? fabs((double) _Z / (double) _A) : 0;
 	}
 
 	double get_A_over_Z() const {
-		return (A > 0) ? fabs((double) A / (double) Z) : 0;
+		return (_A > 0) ? fabs((double) _A / (double) _Z) : 0;
 	}
 
 	int get_id() const {
-		return id;
+		return _id;
 	}
 
 	bool operator==(const PID &other) const {
-		return id == other.id;
-	}
-
-	bool operator!=(const PID &other) const {
-		return id != other.id;
+		return _id == other._id && _isTertiary == other._isTertiary;
 	}
 
 	bool operator<(const PID &other) const {
-		return id < other.id;
+		if (_id != other._id)
+			return _id < other._id;
+		else
+			return _isTertiary;
 	}
 
 	bool operator>(const PID &other) const {
-		return id > other.id;
-	}
-
-	bool is_lepton() const {
-		return A == 0;
+		if (_id != other._id)
+			return _id > other._id;
+		else
+			return !_isTertiary;
 	}
 
 	bool is_H() const {
-		return (Z == 1);
+		return (_Z == 1);
 	}
 
 	bool is_He() const {
-		return (Z == 2);
+		return (_Z == 2);
+	}
+
+	bool is_tertiary() const {
+		return _isTertiary;
 	}
 
 	friend std::ostream& operator<<(std::ostream& stream, const PID& pid) {
@@ -83,18 +86,20 @@ public:
 
 	std::string to_string() const {
 		std::string ss;
-		ss = "(" + std::to_string(Z) + "," + std::to_string(A) + ")";
+		ss = "(" + std::to_string(_Z) + "," + std::to_string(_A) + ")";
 		return ss;
 	}
 
 protected:
-	int Z;
-	int A;
-	int id;
+	int _Z;
+	int _A;
+	int _id;
+	bool _isTertiary;
 };
 
 typedef std::pair<PID, PID> Channel;
 
+static const PID H1_ter = PID(1, 1, true);
 static const PID H1 = PID(1, 1);
 static const PID H2 = PID(1, 2);
 static const PID Li6 = PID(3, 6);
