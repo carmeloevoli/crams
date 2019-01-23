@@ -14,6 +14,7 @@ private:
 
 public:
 	ParticleList() {
+		insert(H1_ter, 0.);
 		insert(H1, 7e-2);
 		insert(B10, 0.);
 		insert(B11, 0.);
