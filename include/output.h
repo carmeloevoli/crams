@@ -14,6 +14,7 @@ public:
 private:
 	Particles _particles;
 	double _phi = 0;
+
 	ptr_Particle ptr_H1 = find_ptr(H1);
 	ptr_Particle ptr_B10 = find_ptr(B10);
 	ptr_Particle ptr_B11 = find_ptr(B11);
@@ -26,6 +27,8 @@ private:
 	ptr_Particle ptr_O17 = find_ptr(O17);
 	ptr_Particle ptr_O18 = find_ptr(O18);
 	ptr_Particle find_ptr(const PID& pid);
+
+	double H(const double& R) const;
 	double B(const double& R) const;
 	double C(const double& R) const;
 	double N(const double& R) const;

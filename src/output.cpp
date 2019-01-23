@@ -14,6 +14,11 @@ ptr_Particle OutputManager::find_ptr(const PID& pid) {
 	return {isPresent, it};
 }
 
+double OutputManager::H(const double& R) const {
+	double value = (ptr_H1.isPresent) ? ptr_H1.it->I_R_TOA(R, _phi) : 0;
+	return value;
+}
+
 double OutputManager::B(const double& R) const {
 	double value = (ptr_B10.isPresent) ? ptr_B10.it->I_R_TOA(R, _phi) : 0;
 	value += (ptr_B11.isPresent) ? ptr_B11.it->I_R_TOA(R, _phi) : 0;
@@ -53,7 +58,7 @@ void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) cons
 	double units = 1. / (cgs::GeV * pow2(cgs::meter) * cgs::sec);
 	for (auto& R : _R) {
 		outfile << R / cgs::GeV << "\t";
-		outfile << 0 / units << "\t";
+		outfile << H(R) / units << "\t";
 		outfile << B(R) / units << "\t";
 		outfile << C(R) / units << "\t";
 		outfile << N(R) / units << "\t";
