@@ -20,7 +20,8 @@ double InelasticXsec::get(const double& T) const {
 	return std::max(sigma, 1e-10 * cgs::mbarn);
 }
 
-double InelasticXsec::sigma_pp(const double& T) const {
+double sigma_pp(const double& T) {
+	constexpr double E_threshold = 0.2797 * cgs::GeV;
 	double value = 0;
 	double x = T / E_threshold;
 	if (x > 1) {
