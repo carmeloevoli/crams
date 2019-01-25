@@ -23,8 +23,6 @@ int main(int argc, char * argv[]) {
 		log_startup_information();
 
 		Params params;
-		params.set_H(4 * cgs::kpc);
-		params.set_D0(1.8e28 * cgs::cm2 / cgs::sec);
 		params.set_from_file(argv[1]);
 		params.print();
 
@@ -44,8 +42,10 @@ int main(int argc, char * argv[]) {
 		for (auto& particle : particles) {
 			std::cout << "running : " << particle.get_pid() << "\n";
 			particle.build_grammage(params);
-			particle.build_primary_source(params);
-			particle.build_secondary_source(particles);
+			particle.build_snr_source(params);
+			particle.build_secondary_source(particles, params);
+			if (particle.get_pid() == H1_ter)
+				particle.build_tertiary_source(particles);
 			particle.build_inelastic_Xsec();
 			particle.build_losses(params);
 			//particle.dump();
@@ -53,21 +53,21 @@ int main(int argc, char * argv[]) {
 			particle.clear();
 		}
 
-		OutputManager outputManager(particles, params.modulation_potential);
+		OutputManager outputManager(particles, params.modulation_potential, params.id);
 		outputManager.dump_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
 		//outputManager.dump_heavy_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
-		outputManager.dump_ratio(10 * cgs::GeV, 10. * cgs::TeV, 50);
+		outputManager.dump_ratios(10 * cgs::GeV, 10. * cgs::TeV, 50);
 
 		std::ofstream fchi2("chi2_results.txt", std::ofstream::out);
 
 		Chi2_C chi2_C(particles, params.modulation_potential);
-		fchi2 << chi2_C.compute_chi2(20. * cgs::GeV, 1e3 * cgs::GeV) << "\n";
+		fchi2 << chi2_C.compute_chi2(10. * cgs::GeV, 300. * cgs::GeV) << "\n";
 
 		Chi2_N chi2_N(particles, params.modulation_potential);
 		fchi2 << chi2_N.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
 
 		Chi2_O chi2_O(particles, params.modulation_potential);
-		fchi2 << chi2_O.compute_chi2(20. * cgs::GeV, 1e3 * cgs::GeV) << "\n";
+		fchi2 << chi2_O.compute_chi2(10. * cgs::GeV, 300. * cgs::GeV) << "\n";
 
 		Chi2_BC chi2_BC(particles, params.modulation_potential);
 		fchi2 << chi2_BC.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
