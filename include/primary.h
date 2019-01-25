@@ -4,11 +4,11 @@
 #include "params.h"
 #include "pid.h"
 
-class PrimarySource {
+class SnrSource {
 public:
-	PrimarySource();
-	PrimarySource(const PID& pid, const double& epsilon, const Params& params);
-	virtual ~PrimarySource();
+	SnrSource();
+	SnrSource(const PID& pid, const double& epsilon, const Params& params);
+	virtual ~SnrSource();
 	double get(const double& T) const;
 
 protected:

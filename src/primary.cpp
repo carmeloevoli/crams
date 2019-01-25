@@ -2,14 +2,14 @@
 #include "primary.h"
 #include "utilities.h"
 
-PrimarySource::PrimarySource() {
+SnrSource::SnrSource() {
 }
 
-PrimarySource::~PrimarySource() {
+SnrSource::~SnrSource() {
 	//std::cout << "delete primary source for particle " << A << " " << Z << "\n";
 }
 
-PrimarySource::PrimarySource(const PID& pid, const double& epsilon, const Params& params) {
+SnrSource::SnrSource(const PID& pid, const double& epsilon, const Params& params) {
 	A = pid.get_A();
 	Z = pid.get_Z();
 	slope = (pid == H1) ? params.H_slope : params.nuclei_slope;
@@ -20,7 +20,7 @@ PrimarySource::PrimarySource(const PID& pid, const double& epsilon, const Params
 	}
 }
 
-double PrimarySource::get(const double& T) const {
+double SnrSource::get(const double& T) const {
 	double value = 0.;
 	if (factor > 0.) {
 		double beta = beta_func(T);
