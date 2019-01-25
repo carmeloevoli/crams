@@ -6,15 +6,16 @@
 
 class OutputManager {
 public:
-	OutputManager(const Particles& particles, const double phi);
+	OutputManager(const Particles& particles, double phi, size_t id);
 	virtual ~OutputManager();
 	void dump_spectra(double R_min, double R_max, size_t R_size) const;
-	void dump_ratio(double R_min, double R_max, size_t R_size) const;
+	void dump_ratios(double R_min, double R_max, size_t R_size) const;
 	void dump_heavy_spectra(double R_min, double R_max, size_t R_size) const;
 private:
 	Particles _particles;
 	double _phi = 0;
 
+	ptr_Particle ptr_H1_ter = find_ptr(H1_ter);
 	ptr_Particle ptr_H1 = find_ptr(H1);
 	ptr_Particle ptr_B10 = find_ptr(B10);
 	ptr_Particle ptr_B11 = find_ptr(B11);
@@ -28,12 +29,14 @@ private:
 	ptr_Particle ptr_O18 = find_ptr(O18);
 	ptr_Particle find_ptr(const PID& pid);
 
+	std::string spectra_filename;
+	std::string ratios_filename;
+
 	double H(const double& R) const;
 	double B(const double& R) const;
 	double C(const double& R) const;
 	double N(const double& R) const;
 	double O(const double& R) const;
-	double C12_C13(const double& R) const;
 };
 
 #endif /* INCLUDE_OUTPUT_H_ */

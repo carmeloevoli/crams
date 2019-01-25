@@ -1,8 +1,10 @@
 #include "output.h"
 #include "utilities.h"
 
-OutputManager::OutputManager(const Particles& particles, const double phi) :
+OutputManager::OutputManager(const Particles& particles, double phi, size_t id) :
 		_particles(particles), _phi(phi) {
+	spectra_filename = "spectra_" + std::to_string(id) + ".txt";
+	ratios_filename = "ratios_" + std::to_string(id) + ".txt";
 }
 
 OutputManager::~OutputManager() {
@@ -16,6 +18,7 @@ ptr_Particle OutputManager::find_ptr(const PID& pid) {
 
 double OutputManager::H(const double& R) const {
 	double value = (ptr_H1.isPresent) ? ptr_H1.it->I_R_TOA(R, _phi) : 0;
+	value += (ptr_H1_ter.isPresent) ? ptr_H1_ter.it->I_R_TOA(R, _phi) : 0;
 	return value;
 }
 
@@ -45,15 +48,9 @@ double OutputManager::O(const double& R) const {
 	return value;
 }
 
-double OutputManager::C12_C13(const double& R) const {
-	double C12 = (ptr_C12.isPresent) ? ptr_C12.it->I_R_TOA(R, _phi) : 0.;
-	double C13 = (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, _phi) : 0.;
-	return C12 / C13;
-}
-
 void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) const {
 	auto _R = LogAxis(R_min, R_max, R_size);
-	std::ofstream outfile("spectra.txt");
+	std::ofstream outfile(spectra_filename.c_str());
 	outfile << std::scientific;
 	double units = 1. / (cgs::GeV * pow2(cgs::meter) * cgs::sec);
 	for (auto& R : _R) {
@@ -68,9 +65,9 @@ void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) cons
 	outfile.close();
 }
 
-void OutputManager::dump_ratio(double R_min, double R_max, size_t R_size) const {
+void OutputManager::dump_ratios(double R_min, double R_max, size_t R_size) const {
 	auto _R = LogAxis(R_min, R_max, R_size);
-	std::ofstream outfile("ratios.txt");
+	std::ofstream outfile(ratios_filename.c_str());
 	outfile << std::scientific;
 	for (auto& R : _R) {
 		outfile << R / cgs::GeV << "\t";
