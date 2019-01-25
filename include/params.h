@@ -54,12 +54,13 @@ private:
 	double _R_b = 312. * cgs::GeV;
 	double _delta = 0.62;
 	double _ddelta = 0.15;
-	double _smoothness = 0.04;
+	double _smoothness = 0.1;
 	double _D_0 = 1.8e28 * cgs::cm2 / cgs::sec;
 	double _H_slope = 4.25;
 	double _nuclei_slope = 4.25;
 	double _modulation_potential = 0.7 * cgs::GeV;
 	size_t _T_size = 100;
+	size_t _id = 0;
 
 public:
 	Params() {
@@ -92,6 +93,7 @@ public:
 	const double& nuclei_slope = _nuclei_slope;
 	const double& modulation_potential = _modulation_potential;
 	const size_t& T_size = _T_size;
+	const size_t& id = _id;
 };
 
 #endif /* INCLUDE_PARAMS_H_ */

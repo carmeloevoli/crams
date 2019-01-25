@@ -80,6 +80,8 @@ void Params::set_params(const std::string& key, const double& value) {
 		_nuclei_slope = value;
 	else if (key == "phi")
 		_modulation_potential = value * cgs::GeV;
+	else if (key == "id")
+		_id = (int) value;
 }
 
 void Params::set_from_file(const std::string& filename) {
@@ -104,7 +106,7 @@ void Params::print() {
 	std::cout << "delta  : " << _delta << "\n";
 	std::cout << "ddelta : " << _ddelta << "\n";
 	std::cout << "R_b    : " << _R_b / cgs::GeV << " GeV\n";
-	std::cout << "s      : " <<  _smoothness << "\n";
+	std::cout << "s      : " << _smoothness << "\n";
 	std::cout << "H_slope: " << _H_slope << "\n";
 	std::cout << "slope  : " << _nuclei_slope << "\n";
 	std::cout << "phi    : " << _modulation_potential / cgs::GeV << " GeV\n";
