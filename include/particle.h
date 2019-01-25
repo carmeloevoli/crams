@@ -39,8 +39,8 @@ public:
 		X = new Grammage(_pid, params);
 	}
 
-	void build_primary_source(const Params& params) {
-		_Q = new PrimarySource(_pid, _efficiency, params);
+	void build_snr_source(const Params& params) {
+		_Q = new SnrSource(_pid, _efficiency, params);
 	}
 
 	inline bool isDone() const {
@@ -51,24 +51,6 @@ public:
 		return _isDone;
 	}
 
-	void build_secondary_source(const std::vector<Particle>& particles) {
-		auto xsecs = SpallationXsecs(_pid);
-		const size_t size = 100;
-		auto T_s = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, size);
-		std::vector<double> Q_s;
-		for (auto& T : T_s) {
-			double value = 0;
-			for (auto& particle : particles) {
-				if (particle.get_pid().get_A() > _pid.get_A() && particle.isDone()) {
-					value += xsecs.get(particle.get_pid(), T) * particle.I_T_interpol(T);
-				}
-			}
-			value /= cgs::mean_ism_mass;
-			Q_s.push_back(value);
-		}
-		_Q_sec = new SecondarySource(T_s, Q_s);
-	}
-
 	void build_inelastic_Xsec() {
 		_sigma = new InelasticXsec(_pid);
 	}
@@ -77,6 +59,8 @@ public:
 		_dEdx = new Losses(_pid, params);
 	}
 
+	void build_secondary_source(const std::vector<Particle>& particles, const Params& params);
+	void build_tertiary_source(const std::vector<Particle>& particles);
 	bool run(const std::vector<double>& T);
 	double I_T_interpol(const double& T) const;
 	double I_R_LIS(const double& R) const;
@@ -99,11 +83,13 @@ protected:
 	std::vector<double> _I_T;
 	PID _pid;
 	Grammage* X = nullptr;
-	PrimarySource* _Q = nullptr;
+	SnrSource* _Q = nullptr;
 	SecondarySource* _Q_sec = nullptr;
+	SecondarySource* _Q_ter = nullptr;
 	InelasticXsec* _sigma = nullptr;
 	Losses* _dEdx = nullptr;
-};
+}
+;
 
 typedef std::vector<Particle> Particles;
 

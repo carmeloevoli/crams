@@ -37,7 +37,7 @@ void Particle::dump() {
 		outfile << R / cgs::GeV << "\t";
 		outfile << _Q->get(T_) << "\t";
 		outfile << X->get(T_) / (cgs::gram / cgs::cm2) << "\t";
-		outfile << cgs::mean_ism_mass / _sigma->get(T_) / (cgs::gram / cgs::cm2) << "\t";
+		outfile << cgs::mean_ism_mass / _sigma->get_ISM(T_) / (cgs::gram / cgs::cm2) << "\t";
 		outfile << T_ / -_dEdx->get(T_) / (cgs::gram / cgs::cm2) << "\t";
 		outfile << "\n";
 	}
@@ -51,6 +51,8 @@ void Particle::clear() {
 		delete _Q;
 	if (_Q_sec != nullptr)
 		delete _Q_sec;
+	if (_Q_ter != nullptr)
+		delete _Q_ter;
 	if (_sigma != nullptr)
 		delete _sigma;
 	if (_dEdx != nullptr)
@@ -58,6 +60,45 @@ void Particle::clear() {
 }
 
 Particle::~Particle() {
+}
+
+void Particle::build_secondary_source(const std::vector<Particle>& particles, const Params& params) {
+	auto xsecs = (params.id == 0) ? SpallationXsecs(_pid) : SpallationXsecs(_pid, true);
+	const size_t size = 100;
+	auto T_s = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, size);
+	std::vector<double> Q_s;
+	for (auto& T : T_s) {
+		double value = 0;
+		for (auto& particle : particles) {
+			if (particle.get_pid().get_A() > _pid.get_A() && particle.isDone()) {
+				value += xsecs.get_ISM(particle.get_pid(), T) * particle.I_T_interpol(T);
+			}
+		}
+		value /= cgs::mean_ism_mass;
+		Q_s.push_back(value);
+	}
+	_Q_sec = new SecondarySource(T_s, Q_s);
+}
+
+void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
+	const size_t size = 100;
+	auto T_t = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, size);
+	std::vector<double> Q_t;
+	for (auto& T : T_t) {
+		const double T_prime = T / cgs::inelasticity;
+		double value = 1.2 * sigma_pp(T_prime) / cgs::inelasticity; // TODO put correct term here
+		value *= (T_prime + cgs::proton_mass_c2) / (T + cgs::proton_mass_c2);
+		value *= std::pow(T * (T + 2. * cgs::proton_mass_c2), 1.5)
+				/ std::pow(T_prime * (T_prime + 2. * cgs::proton_mass_c2), 1.5);
+		for (auto& particle : particles) {
+			if (particle.get_pid() == H1 && particle.isDone()) {
+				value *= particle.I_T_interpol(T_prime);
+			}
+		}
+		value /= cgs::mean_ism_mass;
+		Q_t.push_back(value);
+	}
+	_Q_ter = new SecondarySource(T_t, Q_t);
 }
 
 double Particle::I_T_interpol(const double& T) const {
@@ -104,7 +145,7 @@ bool Particle::run(const std::vector<double>& T) {
 }
 
 double Particle::Lambda_1(const double& T) {
-	double value = 1. / X->get(T) + _sigma->get(T) / cgs::mean_ism_mass + _dEdx->get_derivative(T);
+	double value = 1. / X->get(T) + _sigma->get_ISM(T) / cgs::mean_ism_mass + _dEdx->get_derivative(T);
 	return value;
 }
 
@@ -150,7 +191,12 @@ double Particle::ExpIntegral(const double& T, const double& T_prime) {
 }
 
 double Particle::external_integrand(const double& T_prime, const double& T) {
-	double value = (_Q->get(T_prime) + _Q_sec->get(T_prime)) * std::exp(-ExpIntegral(T, T_prime));
+	bool isNotTertiary = !_pid.is_tertiary();
+	double Q_now = (isNotTertiary) ? _Q->get(T_prime) + _Q_sec->get(T_prime) : 0;
+	if (_pid == H1_ter) {
+		Q_now = _Q_ter->get(T_prime);
+	}
+	double value = Q_now * std::exp(-ExpIntegral(T, T_prime));
 	value /= Lambda_2(T_prime);
 	return value;
 }
