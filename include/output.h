@@ -17,6 +17,9 @@ private:
 
 	ptr_Particle ptr_H1_ter = find_ptr(H1_ter);
 	ptr_Particle ptr_H1 = find_ptr(H1);
+	ptr_Particle ptr_H2 = find_ptr(H2);
+	ptr_Particle ptr_He3 = find_ptr(He3);
+	ptr_Particle ptr_He4 = find_ptr(He4);
 	ptr_Particle ptr_B10 = find_ptr(B10);
 	ptr_Particle ptr_B11 = find_ptr(B11);
 	ptr_Particle ptr_C12 = find_ptr(C12);
@@ -33,6 +36,7 @@ private:
 	std::string ratios_filename;
 
 	double H(const double& R) const;
+	double He(const double& R) const;
 	double B(const double& R) const;
 	double C(const double& R) const;
 	double N(const double& R) const;

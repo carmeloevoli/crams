@@ -102,6 +102,8 @@ typedef std::pair<PID, PID> Channel;
 static const PID H1_ter = PID(1, 1, true);
 static const PID H1 = PID(1, 1);
 static const PID H2 = PID(1, 2);
+static const PID He3 = PID(2, 3);
+static const PID He4 = PID(2, 4);
 static const PID Li6 = PID(3, 6);
 static const PID Li7 = PID(3, 7);
 static const PID Be9 = PID(4, 9);

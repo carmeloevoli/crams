@@ -19,9 +19,15 @@ ptr_Particle OutputManager::find_ptr(const PID& pid) {
 double OutputManager::H(const double& R) const {
 	double value = (ptr_H1.isPresent) ? ptr_H1.it->I_R_TOA(R, _phi) : 0;
 	value += (ptr_H1_ter.isPresent) ? ptr_H1_ter.it->I_R_TOA(R, _phi) : 0;
+	value += (ptr_H2.isPresent) ? ptr_H2.it->I_R_TOA(R, _phi) : 0;
 	return value;
 }
 
+double OutputManager::He(const double& R) const {
+	double value = (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, _phi) : 0;
+	value += (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, _phi) : 0;
+	return value;
+}
 double OutputManager::B(const double& R) const {
 	double value = (ptr_B10.isPresent) ? ptr_B10.it->I_R_TOA(R, _phi) : 0;
 	value += (ptr_B11.isPresent) ? ptr_B11.it->I_R_TOA(R, _phi) : 0;
@@ -60,6 +66,7 @@ void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) cons
 		outfile << C(R) / units << "\t";
 		outfile << N(R) / units << "\t";
 		outfile << O(R) / units << "\t";
+		outfile << He(R) / units << "\t";
 		outfile << "\n";
 	}
 	outfile.close();
@@ -74,6 +81,7 @@ void OutputManager::dump_ratios(double R_min, double R_max, size_t R_size) const
 		outfile << B(R) / C(R) << "\t";
 		outfile << C(R) / O(R) << "\t";
 		outfile << B(R) / O(R) << "\t";
+		outfile << He(R) / O(R) << "\t";
 		outfile << "\n";
 	}
 	outfile.close();

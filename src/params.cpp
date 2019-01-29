@@ -42,6 +42,8 @@ void ParticleList::set_from_file(const std::string& filename) {
 		} // error
 		if (key == "q_H")
 			set_abundance(H1, value);
+		else if (key == "q_He")
+			set_abundance(He4, value);
 		else if (key == "q_C")
 			set_abundance(C12, value);
 		else if (key == "q_N")

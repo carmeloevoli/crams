@@ -16,6 +16,9 @@ public:
 	ParticleList() {
 		insert(H1_ter, 0.);
 		insert(H1, 7e-2);
+		insert(H2, 0.);
+		insert(He3, 0.);
+		insert(He4, 2.5e-2);
 		insert(B10, 0.);
 		insert(B11, 0.);
 		insert(C12, 5e-3);
