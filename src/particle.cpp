@@ -62,7 +62,8 @@ void Particle::clear() {
 Particle::~Particle() {
 }
 
-void Particle::build_secondary_source(const std::vector<Particle>& particles, const Params& params) {
+void Particle::build_secondary_source(const std::vector<Particle>& particles,
+		const Params& params) {
 	auto xsecs = (params.id == 0) ? SpallationXsecs(_pid) : SpallationXsecs(_pid, true);
 	const size_t size = 100;
 	auto T_s = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, size);
@@ -86,7 +87,9 @@ void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
 	std::vector<double> Q_t;
 	for (auto& T : T_t) {
 		const double T_prime = T / cgs::inelasticity;
-		double value = 1.2 * sigma_pp(T_prime) / cgs::inelasticity; // TODO put correct term here
+		double sigma_ISM = sigma_pp(T_prime);
+		sigma_ISM *= (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
+		double value = sigma_ISM / cgs::inelasticity;
 		value *= (T_prime + cgs::proton_mass_c2) / (T + cgs::proton_mass_c2);
 		value *= std::pow(T * (T + 2. * cgs::proton_mass_c2), 1.5)
 				/ std::pow(T_prime * (T_prime + 2. * cgs::proton_mass_c2), 1.5);
@@ -145,7 +148,8 @@ bool Particle::run(const std::vector<double>& T) {
 }
 
 double Particle::Lambda_1(const double& T) {
-	double value = 1. / X->get(T) + _sigma->get_ISM(T) / cgs::mean_ism_mass + _dEdx->get_derivative(T);
+	double value = 1. / X->get(T) + _sigma->get_ISM(T) / cgs::mean_ism_mass
+			+ _dEdx->get_derivative(T);
 	return value;
 }
 
