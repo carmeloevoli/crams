@@ -26,7 +26,8 @@ void Chi2::read_datafile(const std::string& filename, const double& units) {
 			point.F = values[1] * units;
 			point.F_err_low = values[2] * units;
 			point.F_err_high = values[3] * units;
-			_data.push_back(point);
+			if (file_to_read.good())
+				_data.push_back(point);
 		}
 	}
 	std::cout << " with size : " << _data.size() << "\n";
@@ -85,4 +86,10 @@ double Chi2_CO::get_model(const double& R, const double& phi) const {
 	C += (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, phi) : 0.;
 	C += (ptr_C14.isPresent) ? ptr_C14.it->I_R_TOA(R, phi) : 0.;
 	return C / O;
+}
+
+double Chi2_He::get_model(const double& R, const double& phi) const {
+	double value = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, phi) : 0.;
+	value += (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, phi) : 0.;
+	return value;
 }

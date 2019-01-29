@@ -121,4 +121,17 @@ protected:
 	ptr_Particle ptr_O18 = find_ptr(O18);
 };
 
+class Chi2_He: public Chi2 {
+public:
+	Chi2_He(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		constexpr double units = 1. / (cgs::GeV * cgs::m2 * cgs::sec * cgs::sr);
+		read_datafile("data/He_AMS02_rig.txt", units);
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_He3 = find_ptr(He3);
+	ptr_Particle ptr_He4 = find_ptr(He4);
+};
+
 #endif /* INCLUDE_CHI2_H_ */
