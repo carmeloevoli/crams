@@ -16,7 +16,7 @@ InelasticXsec::~InelasticXsec() {
 
 double InelasticXsec::get_ISM(const double& T) const {
 	//double sigma = (Z == 1) ? sigma_pp(T) : sigma_ST(T);
-	double sigma = (Z == 1) ? sigma_pp(T) : table.get_H(T);
+	double sigma = (Z == 1 && A == 1) ? sigma_pp(T) : table.get_H(T);
 	sigma *= (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
 	return std::max(sigma, 1e-10 * cgs::mbarn);
 }
@@ -76,7 +76,7 @@ void InelasticXsecTable::read_table(const std::string& filename) {
 				inf >> x_temp;
 				x.emplace_back(x_temp * cgs::mbarn);
 			}
-			if (PID(Z_proj, A_proj) == _projectile)
+			if (PID(Z_proj, A_proj) == _projectile && inf.good())
 				copy(x.begin(), x.end(), back_inserter(_table));
 		}
 		inf.close();
