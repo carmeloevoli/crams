@@ -7,17 +7,21 @@
 
 ParticleList::~ParticleList() {
 	_list.clear();
+#ifdef DEBUG
 	std::cout << "released memory from ParticleList\n";
+#endif
 }
 
 bool ParticleList::insert(const PID& key, const double& value) {
 	auto res = _list.insert(std::make_pair(key, value));
+#ifdef DEBUG
 	if (!res.second) {
 		std::cout << "particle " << key << " already exists " << " with abundance "
 				<< (res.first)->second << std::endl;
 	} else {
 		std::cout << "created particle " << key << " with abundance " << value << std::endl;
 	}
+#endif
 	return res.second;
 }
 
@@ -25,9 +29,14 @@ void ParticleList::set_abundance(const PID& key, const double& value) {
 	auto it = _list.find(key);
 	if (it != _list.end()) {
 		it->second = value;
+#ifdef DEBUG
 		std::cout << "PID : " << key << " abundance modified to " << value << ".\n";
-	} else
+#endif
+	} else {
+#ifdef DEBUG
 		std::cout << "PID : " << key << " not found in particle list.\n";
+#endif
+	}
 }
 
 void ParticleList::set_from_file(const std::string& filename) {
@@ -54,13 +63,17 @@ void ParticleList::set_from_file(const std::string& filename) {
 }
 
 void ParticleList::print() {
+#ifdef DEBUG
 	std::cout << "Particle list contains " << _list.size() << " nuclei.\n";
 	for (auto& particle : _list)
 		std::cout << particle.first << "\n";
+#endif
 }
 
 Params::~Params() {
+#ifdef DEBUG
 	std::cout << "released memory from Params\n";
+#endif
 }
 
 void Params::set_params(const std::string& key, const double& value) {
@@ -78,6 +91,8 @@ void Params::set_params(const std::string& key, const double& value) {
 		_v_A = value * cgs::km / cgs::sec;
 	else if (key == "H_slope")
 		_H_slope = value;
+	else if (key == "He_slope")
+		_He_slope = value;
 	else if (key == "slope")
 		_nuclei_slope = value;
 	else if (key == "phi")
@@ -101,6 +116,7 @@ void Params::set_from_file(const std::string& filename) {
 }
 
 void Params::print() {
+#ifdef DEBUG
 	std::cout << "H      : " << _H / cgs::kpc << " kpc\n";
 	std::cout << "mu     : " << _mu / (cgs::mgram / cgs::cm2) << " mg/cm2\n";
 	std::cout << "vA     : " << _v_A / (cgs::km / cgs::sec) << " km/s\n";
@@ -115,4 +131,5 @@ void Params::print() {
 	std::cout << "E_min  : " << _T_min / cgs::GeV << " GeV\n";
 	std::cout << "E_max  : " << _T_max / cgs::GeV << " GeV\n";
 	std::cout << "E_size : " << _T_size << "\n";
+#endif
 }

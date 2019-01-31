@@ -11,7 +11,9 @@ InelasticXsec::InelasticXsec(const PID& pid) {
 }
 
 InelasticXsec::~InelasticXsec() {
-	//std::cout << "delete inelastic sigma for particle " << A << " " << Z << "\n";
+#ifdef DEBUG
+	std::cout << "delete inelastic sigma for particle " << A << " " << Z << "\n";
+#endif
 }
 
 double InelasticXsec::get_ISM(const double& T) const {
@@ -81,5 +83,7 @@ void InelasticXsecTable::read_table(const std::string& filename) {
 		}
 		inf.close();
 	}
+#ifdef DEBUG
 	std::cout << "inelastic table read with " << _table.size() << " points.\n";
+#endif
 }

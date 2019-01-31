@@ -16,8 +16,9 @@ Losses::Losses(const PID& pid, const Params& params) {
 }
 
 Losses::~Losses() {
-	//std::cout << "delete losses for particle " << A << " " << Z << "\n";
-
+#ifdef DEBUG
+	std::cout << "delete losses for particle " << A << " " << Z << "\n";
+#endif
 }
 
 double Losses::get(const double& T) const {
