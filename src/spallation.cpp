@@ -4,7 +4,9 @@
 SpallationXsecs::SpallationXsecs(const PID& fragment, bool doError) :
 		_fragment(fragment), _doError(doError) {
 	read_table();
+#ifdef DEBUG
 	std::cout << "read " << _table.size() << " cross-sections for " << _fragment << "\n";
+#endif
 	double T = _T_min;
 	for (size_t i = 0; i < _T_size; ++i) {
 		_T.push_back(T);

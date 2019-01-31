@@ -60,6 +60,7 @@ private:
 	double _smoothness = 0.1;
 	double _D_0 = 1.8e28 * cgs::cm2 / cgs::sec;
 	double _H_slope = 4.25;
+	double _He_slope = 4.25;
 	double _nuclei_slope = 4.25;
 	double _modulation_potential = 0.7 * cgs::GeV;
 	size_t _T_size = 100;
@@ -93,6 +94,7 @@ public:
 	const double& smoothness = _smoothness;
 	const double& D_0 = _D_0;
 	const double& H_slope = _H_slope;
+	const double& He_slope = _He_slope;
 	const double& nuclei_slope = _nuclei_slope;
 	const double& modulation_potential = _modulation_potential;
 	const size_t& T_size = _T_size;
