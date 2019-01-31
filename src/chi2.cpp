@@ -14,7 +14,9 @@ Chi2::~Chi2() {
 }
 
 void Chi2::read_datafile(const std::string& filename, const double& units) {
+#ifdef DEBUG
 	std::cout << "reading data from " << filename << "... ";
+#endif
 	std::ifstream file_to_read(filename.c_str());
 	if (file_to_read.is_open()) {
 		file_to_read.ignore(max_num_of_char_in_a_line, '\n');
@@ -30,7 +32,9 @@ void Chi2::read_datafile(const std::string& filename, const double& units) {
 				_data.push_back(point);
 		}
 	}
+#ifdef DEBUG
 	std::cout << " with size : " << _data.size() << "\n";
+#endif
 	file_to_read.close();
 }
 
@@ -91,5 +95,12 @@ double Chi2_CO::get_model(const double& R, const double& phi) const {
 double Chi2_He::get_model(const double& R, const double& phi) const {
 	double value = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, phi) : 0.;
 	value += (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, phi) : 0.;
+	return value;
+}
+
+double Chi2_H::get_model(const double& R, const double& phi) const {
+	double value = (ptr_H1.isPresent) ? ptr_H1.it->I_R_TOA(R, phi) : 0.;
+	value += (ptr_H2.isPresent) ? ptr_H2.it->I_R_TOA(R, phi) : 0.;
+	value += (ptr_H1_ter.isPresent) ? ptr_H1_ter.it->I_R_TOA(R, phi) : 0.;
 	return value;
 }
