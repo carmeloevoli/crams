@@ -21,7 +21,7 @@ SnrSource::SnrSource(const PID& pid, const double& epsilon, const Params& params
 	else
 		slope = params.nuclei_slope;
 	if (epsilon > 0.) {
-		double L_SN_surface = cgs::E_SN * cgs::sn_rate / M_PI / pow2(cgs::galaxy_size);
+		constexpr double L_SN_surface = cgs::E_SN * cgs::sn_rate / M_PI / pow2(cgs::galaxy_size);
 		factor = (double) A * epsilon * L_SN_surface;
 		factor /= params.mu * Gamma_Integral(slope) * pow2(cgs::proton_mass_c2);
 	}
