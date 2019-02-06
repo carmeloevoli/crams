@@ -11,11 +11,13 @@
 #include "git_revision.h"
 
 void log_startup_information() {
+#ifdef DEBUG
 	std::cout << "version: " << get_version() << "\n";
 	std::cout << "git version: " << git_sha1() << "\n";
 	std::cout << "has local changes: " << std::boolalpha << git_has_local_changes()
 			<< std::noboolalpha << "\n";
 	std::cout << "was built on: " << __DATE__ << " " __TIME__ << "\n";
+#endif
 }
 
 int main(int argc, char * argv[]) {
@@ -40,13 +42,14 @@ int main(int argc, char * argv[]) {
 		auto T = LogAxis(params.T_min, params.T_max, params.T_size);
 
 		for (auto& particle : particles) {
-			std::cout << "running : " << particle.get_pid() << "\n";
+			//std::cout << "running : " << particle.get_pid() << "\n";
 			particle.build_grammage(params);
 			particle.build_snr_source(params);
+			particle.build_inelastic_Xsec(params);
 			particle.build_secondary_source(particles, params);
 			if (particle.get_pid() == H1_ter)
 				particle.build_tertiary_source(particles);
-			particle.build_inelastic_Xsec();
+			particle.build_grammage_at_source(particles, params);
 			particle.build_losses(params);
 			//particle.dump();
 			particle.setDone() = particle.run(T);
@@ -60,23 +63,26 @@ int main(int argc, char * argv[]) {
 
 		std::ofstream fchi2("chi2_results.txt", std::ofstream::out);
 
+		Chi2_H chi2_H(particles, params.modulation_potential);
+		fchi2 << chi2_H.compute_chi2(10. * cgs::GeV, 300. * cgs::GeV) << "\n";
+
+		Chi2_He chi2_He(particles, params.modulation_potential);
+		fchi2 << chi2_He.compute_chi2(10. * cgs::GeV, 300. * cgs::GeV) << "\n";
+
 		Chi2_C chi2_C(particles, params.modulation_potential);
-		fchi2 << chi2_C.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
+		fchi2 << chi2_C.compute_chi2(10. * cgs::GeV, 300. * cgs::GeV) << "\n";
 
 		Chi2_N chi2_N(particles, params.modulation_potential);
 		fchi2 << chi2_N.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
 
 		Chi2_O chi2_O(particles, params.modulation_potential);
-		fchi2 << chi2_O.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
+		fchi2 << chi2_O.compute_chi2(10. * cgs::GeV, 400. * cgs::GeV) << "\n";
 
 		Chi2_BC chi2_BC(particles, params.modulation_potential);
 		fchi2 << chi2_BC.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
 
 		Chi2_CO chi2_CO(particles, params.modulation_potential);
 		fchi2 << chi2_CO.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
-
-		Chi2_He chi2_He(particles, params.modulation_potential);
-		fchi2 << chi2_He.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
 
 		fchi2.close();
 

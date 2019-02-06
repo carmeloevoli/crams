@@ -59,6 +59,7 @@ private:
 	double _ddelta = 0.15;
 	double _smoothness = 0.1;
 	double _D_0 = 1.8e28 * cgs::cm2 / cgs::sec;
+	double _X_s = 0. * cgs::gram / cgs::cm2;
 	double _H_slope = 4.25;
 	double _He_slope = 4.25;
 	double _nuclei_slope = 4.25;
@@ -93,6 +94,7 @@ public:
 	const double& ddelta = _ddelta;
 	const double& smoothness = _smoothness;
 	const double& D_0 = _D_0;
+	const double& X_s = _X_s;
 	const double& H_slope = _H_slope;
 	const double& He_slope = _He_slope;
 	const double& nuclei_slope = _nuclei_slope;

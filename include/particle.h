@@ -51,8 +51,8 @@ public:
 		return _isDone;
 	}
 
-	void build_inelastic_Xsec() {
-		_sigma = new InelasticXsec(_pid);
+	void build_inelastic_Xsec(const Params& params) {
+		_sigma = (params.id == 0) ? new InelasticXsec(_pid) : new InelasticXsec(_pid, true);
 	}
 
 	void build_losses(const Params& params) {
@@ -61,6 +61,7 @@ public:
 
 	void build_secondary_source(const std::vector<Particle>& particles, const Params& params);
 	void build_tertiary_source(const std::vector<Particle>& particles);
+	void build_grammage_at_source(const std::vector<Particle>& particles, const Params& params);
 	bool run(const std::vector<double>& T);
 	double I_T_interpol(const double& T) const;
 	double I_R_LIS(const double& R) const;

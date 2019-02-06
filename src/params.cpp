@@ -17,7 +17,7 @@ bool ParticleList::insert(const PID& key, const double& value) {
 #ifdef DEBUG
 	if (!res.second) {
 		std::cout << "particle " << key << " already exists " << " with abundance "
-				<< (res.first)->second << std::endl;
+		<< (res.first)->second << std::endl;
 	} else {
 		std::cout << "created particle " << key << " with abundance " << value << std::endl;
 	}
@@ -66,7 +66,7 @@ void ParticleList::print() {
 #ifdef DEBUG
 	std::cout << "Particle list contains " << _list.size() << " nuclei.\n";
 	for (auto& particle : _list)
-		std::cout << particle.first << "\n";
+	std::cout << particle.first << "\n";
 #endif
 }
 
@@ -79,6 +79,8 @@ Params::~Params() {
 void Params::set_params(const std::string& key, const double& value) {
 	if (key == "D_0")
 		_D_0 = value * 1e28 * cgs::cm2 / cgs::sec;
+	else if (key == "X_s")
+		_X_s = value * cgs::gram / cgs::cm2;
 	else if (key == "H")
 		_H = value * cgs::kpc;
 	else if (key == "delta")
@@ -121,6 +123,7 @@ void Params::print() {
 	std::cout << "mu     : " << _mu / (cgs::mgram / cgs::cm2) << " mg/cm2\n";
 	std::cout << "vA     : " << _v_A / (cgs::km / cgs::sec) << " km/s\n";
 	std::cout << "D0     : " << _D_0 / (1e28 * cgs::cm2 / cgs::sec) << " x 1e28 cm2/s\n";
+	std::cout << "X_s    : " << _X_s / (cgs::gram / cgs::cm2) << " gr/cm2\n";
 	std::cout << "delta  : " << _delta << "\n";
 	std::cout << "ddelta : " << _ddelta << "\n";
 	std::cout << "R_b    : " << _R_b / cgs::GeV << " GeV\n";

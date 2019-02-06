@@ -104,6 +104,10 @@ void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
 	_Q_ter = new SecondarySource(T_t, Q_t);
 }
 
+void Particle::build_grammage_at_source(const std::vector<Particle>& particles,
+		const Params& params) {
+}
+
 double Particle::I_T_interpol(const double& T) const {
 	return LinearInterpolatorLog(_T, _I_T, T);
 }
