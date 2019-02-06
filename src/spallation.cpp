@@ -17,16 +17,12 @@ SpallationXsecs::SpallationXsecs(const PID& fragment, bool doError) :
 SpallationXsecs::~SpallationXsecs() {
 }
 
-double SpallationXsecs::get_error(const PID& projectile) const {
-	double value = 1;
-	auto it = _xsec_error.find(projectile);
-	if (it != _xsec_error.end()) {
-		double error = it->second;
-		std::random_device rd { };
-		std::mt19937 gen { rd() };
-		std::normal_distribution<> d { 1., error };
-		value = d(gen);
-	}
+double SpallationXsecs::get_error() const {
+	const double error = 0.3;
+	std::random_device rd { };
+	std::mt19937 gen { rd() };
+	std::normal_distribution<> d { 1., error };
+	double value = d(gen);
 	return std::fabs(value);
 }
 
@@ -36,9 +32,10 @@ double SpallationXsecs::get_ISM(const PID& projectile, const double& T) const {
 	if (it != _table.end()) {
 		double T_now = std::min(T, _T.back());
 		value = LinearInterpolator(_T, it->second, T_now);
+		auto it_error = _xsec_error.find(projectile);
+		value *= (_doError) ? it_error->second : 1.;
 	}
-	double error = (_doError) ? get_error(projectile) : 1.;
-	return error * value * (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
+	return value * (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
 }
 
 void SpallationXsecs::read_table() {
@@ -59,7 +56,7 @@ void SpallationXsecs::read_table() {
 			}
 			if (PID(Z_frag, A_frag) == _fragment) {
 				_table[PID(Z_proj, A_proj)] = x;
-				_xsec_error[PID(Z_proj, A_proj)] = 0.2;
+				_xsec_error[PID(Z_proj, A_proj)] = get_error();
 			}
 		}
 		inf.close();

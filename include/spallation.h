@@ -18,10 +18,11 @@ public:
 
 protected:
 	void read_table();
-	double get_error(const PID& projectile) const;
+	double get_error() const;
 
 protected:
 	bool _doError = false;
+	double _renorm_factor = 1;
 	PID _fragment;
 	std::map<PID, double> _xsec_error;
 	std::map<PID, std::vector<double> > _table;

@@ -49,17 +49,20 @@ public:
 class InelasticXsec {
 public:
 	InelasticXsec();
-	InelasticXsec(const PID& pid);
+	InelasticXsec(const PID& pid, bool doError = false);
 	virtual ~InelasticXsec();
 	double get_ISM(const double& T) const;
 
 protected:
-	int A = 0;
-	int Z = 0;
+	int _A = 0;
+	int _Z = 0;
+	double _renorm_factor = 1.;
 
 private:
+	double get_error() const;
 	double sigma_ST(const double& T) const;
-	InelasticXsecTable table;
+	InelasticXsecTable _table;
+	bool _doError = false;
 };
 
 #endif /* INCLUDE_SPALLATION_H_ */

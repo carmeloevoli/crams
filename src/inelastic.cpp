@@ -1,26 +1,40 @@
 #include "inelastic.h"
 #include "utilities.h"
+#include <random>
 
 InelasticXsec::InelasticXsec() {
 }
 
-InelasticXsec::InelasticXsec(const PID& pid) {
-	A = pid.get_A();
-	Z = pid.get_Z();
-	table = Tripathi99(pid);
+InelasticXsec::InelasticXsec(const PID& pid, bool doError) :
+		_doError(doError) {
+	_A = pid.get_A();
+	_Z = pid.get_Z();
+	_table = Tripathi99(pid);
+	if (pid != H1)
+		_renorm_factor = (_doError) ? get_error() : 1.;
+
 }
 
 InelasticXsec::~InelasticXsec() {
 #ifdef DEBUG
-	std::cout << "delete inelastic sigma for particle " << A << " " << Z << "\n";
+	std::cout << "delete inelastic sigma for particle " << _A << " " << _Z << "\n";
 #endif
+}
+
+double InelasticXsec::get_error() const {
+	const double error = 0.05;
+	std::random_device rd { };
+	std::mt19937 gen { rd() };
+	std::normal_distribution<> d { 1., error };
+	double value = d(gen);
+	return std::fabs(value);
 }
 
 double InelasticXsec::get_ISM(const double& T) const {
 	//double sigma = (Z == 1) ? sigma_pp(T) : sigma_ST(T);
-	double sigma = (Z == 1 && A == 1) ? sigma_pp(T) : table.get_H(T);
+	double sigma = (_Z == 1 && _A == 1) ? sigma_pp(T) : _table.get_H(T);
 	sigma *= (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
-	return std::max(sigma, 1e-10 * cgs::mbarn);
+	return _renorm_factor * std::max(sigma, 1e-10 * cgs::mbarn);
 }
 
 double sigma_pp(const double& T) {
@@ -35,8 +49,8 @@ double sigma_pp(const double& T) {
 }
 
 double InelasticXsec::sigma_ST(const double& T) const {
-	double value = 45. * std::pow((double) A, 0.7);
-	value *= 1. + 0.016 * std::sin(5.3 - 2.63 * std::log(A));
+	double value = 45. * std::pow((double) _A, 0.7);
+	value *= 1. + 0.016 * std::sin(5.3 - 2.63 * std::log(_A));
 	double T_MeV = T / cgs::MeV;
 	value *= 1. - 0.62 * std::exp(-T_MeV / 200.) * std::sin(10.9 * pow(T_MeV, -0.28));
 	return value * cgs::mbarn;

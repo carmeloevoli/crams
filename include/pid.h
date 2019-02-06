@@ -53,6 +53,10 @@ public:
 		return _id == other._id && _isTertiary == other._isTertiary;
 	}
 
+	bool operator!=(const PID &other) const {
+		return _id != other._id || _isTertiary != other._isTertiary;
+	}
+
 	bool operator<(const PID &other) const {
 		if (_id != other._id)
 			return _id < other._id;
