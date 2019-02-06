@@ -19,7 +19,9 @@ Grammage::Grammage(const PID& pid, const Params& params) {
 }
 
 Grammage::~Grammage() {
-	//std::cout << "delete grammage for particle " << A << " " << Z << "\n";
+#ifdef DEBUG
+	std::cout << "delete grammage for particle " << A << " " << Z << "\n";
+#endif
 }
 
 double Grammage::D(const double& T) const {
@@ -28,7 +30,7 @@ double Grammage::D(const double& T) const {
 	double x = R / R_b;
 	double value = beta_func(T) * std::pow(R / cgs::GeV, delta);
 	value /= std::pow(1. + std::pow(x, ddelta / s), s);
-	return D_0 * value;
+	return D_0 * value + 2.0 * v_A * H;
 }
 
 double Grammage::get(const double& T) const {
