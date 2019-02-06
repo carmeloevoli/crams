@@ -62,11 +62,11 @@ void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) cons
 	for (auto& R : _R) {
 		outfile << R / cgs::GeV << "\t";
 		outfile << H(R) / units << "\t";
+		outfile << He(R) / units << "\t";
 		outfile << B(R) / units << "\t";
 		outfile << C(R) / units << "\t";
 		outfile << N(R) / units << "\t";
 		outfile << O(R) / units << "\t";
-		outfile << He(R) / units << "\t";
 		outfile << "\n";
 	}
 	outfile.close();
@@ -81,28 +81,11 @@ void OutputManager::dump_ratios(double R_min, double R_max, size_t R_size) const
 		outfile << B(R) / C(R) << "\t";
 		outfile << C(R) / O(R) << "\t";
 		outfile << B(R) / O(R) << "\t";
-		outfile << He(R) / O(R) << "\t";
+		outfile << H(R) / He(R) << "\t";
 		outfile << "\n";
 	}
 	outfile.close();
 }
 
 void OutputManager::dump_heavy_spectra(double R_min, double R_max, size_t R_size) const {
-//	auto ptr_Ne20 = find(_particles.begin(), _particles.end(), Particle(Ne20, 0));
-//	auto ptr_Mg24 = find(_particles.begin(), _particles.end(), Particle(Mg24, 0));
-//	auto ptr_Si28 = find(_particles.begin(), _particles.end(), Particle(Si28, 0));
-//	auto ptr_Fe56 = find(_particles.begin(), _particles.end(), Particle(Fe56, 0));
-//	auto _R = LogAxis(R_min, R_max, R_size);
-//	std::ofstream outfile("heavy_spectra.txt");
-//	outfile << std::scientific;
-//	double units = 1. / (cgs::GeV * pow2(cgs::meter) * cgs::sec);
-//	for (auto& R : _R) {
-//		outfile << R / cgs::GeV << "\t";
-//		outfile << ptr_Ne20->I_R_TOA(R, _phi) / units << "\t";
-//		outfile << ptr_Mg24->I_R_TOA(R, _phi) / units << "\t";
-//		outfile << ptr_Si28->I_R_TOA(R, _phi) / units << "\t";
-//		outfile << ptr_Fe56->I_R_TOA(R, _phi) / units << "\t";
-//		outfile << "\n";
-//	}
-//	outfile.close();
 }
