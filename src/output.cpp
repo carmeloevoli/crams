@@ -81,7 +81,7 @@ void OutputManager::dump_ratios(double R_min, double R_max, size_t R_size) const
 		outfile << B(R) / C(R) << "\t";
 		outfile << C(R) / O(R) << "\t";
 		outfile << B(R) / O(R) << "\t";
-		outfile << H(R) / He(R) << "\t";
+		outfile << He(R) / O(R) << "\t";
 		outfile << "\n";
 	}
 	outfile.close();

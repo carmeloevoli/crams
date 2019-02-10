@@ -73,16 +73,19 @@ int main(int argc, char * argv[]) {
 		fchi2 << chi2_C.compute_chi2(10. * cgs::GeV, 300. * cgs::GeV) << "\n";
 
 		Chi2_N chi2_N(particles, params.modulation_potential);
-		fchi2 << chi2_N.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
+		fchi2 << chi2_N.compute_chi2(20. * cgs::GeV, 400. * cgs::GeV) << "\n";
 
 		Chi2_O chi2_O(particles, params.modulation_potential);
 		fchi2 << chi2_O.compute_chi2(10. * cgs::GeV, 400. * cgs::GeV) << "\n";
 
 		Chi2_BC chi2_BC(particles, params.modulation_potential);
-		fchi2 << chi2_BC.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
+		fchi2 << chi2_BC.compute_chi2(20. * cgs::GeV, 1e3 * cgs::GeV) << "\n";
 
 		Chi2_CO chi2_CO(particles, params.modulation_potential);
 		fchi2 << chi2_CO.compute_chi2(20. * cgs::GeV, 300. * cgs::GeV) << "\n";
+
+		Chi2_HeO chi2_HeO(particles, params.modulation_potential);
+		fchi2 << chi2_HeO.compute_chi2(20. * cgs::GeV, 400. * cgs::GeV) << "\n";
 
 		fchi2.close();
 
