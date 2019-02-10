@@ -121,6 +121,21 @@ protected:
 	ptr_Particle ptr_O18 = find_ptr(O18);
 };
 
+class Chi2_HeO: public Chi2 {
+public:
+	Chi2_HeO(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		read_datafile("data/HeO_AMS02_rig.txt");
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_He3 = find_ptr(He3);
+	ptr_Particle ptr_He4 = find_ptr(He4);
+	ptr_Particle ptr_O16 = find_ptr(O16);
+	ptr_Particle ptr_O17 = find_ptr(O17);
+	ptr_Particle ptr_O18 = find_ptr(O18);
+};
+
 class Chi2_He: public Chi2 {
 public:
 	Chi2_He(const Particles& particles, const double& phi) :

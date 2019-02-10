@@ -92,6 +92,15 @@ double Chi2_CO::get_model(const double& R, const double& phi) const {
 	return C / O;
 }
 
+double Chi2_HeO::get_model(const double& R, const double& phi) const {
+	double O = (ptr_O16.isPresent) ? ptr_O16.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O17.isPresent) ? ptr_O17.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O18.isPresent) ? ptr_O18.it->I_R_TOA(R, phi) : 0.;
+	double He = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, phi) : 0.;
+	He += (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, phi) : 0.;
+	return He / O;
+}
+
 double Chi2_He::get_model(const double& R, const double& phi) const {
 	double value = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, phi) : 0.;
 	value += (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, phi) : 0.;
