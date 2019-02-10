@@ -72,8 +72,7 @@ InelasticXsecTable::~InelasticXsecTable() {
 }
 
 double InelasticXsecTable::get_H(const double& T) const {
-	double T_now = std::min(T, _T.back());
-	return LinearInterpolator(_T, _table, T_now);
+	return (T >= _T.back()) ? _table.back() : LinearInterpolator(_T, _table, T);
 }
 
 void InelasticXsecTable::read_table(const std::string& filename) {
