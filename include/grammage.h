@@ -12,6 +12,14 @@ public:
 	double D(const double& T) const;
 	double get(const double& T) const;
 
+	double diffusion_timescale(const double& T) const {
+		return H * H / D(T);
+	}
+
+	double advection_timescale() const {
+		return H / v_A;
+	}
+
 protected:
 	int A = 0;
 	int Z = 0;

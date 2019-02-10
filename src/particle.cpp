@@ -19,34 +19,16 @@ Particle::Particle(PID pid, double efficiency) :
 		_pid(pid), _efficiency(efficiency) {
 }
 
-std::string Particle::make_filename() {
+std::string Particle::make_filename() const {
 	std::string filename = "particle";
 	filename += "_" + std::to_string(_pid.get_Z());
 	filename += "_" + std::to_string(_pid.get_A()) + ".log";
 	return filename;
 }
 
-void Particle::dump() {
-	auto filename = make_filename();
-	std::ofstream outfile(filename);
-	outfile << std::scientific;
-	for (double T_ = 0.01 * cgs::GeV; T_ < 1e3 * cgs::TeV; T_ *= 1.1) {
-		outfile << T_ / cgs::GeV << "\t";
-		double E = T_ + cgs::proton_mass_c2;
-		double R = pc_func(_pid.get_A(), T_) / (double) _pid.get_Z();
-		outfile << R / cgs::GeV << "\t";
-		outfile << _Q->get(T_) << "\t";
-		outfile << X->get(T_) / (cgs::gram / cgs::cm2) << "\t";
-		outfile << cgs::mean_ism_mass / _sigma->get_ISM(T_) / (cgs::gram / cgs::cm2) << "\t";
-		outfile << T_ / -_dEdx->get(T_) / (cgs::gram / cgs::cm2) << "\t";
-		outfile << "\n";
-	}
-	outfile.close();
-}
-
 void Particle::clear() {
-	if (X != nullptr)
-		delete X;
+	if (_X != nullptr)
+		delete _X;
 	if (_Q != nullptr)
 		delete _Q;
 	if (_Q_sec != nullptr)
@@ -78,7 +60,7 @@ void Particle::build_secondary_source(const std::vector<Particle>& particles,
 		value /= cgs::mean_ism_mass;
 		Q_s.push_back(value);
 	}
-	_Q_sec = new SecondarySource(T_s, Q_s);
+	_Q_sec = new SourceTerm(T_s, Q_s);
 }
 
 void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
@@ -101,11 +83,27 @@ void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
 		value /= cgs::mean_ism_mass;
 		Q_t.push_back(value);
 	}
-	_Q_ter = new SecondarySource(T_t, Q_t);
+	_Q_ter = new SourceTerm(T_t, Q_t);
 }
 
 void Particle::build_grammage_at_source(const std::vector<Particle>& particles,
 		const Params& params) {
+	auto xsecs = (params.id == 0) ? SpallationXsecs(_pid) : SpallationXsecs(_pid, true);
+	const size_t size = 100;
+	auto T_X = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, size);
+	std::vector<double> Q_X;
+	for (auto& T : T_X) {
+		double value = 0;
+		for (auto& particle : particles) {
+			if (particle.get_pid().get_A() > _pid.get_A() && particle.isDone()) {
+				double r = params.X_s / cgs::mean_ism_mass * xsecs.get_ISM(particle.get_pid(), T);
+				auto Q = new SnrSource(particle.get_pid(), particle.get_efficiency(), params);
+				value += r * Q->get(T);
+			}
+		}
+		Q_X.push_back(value);
+	}
+	_Q_Xs = new SourceTerm(T_X, Q_X);
 }
 
 double Particle::I_T_interpol(const double& T) const {
@@ -152,7 +150,7 @@ bool Particle::run(const std::vector<double>& T) {
 }
 
 double Particle::Lambda_1(const double& T) {
-	double value = 1. / X->get(T) + _sigma->get_ISM(T) / cgs::mean_ism_mass
+	double value = 1. / _X->get(T) + _sigma->get_ISM(T) / cgs::mean_ism_mass
 			+ _dEdx->get_derivative(T);
 	return value;
 }
@@ -160,6 +158,16 @@ double Particle::Lambda_1(const double& T) {
 double Particle::Lambda_2(const double& T) {
 	double value = _dEdx->get(T);
 	return std::fabs(value);
+}
+
+double Particle::Q(const double& T) {
+	double value = 0;
+	if (_pid == H1_ter) {
+		value = _Q_ter->get(T);
+	} else {
+		value = _Q->get(T) + _Q_sec->get(T) + _Q_Xs->get(T);
+	}
+	return value;
 }
 
 double compute_integral_qags(gsl_integration_workspace * w, gsl_function * F, double x_lo,
@@ -199,12 +207,7 @@ double Particle::ExpIntegral(const double& T, const double& T_prime) {
 }
 
 double Particle::external_integrand(const double& T_prime, const double& T) {
-	bool isNotTertiary = !_pid.is_tertiary();
-	double Q_now = (isNotTertiary) ? _Q->get(T_prime) + _Q_sec->get(T_prime) : 0;
-	if (_pid == H1_ter) {
-		Q_now = _Q_ter->get(T_prime);
-	}
-	double value = Q_now * std::exp(-ExpIntegral(T, T_prime));
+	double value = Q(T_prime) * std::exp(-ExpIntegral(T, T_prime));
 	value /= Lambda_2(T_prime);
 	return value;
 }
@@ -233,19 +236,27 @@ double Particle::compute_integral(const double& T) {
 	return result;
 }
 
-//void Particle::dump_timescales() const {
-//	std::cout << std::scientific;
-//	for (double E = 0.1 * GeV; E < 10 * PeV; E *= 1.1) {
-//		std::cout << E / GeV << "\t";
-//		std::cout << X.get(E) / (gram / cm2) << "\t";
-//		std::cout << X.diffusion_escape_time(E) / year << "\t";
-//		std::cout << X.advection_escape_time() / year << "\t";
-//		std::cout << std::pow(E, 2.2) * Q.get(E) << "\t";
+void Particle::dump() const {
+	auto filename = make_filename();
+	std::ofstream outfile(filename);
+	outfile << std::scientific;
+	for (double T = cgs::GeV; T < 1.1 * cgs::TeV; T *= 1.1) {
+		outfile << T / cgs::GeV << "\t";
+		double E = T + cgs::proton_mass_c2;
+		double R = pc_func(_pid.get_A(), T) / (double) _pid.get_Z();
+		outfile << R / cgs::GeV << "\t";
+		outfile << _Q->get(T) << "\t";
+		outfile << _X->get(T) / (cgs::gram / cgs::cm2) << "\t";
+		outfile << _X->diffusion_timescale(T) / cgs::year << "\t";
+		outfile << _X->advection_timescale() / cgs::year << "\t";
+		outfile << cgs::mean_ism_mass / _sigma->get_ISM(T) / (cgs::gram / cgs::cm2) << "\t";
+//		outfile << T / -_dEdx->get(T) / (cgs::gram / cgs::cm2) << "\t";
+		//outfile << (1. / cgs::c_light / n_H / _sigma->get_ISM(T)) / cgs::year << "\t";
 //		std::cout << -(E / b.dE_dt_adiabatic(E)) / year << "\t";
 //		std::cout << -(E / b.dE_dt_ionization(E)) / year << "\t";
-//		std::cout << sigma_in.get(E) / mbarn << "\t";
-//		std::cout << "\n";
-//	}
-//}
+		outfile << "\n";
+	}
+	outfile.close();
+}
 
 #undef LIMIT

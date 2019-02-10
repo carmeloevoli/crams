@@ -27,6 +27,10 @@ public:
 		return _I_T;
 	}
 
+	double get_efficiency() const {
+		return _efficiency;
+	}
+
 	PID get_pid() const {
 		return _pid;
 	}
@@ -36,7 +40,7 @@ public:
 	}
 
 	void build_grammage(const Params& params) {
-		X = new Grammage(_pid, params);
+		_X = new Grammage(_pid, params);
 	}
 
 	void build_snr_source(const Params& params) {
@@ -66,10 +70,11 @@ public:
 	double I_T_interpol(const double& T) const;
 	double I_R_LIS(const double& R) const;
 	double I_R_TOA(const double& R, const double& modulation_potential) const;
-	void dump();
+	void dump() const;
 
 public:
-	std::string make_filename();
+	std::string make_filename() const;
+	double Q(const double& T);
 	double Lambda_1(const double& T);
 	double Lambda_2(const double& T);
 	double internal_integrand(const double& T_second);
@@ -83,14 +88,14 @@ protected:
 	std::vector<double> _T;
 	std::vector<double> _I_T;
 	PID _pid;
-	Grammage* X = nullptr;
+	Grammage* _X = nullptr;
 	SnrSource* _Q = nullptr;
-	SecondarySource* _Q_sec = nullptr;
-	SecondarySource* _Q_ter = nullptr;
+	SourceTerm* _Q_sec = nullptr;
+	SourceTerm* _Q_ter = nullptr;
+	SourceTerm* _Q_Xs = nullptr;
 	InelasticXsec* _sigma = nullptr;
 	Losses* _dEdx = nullptr;
-}
-;
+};
 
 typedef std::vector<Particle> Particles;
 
