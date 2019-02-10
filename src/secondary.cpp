@@ -1,15 +1,15 @@
 #include "secondary.h"
 
-SecondarySource::SecondarySource() {
+SourceTerm::SourceTerm() {
 }
 
-SecondarySource::SecondarySource(const std::vector<double>& T, const std::vector<double>& Q) :
+SourceTerm::SourceTerm(const std::vector<double>& T, const std::vector<double>& Q) :
 		_T(T), _Q(Q) {
 }
 
-SecondarySource::~SecondarySource() {
+SourceTerm::~SourceTerm() {
 }
 
-double SecondarySource::get(const double& T) const {
+double SourceTerm::get(const double& T) const {
 	return LinearInterpolatorLog(_T, _Q, T);
 }

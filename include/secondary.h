@@ -4,11 +4,11 @@
 #include <vector>
 #include "utilities.h"
 
-class SecondarySource {
+class SourceTerm {
 public:
-	SecondarySource();
-	SecondarySource(const std::vector<double>& T, const std::vector<double>& Q);
-	virtual ~SecondarySource();
+	SourceTerm();
+	SourceTerm(const std::vector<double>& T, const std::vector<double>& Q);
+	virtual ~SourceTerm();
 	double get(const double& T) const;
 
 private:
