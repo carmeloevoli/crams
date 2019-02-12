@@ -3,6 +3,9 @@
 .project
 .settings
 build
+plots
+docs
+.DS_Store
 
 # Prerequisites
 *.d
