@@ -39,3 +39,14 @@ double Grammage::get(const double& T) const {
 	value *= 1. - std::exp(-v_A * H / D(T));
 	return value;
 }
+
+double Grammage::get(const double& T, const double& tau_d_0) const {
+	double beta = beta_func(T);
+	double tau_d = gamma_func(T) * tau_d_0;
+	double xi = v_A * H / D(T);
+	double Delta = std::sqrt(1. + 4. * D(T)/ pow2(v_A) / tau_d);
+	double value = beta * factor;
+	value *= 2. * (1. - std::exp(-xi * Delta));
+	value /= (1. + Delta) - (1. - Delta) * std::exp(-xi * Delta);
+	return value;
+}

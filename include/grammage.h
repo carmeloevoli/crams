@@ -11,6 +11,7 @@ public:
 	virtual ~Grammage();
 	double D(const double& T) const;
 	double get(const double& T) const;
+	double get(const double& T, const double& tau_d) const;
 
 	double diffusion_timescale(const double& T) const {
 		return H * H / D(T);
