@@ -110,6 +110,7 @@ static const PID He3 = PID(2, 3);
 static const PID He4 = PID(2, 4);
 static const PID Li6 = PID(3, 6);
 static const PID Li7 = PID(3, 7);
+static const PID Be7 = PID(4, 7);
 static const PID Be9 = PID(4, 9);
 static const PID Be10 = PID(4, 10);
 static const PID B10 = PID(5, 10);
