@@ -20,6 +20,11 @@ private:
 	ptr_Particle ptr_H2 = find_ptr(H2);
 	ptr_Particle ptr_He3 = find_ptr(He3);
 	ptr_Particle ptr_He4 = find_ptr(He4);
+	ptr_Particle ptr_Li6 = find_ptr(Li6);
+	ptr_Particle ptr_Li7 = find_ptr(Li7);
+	ptr_Particle ptr_Be7 = find_ptr(Be7);
+	ptr_Particle ptr_Be9 = find_ptr(Be9);
+	ptr_Particle ptr_Be10 = find_ptr(Be10);
 	ptr_Particle ptr_B10 = find_ptr(B10);
 	ptr_Particle ptr_B11 = find_ptr(B11);
 	ptr_Particle ptr_C12 = find_ptr(C12);
@@ -37,6 +42,8 @@ private:
 
 	double H(const double& R) const;
 	double He(const double& R) const;
+	double Li(const double& R) const;
+	double Be(const double& R) const;
 	double B(const double& R) const;
 	double C(const double& R) const;
 	double N(const double& R) const;

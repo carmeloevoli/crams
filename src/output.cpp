@@ -28,16 +28,30 @@ double OutputManager::He(const double& R) const {
 	value += (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, _phi) : 0;
 	return value;
 }
+
+double OutputManager::Li(const double& R) const {
+	double value = (ptr_Li6.isPresent) ? ptr_Li6.it->I_R_TOA(R, _phi) : 0;
+	value += (ptr_Li7.isPresent) ? ptr_Li7.it->I_R_TOA(R, _phi) : 0;
+	return value;
+}
+
+double OutputManager::Be(const double& R) const {
+	double value = (ptr_Be9.isPresent) ? ptr_Be9.it->I_R_TOA(R, _phi) : 0;
+	value += (ptr_Be10.isPresent) ? ptr_Be10.it->I_R_TOA(R, _phi) : 0;
+	value += (ptr_Be7.isPresent) ? ptr_Be7.it->I_R_TOA(R, _phi) : 0;
+	return value;
+}
+
 double OutputManager::B(const double& R) const {
 	double value = (ptr_B10.isPresent) ? ptr_B10.it->I_R_TOA(R, _phi) : 0;
 	value += (ptr_B11.isPresent) ? ptr_B11.it->I_R_TOA(R, _phi) : 0;
 	return value;
 }
 
-double OutputManager::C(const double& R) const {
-	double value = (ptr_C12.isPresent) ? ptr_C12.it->I_R_TOA(R, _phi) : 0.;
-	value += (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, _phi) : 0.;
-	value += (ptr_C14.isPresent) ? ptr_C14.it->I_R_TOA(R, _phi) : 0.;
+double OutputManager::C(const double& R) const { // TODO TOA -> LIS
+	double value = (ptr_C12.isPresent) ? ptr_C12.it->I_R_LIS(R) : 0.;
+	value += (ptr_C13.isPresent) ? ptr_C13.it->I_R_LIS(R) : 0.;
+	value += (ptr_C14.isPresent) ? ptr_C14.it->I_R_LIS(R) : 0.;
 	return value;
 }
 
@@ -63,6 +77,8 @@ void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) cons
 		outfile << R / cgs::GeV << "\t";
 		outfile << H(R) / units << "\t";
 		outfile << He(R) / units << "\t";
+		outfile << Li(R) / units << "\t";
+		outfile << Be(R) / units << "\t";
 		outfile << B(R) / units << "\t";
 		outfile << C(R) / units << "\t";
 		outfile << N(R) / units << "\t";
@@ -78,6 +94,10 @@ void OutputManager::dump_ratios(double R_min, double R_max, size_t R_size) const
 	outfile << std::scientific;
 	for (auto& R : _R) {
 		outfile << R / cgs::GeV << "\t";
+		outfile << Li(R) / B(R) << "\t";
+		outfile << Be(R) / B(R) << "\t";
+		outfile << Li(R) / C(R) << "\t";
+		outfile << Be(R) / C(R) << "\t";
 		outfile << B(R) / C(R) << "\t";
 		outfile << C(R) / O(R) << "\t";
 		outfile << B(R) / O(R) << "\t";
