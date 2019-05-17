@@ -19,6 +19,9 @@ public:
 		insert(H2, 0.);
 		insert(He3, 0.);
 		insert(He4, 2.5e-2);
+		insert(Be7, 0);
+		insert(Be9, 0);
+		insert(Be10, 0);
 		insert(B10, 0.);
 		insert(B11, 0.);
 		insert(C12, 5e-3);
