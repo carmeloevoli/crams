@@ -48,10 +48,10 @@ double OutputManager::B(const double& R) const {
 	return value;
 }
 
-double OutputManager::C(const double& R) const { // TODO TOA -> LIS
-	double value = (ptr_C12.isPresent) ? ptr_C12.it->I_R_LIS(R) : 0.;
-	value += (ptr_C13.isPresent) ? ptr_C13.it->I_R_LIS(R) : 0.;
-	value += (ptr_C14.isPresent) ? ptr_C14.it->I_R_LIS(R) : 0.;
+double OutputManager::C(const double& R) const {
+	double value = (ptr_C12.isPresent) ? ptr_C12.it->I_R_TOA(R, _phi) : 0.;
+	value += (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, _phi) : 0.;
+	value += (ptr_C14.isPresent) ? ptr_C14.it->I_R_TOA(R, _phi) : 0.;
 	return value;
 }
 
