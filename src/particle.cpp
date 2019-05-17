@@ -150,8 +150,14 @@ bool Particle::run(const std::vector<double>& T) {
 }
 
 double Particle::Lambda_1(const double& T) {
-	double value = 1. / _X->get(T) + _sigma->get_ISM(T) / cgs::mean_ism_mass
-			+ _dEdx->get_derivative(T);
+	double value = 0;
+	if (_pid == Be10) {
+		value = 1. / _X->get(T, 1.39 * cgs::Myr) + _sigma->get_ISM(T) / cgs::mean_ism_mass
+				+ _dEdx->get_derivative(T);
+	} else {
+		value = 1. / _X->get(T) + _sigma->get_ISM(T) / cgs::mean_ism_mass
+				+ _dEdx->get_derivative(T);
+	}
 	return value;
 }
 
