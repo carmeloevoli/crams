@@ -58,18 +58,22 @@ public:
 	}
 
 	bool operator<(const PID &other) const {
+		if (_id == 10005 && other._id == 10004)
+			return true;
+		if (_id == 10004 && other._id == 10005)
+			return false;
 		if (_id != other._id)
 			return _id < other._id;
 		else
 			return _isTertiary;
 	}
 
-	bool operator>(const PID &other) const {
-		if (_id != other._id)
-			return _id > other._id;
-		else
-			return !_isTertiary;
-	}
+//	bool operator>(const PID &other) const {
+//		if (_id != other._id)
+//			return _id > other._id;
+//		else
+//			return !_isTertiary;
+//	}
 
 	bool is_H() const {
 		return (_Z == 1);
