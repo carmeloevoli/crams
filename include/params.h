@@ -14,15 +14,15 @@ private:
 
 public:
 	ParticleList() {
-		insert(H1_ter, 0.);
-		insert(H1, 7e-2);
-		insert(H2, 0.);
-		insert(He3, 0.);
-		insert(He4, 2.5e-2);
+		//insert(H1_ter, 0.);
+		//insert(H1, 7e-2);
+		//insert(H2, 0.);
+		//insert(He3, 0.);
+		//insert(He4, 2.5e-2);
 		insert(Be7, 0);
 		insert(Be9, 0);
-		insert(Be10, 0);
 		insert(B10, 0.);
+		insert(Be10, 0);
 		insert(B11, 0.);
 		insert(C12, 5e-3);
 		insert(C13, 0.);
@@ -53,7 +53,7 @@ public:
 class Params {
 private:
 	double _H = 4. * cgs::kpc;
-	double _T_min = 1.0 * cgs::GeV;
+	double _T_min = 0.1 * cgs::GeV;
 	double _T_max = 10. * cgs::TeV;
 	double _mu = 2.7 * cgs::mgram / cgs::cm2;
 	double _v_A = 10. * cgs::km / cgs::sec;
@@ -67,7 +67,7 @@ private:
 	double _He_slope = 4.25;
 	double _nuclei_slope = 4.25;
 	double _modulation_potential = 0.7 * cgs::GeV;
-	size_t _T_size = 100;
+	size_t _T_size = 200;
 	size_t _id = 0;
 
 public:
@@ -80,6 +80,14 @@ public:
 
 	void set_D0(const double& _D_0) {
 		this->_D_0 = _D_0;
+	}
+
+	void set_vA(const double& _v_A) {
+		this->_v_A = _v_A;
+	}
+
+	void set_delta(const double& _delta) {
+		this->_delta = _delta;
 	}
 
 	virtual ~Params();
