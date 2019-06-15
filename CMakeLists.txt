@@ -21,7 +21,6 @@ set(git_revision_cpp "${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp")
 configure_file("src/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
 
 set( CRAMS_SRCS 
-     src/main.cpp
      src/chi2.cpp
 	 src/grammage.cpp
 	 src/inelastic.cpp
@@ -49,8 +48,11 @@ endif(GSL_FOUND)
 # MAKE EXECUTABLE
 include_directories (include ${CRAMS_EXTRA_INCLUDES})
 
-add_executable(CRAMS ${CRAMS_SRCS} )
+add_executable(CRAMS src/main.cpp ${CRAMS_SRCS} )
 target_link_libraries (CRAMS ${CRAMS_EXTRA_LIBRARIES})
+
+add_executable(sandbox src/sandbox.cpp ${CRAMS_SRCS} )
+target_link_libraries (sandbox ${CRAMS_EXTRA_LIBRARIES})
 
 # Show summary.
 message (STATUS "CMAKE_SYSTEM .......... = ${CMAKE_SYSTEM}")
