@@ -31,6 +31,10 @@ public:
 		return _efficiency;
 	}
 
+	Grammage* getX () const {
+		return _X;
+	}
+
 	PID get_pid() const {
 		return _pid;
 	}
@@ -84,6 +88,7 @@ public:
 
 protected:
 	bool _isDone = false;
+	bool _doGrammageAtSource = false;
 	double _efficiency = 0;
 	std::vector<double> _T;
 	std::vector<double> _I_T;
