@@ -31,7 +31,7 @@ double SpallationXsecs::get_ISM(const PID& projectile, const double& T) const {
 	auto it = _table.find(projectile);
 	if (it != _table.end()) {
 		double T_now = std::min(T, _T.back());
-		value = LinearInterpolator(_T, it->second, T_now);
+		value = LinearInterpolatorLog(_T, it->second, T_now);
 		auto it_error = _xsec_error.find(projectile);
 		value *= (_doError) ? it_error->second : 1.;
 	}
