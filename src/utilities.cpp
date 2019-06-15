@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 #include <gsl/gsl_integration.h>
 #include "cgs.h"
 #include "utilities.h"
@@ -72,17 +73,38 @@ double LinearInterpolator(const std::vector<double>& x, const std::vector<double
 	return value;
 }
 
+//double LinearInterpolatorLog(const std::vector<double>& x, const std::vector<double>& y,
+//		const double& x_new) {
+//	auto value = double();
+//	if (x_new >= x.front() && x_new <= x.back()) {
+//		size_t const i = std::lower_bound(x.begin(), x.end(), x_new) - x.begin();
+//		double t = std::log(x_new) - std::log(x.at(i - 1));
+//		t /= std::log(x.at(i)) - std::log(x.at(i - 1));
+//		value = std::log(y.at(i - 1)) * (1. - t) + std::log(y.at(i)) * t;
+//		value = std::exp(value);
+//	}
+//	return value;
+//}
+
+size_t getLowerIndex(const std::vector<double>& v, double x) {
+	assert(x >= v.front());
+	size_t i = 0;
+	while (v.at(i + 1) < x)
+		i++;
+	return i;
+}
+
 double LinearInterpolatorLog(const std::vector<double>& x, const std::vector<double>& y,
 		const double& x_new) {
-	auto value = double();
-	if (x_new >= x.front() && x_new <= x.back()) {
-		size_t const i = std::lower_bound(x.begin(), x.end(), x_new) - x.begin();
-		double t = std::log(x_new) - std::log(x.at(i - 1));
-		t /= std::log(x.at(i)) - std::log(x.at(i - 1));
-		value = std::log(y.at(i - 1)) * (1. - t) + std::log(y.at(i)) * t;
-		value = std::exp(value);
+	if (x_new < x.front() || x_new > x.back())
+		return 0;
+	else {
+		size_t const i = getLowerIndex(x, x_new);
+		double t = std::log(x_new) - std::log(x.at(i));
+		t /= std::log(x.at(i + 1)) - std::log(x.at(i));
+		double v = std::log(y.at(i)) * (1. - t) + std::log(y.at(i + 1)) * t;
+		return std::exp(v);
 	}
-	return value;
 }
 
 #undef LIMIT
