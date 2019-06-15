@@ -94,14 +94,15 @@ void OutputManager::dump_ratios(double R_min, double R_max, size_t R_size) const
 	outfile << std::scientific;
 	for (auto& R : _R) {
 		outfile << R / cgs::GeV << "\t";
-		outfile << Li(R) / B(R) << "\t";
-		outfile << Be(R) / B(R) << "\t";
-		outfile << Li(R) / C(R) << "\t";
-		outfile << Be(R) / C(R) << "\t";
-		outfile << B(R) / C(R) << "\t";
-		outfile << C(R) / O(R) << "\t";
-		outfile << B(R) / O(R) << "\t";
 		outfile << He(R) / O(R) << "\t";
+		outfile << Li(R) / B(R) << "\t";
+		outfile << Li(R) / C(R) << "\t";
+		outfile << Be(R) / B(R) << "\t";
+		outfile << Be(R) / C(R) << "\t";
+		outfile << Be(R) / O(R) << "\t";
+		outfile << B(R) / C(R) << "\t";
+		outfile << B(R) / O(R) << "\t";
+		outfile << C(R) / O(R) << "\t";
 		outfile << "\n";
 	}
 	outfile.close();
