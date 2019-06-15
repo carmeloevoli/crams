@@ -38,6 +38,32 @@ void Chi2::read_datafile(const std::string& filename, const double& units) {
 	file_to_read.close();
 }
 
+void Chi2::read_datafile_statsonly(const std::string& filename, const double& units) {
+#ifdef DEBUG
+	std::cout << "reading data from " << filename << "... ";
+#endif
+	std::ifstream file_to_read(filename.c_str());
+	if (file_to_read.is_open()) {
+		file_to_read.ignore(max_num_of_char_in_a_line, '\n');
+		double values[6];
+		while (!file_to_read.eof()) {
+			file_to_read >> values[0] >> values[1] >> values[2] >> values[3] >> values[4]
+					>> values[5];
+			data_point point;
+			point.R = values[0] * cgs::GeV;
+			point.F = values[1] * units;
+			point.F_err_low = values[4] * units;
+			point.F_err_high = values[5] * units;
+			if (file_to_read.good())
+				_data.push_back(point);
+		}
+	}
+#ifdef DEBUG
+	std::cout << " with size : " << _data.size() << "\n";
+#endif
+	file_to_read.close();
+}
+
 double Chi2::compute_chi2(const double& R_min, const double& R_max) const {
 	double chi2 = 0.0;
 	size_t ndata = 0;
@@ -51,6 +77,19 @@ double Chi2::compute_chi2(const double& R_min, const double& R_max) const {
 		}
 	}
 	return chi2 / (double) ndata;
+}
+
+double Chi2_H::get_model(const double& R, const double& phi) const {
+	double value = (ptr_H1.isPresent) ? ptr_H1.it->I_R_TOA(R, phi) : 0.;
+	value += (ptr_H2.isPresent) ? ptr_H2.it->I_R_TOA(R, phi) : 0.;
+	value += (ptr_H1_ter.isPresent) ? ptr_H1_ter.it->I_R_TOA(R, phi) : 0.;
+	return value;
+}
+
+double Chi2_He::get_model(const double& R, const double& phi) const {
+	double value = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, phi) : 0.;
+	value += (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, phi) : 0.;
+	return value;
 }
 
 double Chi2_C::get_model(const double& R, const double& phi) const {
@@ -73,6 +112,53 @@ double Chi2_O::get_model(const double& R, const double& phi) const {
 	return value;
 }
 
+double Chi2_HeO::get_model(const double& R, const double& phi) const {
+	double O = (ptr_O16.isPresent) ? ptr_O16.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O17.isPresent) ? ptr_O17.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O18.isPresent) ? ptr_O18.it->I_R_TOA(R, phi) : 0.;
+	double He = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, phi) : 0.;
+	He += (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, phi) : 0.;
+	return He / O;
+}
+
+double Chi2_BeB::get_model(const double& R, const double& phi) const {
+	double B = (ptr_B10.isPresent) ? ptr_B10.it->I_R_TOA(R, phi) : 0.;
+	B += (ptr_B11.isPresent) ? ptr_B11.it->I_R_TOA(R, phi) : 0.;
+	double Be = (ptr_Be7.isPresent) ? ptr_Be7.it->I_R_TOA(R, phi) : 0.;
+	Be += (ptr_Be9.isPresent) ? ptr_Be9.it->I_R_TOA(R, phi) : 0.;
+	Be += (ptr_Be10.isPresent) ? ptr_Be10.it->I_R_TOA(R, phi) : 0.;
+	return Be / B;
+}
+
+double Chi2_BeB_statsonly::get_model(const double& R, const double& phi) const {
+	double B = (ptr_B10.isPresent) ? ptr_B10.it->I_R_TOA(R, phi) : 0.;
+	B += (ptr_B11.isPresent) ? ptr_B11.it->I_R_TOA(R, phi) : 0.;
+	double Be = (ptr_Be7.isPresent) ? ptr_Be7.it->I_R_TOA(R, phi) : 0.;
+	Be += (ptr_Be9.isPresent) ? ptr_Be9.it->I_R_TOA(R, phi) : 0.;
+	Be += (ptr_Be10.isPresent) ? ptr_Be10.it->I_R_TOA(R, phi) : 0.;
+	return Be / B;
+}
+
+double Chi2_BeC::get_model(const double& R, const double& phi) const {
+	double C = (ptr_C12.isPresent) ? ptr_C12.it->I_R_TOA(R, phi) : 0.;
+	C += (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, phi) : 0.;
+	C += (ptr_C14.isPresent) ? ptr_C14.it->I_R_TOA(R, phi) : 0.;
+	double Be = (ptr_Be7.isPresent) ? ptr_Be7.it->I_R_TOA(R, phi) : 0.;
+	Be += (ptr_Be9.isPresent) ? ptr_Be9.it->I_R_TOA(R, phi) : 0.;
+	Be += (ptr_Be10.isPresent) ? ptr_Be10.it->I_R_TOA(R, phi) : 0.;
+	return Be / C;
+}
+
+double Chi2_BeO::get_model(const double& R, const double& phi) const {
+	double O = (ptr_O16.isPresent) ? ptr_O16.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O17.isPresent) ? ptr_O17.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O18.isPresent) ? ptr_O18.it->I_R_TOA(R, phi) : 0.;
+	double Be = (ptr_Be7.isPresent) ? ptr_Be7.it->I_R_TOA(R, phi) : 0.;
+	Be += (ptr_Be9.isPresent) ? ptr_Be9.it->I_R_TOA(R, phi) : 0.;
+	Be += (ptr_Be10.isPresent) ? ptr_Be10.it->I_R_TOA(R, phi) : 0.;
+	return Be / O;
+}
+
 double Chi2_BC::get_model(const double& R, const double& phi) const {
 	double B = (ptr_B10.isPresent) ? ptr_B10.it->I_R_TOA(R, phi) : 0.;
 	B += (ptr_B11.isPresent) ? ptr_B11.it->I_R_TOA(R, phi) : 0.;
@@ -80,6 +166,15 @@ double Chi2_BC::get_model(const double& R, const double& phi) const {
 	C += (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, phi) : 0.;
 	C += (ptr_C14.isPresent) ? ptr_C14.it->I_R_TOA(R, phi) : 0.;
 	return B / C;
+}
+
+double Chi2_BO::get_model(const double& R, const double& phi) const {
+	double B = (ptr_B10.isPresent) ? ptr_B10.it->I_R_TOA(R, phi) : 0.;
+	B += (ptr_B11.isPresent) ? ptr_B11.it->I_R_TOA(R, phi) : 0.;
+	double O = (ptr_O16.isPresent) ? ptr_O16.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O17.isPresent) ? ptr_O17.it->I_R_TOA(R, phi) : 0.;
+	O += (ptr_O18.isPresent) ? ptr_O18.it->I_R_TOA(R, phi) : 0.;
+	return B / O;
 }
 
 double Chi2_CO::get_model(const double& R, const double& phi) const {
@@ -90,26 +185,4 @@ double Chi2_CO::get_model(const double& R, const double& phi) const {
 	C += (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, phi) : 0.;
 	C += (ptr_C14.isPresent) ? ptr_C14.it->I_R_TOA(R, phi) : 0.;
 	return C / O;
-}
-
-double Chi2_HeO::get_model(const double& R, const double& phi) const {
-	double O = (ptr_O16.isPresent) ? ptr_O16.it->I_R_TOA(R, phi) : 0.;
-	O += (ptr_O17.isPresent) ? ptr_O17.it->I_R_TOA(R, phi) : 0.;
-	O += (ptr_O18.isPresent) ? ptr_O18.it->I_R_TOA(R, phi) : 0.;
-	double He = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, phi) : 0.;
-	He += (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, phi) : 0.;
-	return He / O;
-}
-
-double Chi2_He::get_model(const double& R, const double& phi) const {
-	double value = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, phi) : 0.;
-	value += (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, phi) : 0.;
-	return value;
-}
-
-double Chi2_H::get_model(const double& R, const double& phi) const {
-	double value = (ptr_H1.isPresent) ? ptr_H1.it->I_R_TOA(R, phi) : 0.;
-	value += (ptr_H2.isPresent) ? ptr_H2.it->I_R_TOA(R, phi) : 0.;
-	value += (ptr_H1_ter.isPresent) ? ptr_H1_ter.it->I_R_TOA(R, phi) : 0.;
-	return value;
 }

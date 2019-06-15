@@ -40,6 +40,7 @@ public:
 
 protected:
 	void read_datafile(const std::string& filename, const double& units = 1.0);
+	void read_datafile_statsonly(const std::string& filename, const double& units = 1.0);
 	virtual double get_model(const double& R, const double& phi) const = 0;
 
 protected:
@@ -47,6 +48,33 @@ protected:
 	double _phi = 0;
 	std::vector<data_point> _data;
 	Particles _particles;
+};
+
+class Chi2_H: public Chi2 {
+public:
+	Chi2_H(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		constexpr double units = 1. / (cgs::GeV * cgs::m2 * cgs::sec * cgs::sr);
+		read_datafile("data/H_AMS02_rig.txt", units);
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_H1 = find_ptr(H1);
+	ptr_Particle ptr_H2 = find_ptr(H2);
+	ptr_Particle ptr_H1_ter = find_ptr(H1_ter);
+};
+
+class Chi2_He: public Chi2 {
+public:
+	Chi2_He(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		constexpr double units = 1. / (cgs::GeV * cgs::m2 * cgs::sec * cgs::sr);
+		read_datafile("data/He_AMS02_rig.txt", units);
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_He3 = find_ptr(He3);
+	ptr_Particle ptr_He4 = find_ptr(He4);
 };
 
 class Chi2_C: public Chi2 {
@@ -90,6 +118,83 @@ protected:
 	ptr_Particle ptr_O18 = find_ptr(O18);
 };
 
+class Chi2_HeO: public Chi2 {
+public:
+	Chi2_HeO(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		read_datafile("data/HeO_AMS02_rig.txt");
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_He3 = find_ptr(He3);
+	ptr_Particle ptr_He4 = find_ptr(He4);
+	ptr_Particle ptr_O16 = find_ptr(O16);
+	ptr_Particle ptr_O17 = find_ptr(O17);
+	ptr_Particle ptr_O18 = find_ptr(O18);
+};
+
+class Chi2_BeB: public Chi2 {
+public:
+	Chi2_BeB(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		read_datafile("data/BeB_AMS02_rig.txt");
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_Be7 = find_ptr(Be7);
+	ptr_Particle ptr_Be9 = find_ptr(Be9);
+	ptr_Particle ptr_Be10 = find_ptr(Be10);
+	ptr_Particle ptr_B10 = find_ptr(B10);
+	ptr_Particle ptr_B11 = find_ptr(B11);
+};
+
+class Chi2_BeB_statsonly: public Chi2 {
+public:
+	Chi2_BeB_statsonly(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		read_datafile_statsonly("data/BeB_AMS02_rig.txt");
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_Be7 = find_ptr(Be7);
+	ptr_Particle ptr_Be9 = find_ptr(Be9);
+	ptr_Particle ptr_Be10 = find_ptr(Be10);
+	ptr_Particle ptr_B10 = find_ptr(B10);
+	ptr_Particle ptr_B11 = find_ptr(B11);
+};
+
+class Chi2_BeC: public Chi2 {
+public:
+	Chi2_BeC(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		read_datafile("data/BeC_AMS02_rig.txt");
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_Be7 = find_ptr(Be7);
+	ptr_Particle ptr_Be9 = find_ptr(Be9);
+	ptr_Particle ptr_Be10 = find_ptr(Be10);
+	ptr_Particle ptr_C12 = find_ptr(C12);
+	ptr_Particle ptr_C13 = find_ptr(C13);
+	ptr_Particle ptr_C14 = find_ptr(C14);
+};
+
+class Chi2_BeO: public Chi2 {
+public:
+	Chi2_BeO(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		read_datafile("data/BeO_AMS02_rig.txt");
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_Be7 = find_ptr(Be7);
+	ptr_Particle ptr_Be9 = find_ptr(Be9);
+	ptr_Particle ptr_Be10 = find_ptr(Be10);
+	ptr_Particle ptr_O16 = find_ptr(O16);
+	ptr_Particle ptr_O17 = find_ptr(O17);
+	ptr_Particle ptr_O18 = find_ptr(O18);
+};
+
 class Chi2_BC: public Chi2 {
 public:
 	Chi2_BC(const Particles& particles, const double& phi) :
@@ -98,11 +203,26 @@ public:
 	}
 protected:
 	double get_model(const double& R, const double& phi) const override;
+	ptr_Particle ptr_B10 = find_ptr(B10);
+	ptr_Particle ptr_B11 = find_ptr(B11);
 	ptr_Particle ptr_C12 = find_ptr(C12);
 	ptr_Particle ptr_C13 = find_ptr(C13);
 	ptr_Particle ptr_C14 = find_ptr(C14);
+};
+
+class Chi2_BO: public Chi2 {
+public:
+	Chi2_BO(const Particles& particles, const double& phi) :
+			Chi2(particles, phi) {
+		read_datafile("data/BO_AMS02_rig.txt");
+	}
+protected:
+	double get_model(const double& R, const double& phi) const override;
 	ptr_Particle ptr_B10 = find_ptr(B10);
 	ptr_Particle ptr_B11 = find_ptr(B11);
+	ptr_Particle ptr_O16 = find_ptr(O16);
+	ptr_Particle ptr_O17 = find_ptr(O17);
+	ptr_Particle ptr_O18 = find_ptr(O18);
 };
 
 class Chi2_CO: public Chi2 {
@@ -119,48 +239,6 @@ protected:
 	ptr_Particle ptr_O16 = find_ptr(O16);
 	ptr_Particle ptr_O17 = find_ptr(O17);
 	ptr_Particle ptr_O18 = find_ptr(O18);
-};
-
-class Chi2_HeO: public Chi2 {
-public:
-	Chi2_HeO(const Particles& particles, const double& phi) :
-			Chi2(particles, phi) {
-		read_datafile("data/HeO_AMS02_rig.txt");
-	}
-protected:
-	double get_model(const double& R, const double& phi) const override;
-	ptr_Particle ptr_He3 = find_ptr(He3);
-	ptr_Particle ptr_He4 = find_ptr(He4);
-	ptr_Particle ptr_O16 = find_ptr(O16);
-	ptr_Particle ptr_O17 = find_ptr(O17);
-	ptr_Particle ptr_O18 = find_ptr(O18);
-};
-
-class Chi2_He: public Chi2 {
-public:
-	Chi2_He(const Particles& particles, const double& phi) :
-			Chi2(particles, phi) {
-		constexpr double units = 1. / (cgs::GeV * cgs::m2 * cgs::sec * cgs::sr);
-		read_datafile("data/He_AMS02_rig.txt", units);
-	}
-protected:
-	double get_model(const double& R, const double& phi) const override;
-	ptr_Particle ptr_He3 = find_ptr(He3);
-	ptr_Particle ptr_He4 = find_ptr(He4);
-};
-
-class Chi2_H: public Chi2 {
-public:
-	Chi2_H(const Particles& particles, const double& phi) :
-			Chi2(particles, phi) {
-		constexpr double units = 1. / (cgs::GeV * cgs::m2 * cgs::sec * cgs::sr);
-		read_datafile("data/H_AMS02_rig.txt", units);
-	}
-protected:
-	double get_model(const double& R, const double& phi) const override;
-	ptr_Particle ptr_H1 = find_ptr(H1);
-	ptr_Particle ptr_H2 = find_ptr(H2);
-	ptr_Particle ptr_H1_ter = find_ptr(H1_ter);
 };
 
 #endif /* INCLUDE_CHI2_H_ */
