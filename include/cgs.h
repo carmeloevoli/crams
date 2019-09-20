@@ -1,6 +1,8 @@
 #ifndef UNITS_H
 #define UNITS_H
 
+#include <cmath>
+
 namespace cgs {
 
 // CGS UNITS
@@ -74,7 +76,7 @@ static constexpr double barn = 1e-24 * cm2;
 static constexpr double mbarn = 1e-3 * barn;
 //static constexpr double elementary_charge = 1.60217662e-19 * coulomb;
 //static constexpr double vacuum_permeability = 4e-7 * M_PI * tesla * meter / ampere;
-static constexpr double tau_Be10 = 1.39 * Myr;
+static constexpr double tau_Be10 = 1.39 * Myr / M_LN2;
 
 // MOMENTUM UNITS
 static constexpr double eV_c = electronvolt / c_light;
