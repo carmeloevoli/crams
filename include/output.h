@@ -44,6 +44,7 @@ private:
 	double He(const double& R) const;
 	double Li(const double& R) const;
 	double Be(const double& R) const;
+	double Be_ratio(const double& R) const;
 	double B(const double& R) const;
 	double C(const double& R) const;
 	double N(const double& R) const;

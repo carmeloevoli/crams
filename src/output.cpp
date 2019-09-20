@@ -68,6 +68,12 @@ double OutputManager::O(const double& R) const {
 	return value;
 }
 
+double OutputManager::Be_ratio(const double& R) const {
+	double Be9 = (ptr_Be9.isPresent) ? ptr_Be9.it->I_R_TOA(R, _phi) : 0;
+	double Be10 = (ptr_Be10.isPresent) ? ptr_Be10.it->I_R_TOA(R, _phi) : 0;
+	return Be10 / Be9;
+}
+
 void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) const {
 	auto _R = LogAxis(R_min, R_max, R_size);
 	std::ofstream outfile(spectra_filename.c_str());
@@ -103,6 +109,7 @@ void OutputManager::dump_ratios(double R_min, double R_max, size_t R_size) const
 		outfile << B(R) / C(R) << "\t";
 		outfile << B(R) / O(R) << "\t";
 		outfile << C(R) / O(R) << "\t";
+		outfile << Be_ratio(R) << "\t";
 		outfile << "\n";
 	}
 	outfile.close();
