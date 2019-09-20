@@ -1,6 +1,7 @@
 #ifndef INCLUDE_CHI2_H_
 #define INCLUDE_CHI2_H_
 
+#include <algorithm>
 #include <string>
 #include <vector>
 #include "particle.h"
