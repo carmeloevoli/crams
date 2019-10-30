@@ -1,6 +1,7 @@
 #ifndef INCLUDE_PARTICLE_H_
 #define INCLUDE_PARTICLE_H_
 
+#include <algorithm>
 #include <vector>
 
 #include "grammage.h"
@@ -60,7 +61,7 @@ public:
 	}
 
 	void build_inelastic_Xsec(const Params& params) {
-		_sigma = (params.id == 0) ? new InelasticXsec(_pid) : new InelasticXsec(_pid, true);
+		_sigma = (params.id == 0) ? new InelasticXsec(_pid, false) : new InelasticXsec(_pid, true);
 	}
 
 	void build_losses(const Params& params) {

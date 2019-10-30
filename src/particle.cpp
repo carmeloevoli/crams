@@ -2,6 +2,7 @@
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include <gsl/gsl_math.h>
 #include <gsl/gsl_errno.h>
 #include <gsl/gsl_integration.h>
 
@@ -51,7 +52,7 @@ Particle::~Particle() {
 
 void Particle::build_secondary_source(const std::vector<Particle>& particles,
 		const Params& params) {
-	auto xsecs = (params.id == 0) ? SpallationXsecs(_pid) : SpallationXsecs(_pid, true);
+	auto xsecs = (params.id == 0) ? SpallationXsecs(_pid, params.xsecs_norm) : SpallationXsecs(_pid, params.xsecs_norm, true);
 	auto T_s = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, ARRAYSIZE);
 	std::vector<double> Q_s;
 	for (auto& T : T_s) {
@@ -110,7 +111,7 @@ void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
 void Particle::build_grammage_at_source(const std::vector<Particle>& particles,
 		const Params& params) {
 	_doGrammageAtSource = true;
-	auto xsecs = (params.id == 0) ? SpallationXsecs(_pid) : SpallationXsecs(_pid, true);
+	auto xsecs = (params.id == 0) ? SpallationXsecs(_pid, params.xsecs_norm) : SpallationXsecs(_pid, params.xsecs_norm, true);
 	auto T_X = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, ARRAYSIZE);
 	std::vector<double> Q_X;
 	for (auto& T : T_X) {

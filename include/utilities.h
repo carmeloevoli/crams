@@ -1,6 +1,7 @@
 #ifndef INCLUDE_UTILITIES_H_
 #define INCLUDE_UTILITIES_H_
 
+#include <cassert>
 #include <vector>
 
 #define pow2(A) ((A)*(A))
