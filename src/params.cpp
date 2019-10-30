@@ -99,6 +99,8 @@ void Params::set_params(const std::string& key, const double& value) {
 		_nuclei_slope = value;
 	else if (key == "phi")
 		_modulation_potential = value * cgs::GeV;
+	else if (key == "xsecs_norm")
+		_xsecs_norm = value;
 	else if (key == "id")
 		_id = (int) value;
 }
@@ -131,6 +133,7 @@ void Params::print() {
 	std::cout << "H_slope: " << _H_slope << "\n";
 	std::cout << "slope  : " << _nuclei_slope << "\n";
 	std::cout << "phi    : " << _modulation_potential / cgs::GeV << " GeV\n";
+	std::cout << "xsecs  : " << _xsecs_norm << "\n";
 	std::cout << "E_min  : " << _T_min / cgs::GeV << " GeV\n";
 	std::cout << "E_max  : " << _T_max / cgs::GeV << " GeV\n";
 	std::cout << "E_size : " << _T_size << "\n";
