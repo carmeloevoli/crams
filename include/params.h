@@ -19,6 +19,8 @@ public:
 		//insert(H2, 0.);
 		//insert(He3, 0.);
 		//insert(He4, 2.5e-2);
+		//insert(Li6, 0.);
+		//insert(Li7, 0.);
 		insert(Be7, 0);
 		insert(Be9, 0);
 		insert(B10, 0.);
@@ -67,7 +69,8 @@ private:
 	double _He_slope = 4.25;
 	double _nuclei_slope = 4.25;
 	double _modulation_potential = 0.7 * cgs::GeV;
-	size_t _T_size = 200;
+	double _xsecs_norm = 1;
+	size_t _T_size = 100;
 	size_t _id = 0;
 
 public:
@@ -110,6 +113,7 @@ public:
 	const double& He_slope = _He_slope;
 	const double& nuclei_slope = _nuclei_slope;
 	const double& modulation_potential = _modulation_potential;
+	const double& xsecs_norm = _xsecs_norm;
 	const size_t& T_size = _T_size;
 	const size_t& id = _id;
 };

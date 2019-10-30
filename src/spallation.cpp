@@ -1,8 +1,8 @@
 #include "spallation.h"
 #include "utilities.h"
 
-SpallationXsecs::SpallationXsecs(const PID& fragment, bool doError) :
-		_fragment(fragment), _doError(doError) {
+SpallationXsecs::SpallationXsecs(const PID& fragment, const double& Be_xsecs_norm, bool doError) :
+		_fragment(fragment), _Be_xsecs_norm(Be_xsecs_norm), _doError(doError) {
 	read_table();
 #ifdef DEBUG
 	std::cout << "read " << _table.size() << " cross-sections for " << _fragment << "\n";
@@ -35,6 +35,8 @@ double SpallationXsecs::get_ISM(const PID& projectile, const double& T) const {
 		auto it_error = _xsec_error.find(projectile);
 		value *= (_doError) ? it_error->second : 1.;
 	}
+	if (_fragment.get_Z() == 4)
+		value *= _Be_xsecs_norm;
 	return value * (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
 }
 

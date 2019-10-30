@@ -11,7 +11,7 @@
 
 class SpallationXsecs {
 public:
-	SpallationXsecs(const PID& fragment, bool doError = false);
+	SpallationXsecs(const PID& fragment, const double& Be_xsecs_norm, bool doError = false);
 	virtual ~SpallationXsecs();
 
 	double get_ISM(const PID& projectile, const double& T) const;
@@ -31,6 +31,7 @@ protected:
 	double _T_min = 0.1 * cgs::GeV;
 	size_t _T_size = 100;
 	double _T_ratio = 1.1;
+	double _Be_xsecs_norm = 1;
 };
 
 #endif /* INCLUDE_SPALLATION_H_ */
