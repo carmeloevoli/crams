@@ -59,10 +59,10 @@ private:
 	double _T_max = 10. * cgs::TeV;
 	double _mu = 2.7 * cgs::mgram / cgs::cm2;
 	double _v_A = 10. * cgs::km / cgs::sec;
-	double _R_b = 312. * cgs::GeV;
+	double _R_b = 312. * cgs::GeV; // Evoli, PRD, 2019
 	double _delta = 0.62;
-	double _ddelta = 0.15;
-	double _smoothness = 0.1;
+	double _ddelta = 0.2; // Evoli, PRD, 2019
+	double _smoothness = 0.1; // Evoli, PRD, 2019
 	double _D_0 = 1.8e28 * cgs::cm2 / cgs::sec;
 	double _X_s = 0. * cgs::gram / cgs::cm2;
 	double _H_slope = 4.25;
