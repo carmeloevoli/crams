@@ -52,7 +52,9 @@ Particle::~Particle() {
 
 void Particle::build_secondary_source(const std::vector<Particle>& particles,
 		const Params& params) {
-	auto xsecs = (params.id == 0) ? SpallationXsecs(_pid, params.xsecs_norm) : SpallationXsecs(_pid, params.xsecs_norm, true);
+	auto id = params.id;
+	auto norm = params.xsecs_norm;
+	auto xsecs = (id == 0) ? SpallationXsecs(_pid, norm) : SpallationXsecs(_pid, norm, true);
 	auto T_s = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, ARRAYSIZE);
 	std::vector<double> Q_s;
 	for (auto& T : T_s) {
@@ -111,7 +113,9 @@ void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
 void Particle::build_grammage_at_source(const std::vector<Particle>& particles,
 		const Params& params) {
 	_doGrammageAtSource = true;
-	auto xsecs = (params.id == 0) ? SpallationXsecs(_pid, params.xsecs_norm) : SpallationXsecs(_pid, params.xsecs_norm, true);
+	auto id = params.id;
+	auto norm = params.xsecs_norm;
+	auto xsecs = (id == 0) ? SpallationXsecs(_pid, norm) : SpallationXsecs(_pid, norm, true);
 	auto T_X = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, ARRAYSIZE);
 	std::vector<double> Q_X;
 	for (auto& T : T_X) {
@@ -164,8 +168,10 @@ double Particle::I_R_TOA(const double& R, const double& modulation_potential) co
 
 bool Particle::run(const std::vector<double>& T) {
 	_T = std::vector<double>(T);
-	for (auto& T_now : _T) {
-		_I_T.push_back(compute_integral(T_now));
+	_I_T.resize(T.size());
+#pragma omp parallel for schedule(dynamic) num_threads(THREADS)
+	for (size_t i = 0; i < _T.size(); ++i) {
+		_I_T.at(i) = compute_integral(_T.at(i));
 	}
 	return _I_T.size() == _T.size();
 }
