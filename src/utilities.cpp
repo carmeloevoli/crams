@@ -31,13 +31,30 @@ double gsl_Gamma_Integrand(double x, void * params) {
 	return f;
 }
 
+double gsl_xGamma_Integrand(double y, void * params) {
+	double alpha = *(double *) params;
+	double x = std::exp(y);
+	double f = std::pow(x, 2. - alpha);
+	f *= std::sqrt(x * x + 1) - 1;
+	return x * f;
+}
+
 double Gamma_Integral(double slope) {
 	gsl_integration_workspace * w = gsl_integration_workspace_alloc(LIMIT);
 	double result, error;
 	gsl_function F;
-	F.function = &gsl_Gamma_Integrand;
 	F.params = &slope;
-	gsl_integration_qagiu(&F, 0, 0, 1e-6, LIMIT, w, &result, &error);
+
+	double EPSREL = 1e-6;
+
+	if (slope < 4.1) {
+		F.function = &gsl_Gamma_Integrand;
+		gsl_integration_qagiu(&F, 0, 0, EPSREL, LIMIT, w, &result, &error);
+	} else {
+		F.function = &gsl_xGamma_Integrand;
+		gsl_integration_qag(&F, std::log(1e-5), std::log(1e10), 0, EPSREL, LIMIT, 4, w, &result,
+				&error);
+	}
 	gsl_integration_workspace_free(w);
 	return 4. * M_PI * result;
 }
