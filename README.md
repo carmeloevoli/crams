@@ -8,4 +8,8 @@
 
 ### Versions
 
-**Version 1.0 (20/11/2019):** Release version.
+**Version 2.0 (20/11/2019):** Version created to be used in [1910.04113](https://arxiv.org/abs/1910.04113)
+
+**Version 1.1 (07/02/2019):** Version created to be used in [1904.10220](https://arxiv.org/abs/1904.10220)
+
+**Version 1.0 (25/01/2019):** Release version.
