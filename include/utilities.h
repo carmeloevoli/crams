@@ -1,6 +1,7 @@
 #ifndef INCLUDE_UTILITIES_H_
 #define INCLUDE_UTILITIES_H_
 
+#include <cstdlib>
 #include <cassert>
 #include <vector>
 
