@@ -7,7 +7,7 @@
 #define LIMIT 1000
 
 double beta_func(const double& T) {
-	double value = std::sqrt(T * (T + cgs::proton_mass_c2));
+	double value = std::sqrt(T * (T + 2. * cgs::proton_mass_c2));
 	value /= T + cgs::proton_mass_c2;
 	return value;
 }
@@ -19,7 +19,7 @@ double gamma_func(const double& T) {
 }
 
 double pc_func(const int& A, const double& T) {
-	double value = std::sqrt(T * (T + cgs::proton_mass_c2));
+	double value = std::sqrt(T * (T + 2. * cgs::proton_mass_c2));
 	value *= (double) A;
 	return value;
 }
