@@ -15,12 +15,12 @@ private:
 public:
 	ParticleList() {
 		//insert(H1_ter, 0.);
-		//insert(H1, 7e-2);
-		//insert(H2, 0.);
-		//insert(He3, 0.);
-		//insert(He4, 2.5e-2);
-		//insert(Li6, 0.);
-		//insert(Li7, 0.);
+		insert(H1, 7e-2);
+		insert(H2, 0.);
+		insert(He3, 0.);
+		insert(He4, 2.5e-2);
+		insert(Li6, 0.);
+		insert(Li7, 0.);
 		insert(Be7, 0);
 		insert(Be9, 0);
 		insert(B10, 0.);
