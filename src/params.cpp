@@ -121,21 +121,22 @@ void Params::set_from_file(const std::string& filename) {
 
 void Params::print() {
 #ifdef DEBUG
-	std::cout << "H      : " << _H / cgs::kpc << " kpc\n";
-	std::cout << "mu     : " << _mu / (cgs::mgram / cgs::cm2) << " mg/cm2\n";
-	std::cout << "vA     : " << _v_A / (cgs::km / cgs::sec) << " km/s\n";
-	std::cout << "D0     : " << _D_0 / (1e28 * cgs::cm2 / cgs::sec) << " x 1e28 cm2/s\n";
-	std::cout << "X_s    : " << _X_s / (cgs::gram / cgs::cm2) << " gr/cm2\n";
-	std::cout << "delta  : " << _delta << "\n";
-	std::cout << "ddelta : " << _ddelta << "\n";
-	std::cout << "R_b    : " << _R_b / cgs::GeV << " GeV\n";
-	std::cout << "s      : " << _smoothness << "\n";
-	std::cout << "H_slope: " << _H_slope << "\n";
-	std::cout << "slope  : " << _nuclei_slope << "\n";
-	std::cout << "phi    : " << _modulation_potential / cgs::GeV << " GeV\n";
-	std::cout << "xsecs  : " << _xsecs_norm << "\n";
-	std::cout << "E_min  : " << _T_min / cgs::GeV << " GeV\n";
-	std::cout << "E_max  : " << _T_max / cgs::GeV << " GeV\n";
-	std::cout << "E_size : " << _T_size << "\n";
+	std::cout << "H       : " << _H / cgs::kpc << " kpc\n";
+	std::cout << "mu      : " << _mu / (cgs::mgram / cgs::cm2) << " mg/cm2\n";
+	std::cout << "vA      : " << _v_A / (cgs::km / cgs::sec) << " km/s\n";
+	std::cout << "D0      : " << _D_0 / (1e28 * cgs::cm2 / cgs::sec) << " x 1e28 cm2/s\n";
+	std::cout << "X_s     : " << _X_s / (cgs::gram / cgs::cm2) << " gr/cm2\n";
+	std::cout << "delta   : " << _delta << "\n";
+	std::cout << "ddelta  : " << _ddelta << "\n";
+	std::cout << "R_b     : " << _R_b / cgs::GeV << " GeV\n";
+	std::cout << "s       : " << _smoothness << "\n";
+	std::cout << "H_slope : " << _H_slope << "\n";
+        std::cout << "He_slope: " << _He_slope << "\n";
+	std::cout << "slope   : " << _nuclei_slope << "\n";
+	std::cout << "phi     : " << _modulation_potential / cgs::GeV << " GeV\n";
+	std::cout << "xsecs   : " << _xsecs_norm << "\n";
+	std::cout << "E_min   : " << _T_min / cgs::GeV << " GeV\n";
+	std::cout << "E_max   : " << _T_max / cgs::GeV << " GeV\n";
+	std::cout << "E_size  : " << _T_size << "\n";
 #endif
 }
