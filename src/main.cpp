@@ -59,7 +59,7 @@ int main(int argc, char * argv[]) {
 		}
 
 		OutputManager outputManager(particles, params.modulation_potential, params.id);
-//      outputManager.dump_spectra(2 * cgs::GeV, 5. * cgs::TeV, 100);
+	        outputManager.dump_spectra(2 * cgs::GeV, 5. * cgs::TeV, 100);
 		outputManager.dump_ratios(2 * cgs::GeV, 5. * cgs::TeV, 100);
 //      outputManager.dump_heavy_spectra(10 * cgs::GeV, 10. * cgs::TeV, 50);
 
