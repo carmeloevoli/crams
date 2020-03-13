@@ -1,7 +1,6 @@
 #ifndef INCLUDE_OUTPUT_H_
 #define INCLUDE_OUTPUT_H_
 
-#include <vector>
 #include "particle.h"
 
 class OutputManager {

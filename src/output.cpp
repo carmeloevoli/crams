@@ -1,5 +1,6 @@
 #include "output.h"
 #include "utilities.h"
+#include <iomanip>
 
 OutputManager::OutputManager(const Particles& particles, double phi, size_t id) :
 		_particles(particles), _phi(phi) {
@@ -76,13 +77,13 @@ double OutputManager::Fe(const double& R) const {
 double OutputManager::Be_ratio(const double& R) const {
 	double Be9 = (ptr_Be9.isPresent) ? ptr_Be9.it->I_R_TOA(R, _phi) : 0;
 	double Be10 = (ptr_Be10.isPresent) ? ptr_Be10.it->I_R_TOA(R, _phi) : 0;
-	return Be10 / Be9;
+	return (Be9 > 0.) ? Be10 / Be9 : 0.;
 }
 
 double OutputManager::He_ratio(const double& R) const {
 	double He3 = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, _phi) : 0;
 	double He4 = (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, _phi) : 0;
-	return He3 / He4;
+	return (He4 > 0) ? He3 / He4 : 0.;
 }
 
 void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) const {
@@ -109,7 +110,7 @@ void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) cons
 void OutputManager::dump_ratios(double R_min, double R_max, size_t R_size) const {
 	auto _R = LogAxis(R_min, R_max, R_size);
 	std::ofstream outfile(ratios_filename.c_str());
-	outfile << std::scientific;
+	outfile << std::scientific << std::setprecision(4);
 	for (auto& R : _R) {
 		outfile << R / cgs::GeV << "\t";
 		outfile << He(R) / O(R) << "\t";
