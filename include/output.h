@@ -35,6 +35,7 @@ private:
 	ptr_Particle ptr_O16 = find_ptr(O16);
 	ptr_Particle ptr_O17 = find_ptr(O17);
 	ptr_Particle ptr_O18 = find_ptr(O18);
+	ptr_Particle ptr_Fe56 = find_ptr(Fe56);
 	ptr_Particle find_ptr(const PID& pid);
 
 	std::string spectra_filename;
@@ -44,12 +45,14 @@ private:
 	double He(const double& R) const;
 	double Li(const double& R) const;
 	double Be(const double& R) const;
-	double Be_ratio(const double& R) const;
-        double He_ratio(const double& R) const;
 	double B(const double& R) const;
 	double C(const double& R) const;
 	double N(const double& R) const;
 	double O(const double& R) const;
+	double Fe(const double& R) const;
+
+	double Be_ratio(const double& R) const;
+	double He_ratio(const double& R) const;
 };
 
 #endif /* INCLUDE_OUTPUT_H_ */
