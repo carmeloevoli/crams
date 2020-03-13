@@ -54,7 +54,7 @@ void SpallationXsecs::read_table() {
 			x.reserve(_T_size);
 			for (size_t i = 0; i < _T_size; ++i) {
 				inf >> x_temp;
-				x.emplace_back(x_temp * cgs::mbarn);
+				x.emplace_back(std::max(x_temp, 1e-10) * cgs::mbarn);
 			}
 			if (PID(Z_frag, A_frag) == _fragment) {
 				_table[PID(Z_proj, A_proj)] = x;
