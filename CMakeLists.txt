@@ -7,7 +7,7 @@ project(CRAMS VERSION ${VERSION} LANGUAGES ${LANGS})
 set( CMAKE_VERBOSE_MAKEFILE off )
 set( CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
 set( CMAKE_CXX_COMPILER "/usr/local/Cellar/gcc/9.2.0_1/bin/g++-9" )
-set( CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++11 -fopenmp -DTHREADS=4")
+set( CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++11 -fopenmp -DTHREADS=4 -DDEBUG -DGALPROP2017")
 set( CRAMS_EXTRA_INCLUDES )
 set( CRAMS_EXTRA_LIBRARIES )
 
@@ -31,6 +31,7 @@ set( CRAMS_SRCS
 	 src/primary.cpp
 	 src/secondary.cpp
 	 src/spallation.cpp
+	 src/Tripathi99.cpp
      src/utilities.cpp
      "${git_revision_cpp}"
 )

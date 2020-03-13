@@ -32,7 +32,7 @@ public:
 		return _efficiency;
 	}
 
-	Grammage* getX () const {
+	Grammage* getX() const {
 		return _X;
 	}
 
@@ -44,14 +44,6 @@ public:
 		return _I_T.at(i);
 	}
 
-	void build_grammage(const Params& params) {
-		_X = new Grammage(_pid, params);
-	}
-
-	void build_snr_source(const Params& params) {
-		_Q = new SnrSource(_pid, _efficiency, params);
-	}
-
 	inline bool isDone() const {
 		return _isDone;
 	}
@@ -60,14 +52,10 @@ public:
 		return _isDone;
 	}
 
-	void build_inelastic_Xsec(const Params& params) {
-		_sigma = (params.id == 0) ? new InelasticXsec(_pid, false) : new InelasticXsec(_pid, true);
-	}
-
-	void build_losses(const Params& params) {
-		_dEdx = new Losses(_pid, params);
-	}
-
+	void build_grammage(const Params& params);
+	void build_snr_source(const Params& params);
+	void build_inelastic_Xsec(const Params& params);
+	void build_losses(const Params& params);
 	void build_secondary_source(const std::vector<Particle>& particles, const Params& params);
 	void build_tertiary_source(const std::vector<Particle>& particles);
 	void build_grammage_at_source(const std::vector<Particle>& particles, const Params& params);

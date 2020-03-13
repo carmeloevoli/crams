@@ -50,6 +50,22 @@ void Particle::clear() {
 Particle::~Particle() {
 }
 
+void Particle::build_grammage(const Params& params) {
+	_X = new Grammage(_pid, params);
+}
+
+void Particle::build_snr_source(const Params& params) {
+	_Q = new SnrSource(_pid, _efficiency, params);
+}
+
+void Particle::build_inelastic_Xsec(const Params& params) {
+	_sigma = (params.id == 0) ? new InXsecTripathi99(_pid, false) : new InXsecTripathi99(_pid, true);
+}
+
+void Particle::build_losses(const Params& params) {
+	_dEdx = new Losses(_pid, params);
+}
+
 void Particle::build_secondary_source(const std::vector<Particle>& particles,
 		const Params& params) {
 	auto id = params.id;

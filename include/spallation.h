@@ -9,8 +9,6 @@
 #include "cgs.h"
 #include "pid.h"
 
-#define GALPROP2017
-
 class SpallationXsecs {
 public:
 	SpallationXsecs(const PID& fragment, const double& Be_xsecs_norm, bool doError = false);
