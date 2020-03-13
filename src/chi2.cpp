@@ -92,6 +92,12 @@ double Chi2_He::get_model(const double& R, const double& phi) const {
 	return value;
 }
 
+double Chi2_B::get_model(const double& R, const double& phi) const {
+	double value = (ptr_B10.isPresent) ? ptr_B10.it->I_R_TOA(R, phi) : 0.;
+	value += (ptr_B11.isPresent) ? ptr_B11.it->I_R_TOA(R, phi) : 0.;
+	return value;
+}
+
 double Chi2_C::get_model(const double& R, const double& phi) const {
 	double value = (ptr_C12.isPresent) ? ptr_C12.it->I_R_TOA(R, phi) : 0.;
 	value += (ptr_C13.isPresent) ? ptr_C13.it->I_R_TOA(R, phi) : 0.;
