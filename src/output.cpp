@@ -68,6 +68,11 @@ double OutputManager::O(const double& R) const {
 	return value;
 }
 
+double OutputManager::Fe(const double& R) const {
+	double value = (ptr_Fe56.isPresent) ? ptr_Fe56.it->I_R_TOA(R, _phi) : 0;
+	return value;
+}
+
 double OutputManager::Be_ratio(const double& R) const {
 	double Be9 = (ptr_Be9.isPresent) ? ptr_Be9.it->I_R_TOA(R, _phi) : 0;
 	double Be10 = (ptr_Be10.isPresent) ? ptr_Be10.it->I_R_TOA(R, _phi) : 0;
@@ -75,9 +80,9 @@ double OutputManager::Be_ratio(const double& R) const {
 }
 
 double OutputManager::He_ratio(const double& R) const {
-        double He3 = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, _phi) : 0;
-        double He4 = (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, _phi) : 0;
-        return He3 / He4;
+	double He3 = (ptr_He3.isPresent) ? ptr_He3.it->I_R_TOA(R, _phi) : 0;
+	double He4 = (ptr_He4.isPresent) ? ptr_He4.it->I_R_TOA(R, _phi) : 0;
+	return He3 / He4;
 }
 
 void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) const {
@@ -95,6 +100,7 @@ void OutputManager::dump_spectra(double R_min, double R_max, size_t R_size) cons
 		outfile << C(R) / units << "\t";
 		outfile << N(R) / units << "\t";
 		outfile << O(R) / units << "\t";
+		outfile << Fe(R) / units << "\t";
 		outfile << "\n";
 	}
 	outfile.close();
@@ -116,7 +122,7 @@ void OutputManager::dump_ratios(double R_min, double R_max, size_t R_size) const
 		outfile << B(R) / O(R) << "\t";
 		outfile << C(R) / O(R) << "\t";
 		outfile << Be_ratio(R) << "\t";
-                outfile << He_ratio(R) << "\t";
+		outfile << He_ratio(R) << "\t";
 		outfile << "\n";
 	}
 	outfile.close();
