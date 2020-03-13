@@ -279,6 +279,7 @@ void Particle::dump() const {
 		double R = pc_func(_pid.get_A(), T) / (double) _pid.get_Z();
 		outfile << R / cgs::GeV << "\t";
 		outfile << _Q->get(T) << "\t";
+		outfile << _Q_sec->get(T) << "\t";
 		outfile << _X->get(T) / (cgs::gram / cgs::cm2) << "\t";
 		outfile << _X->diffusion_timescale(T) / cgs::year << "\t";
 		outfile << _X->advection_timescale() / cgs::year << "\t";
