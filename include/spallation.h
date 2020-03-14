@@ -45,7 +45,7 @@ protected:
 #endif
 
 #ifdef USINE
-	std::string _table_filename = "data/sigProdWebber03+Coste12.txt"
+	std::string _table_filename = "data/sigProdWebber03+Coste12.txt";
 	double _T_min = 0.01 * cgs::GeV;
 	double _T_max = 10. * cgs::GeV;
 	size_t _T_size = 41;
