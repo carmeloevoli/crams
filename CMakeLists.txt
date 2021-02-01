@@ -7,7 +7,7 @@ project(CRAMS VERSION ${VERSION} LANGUAGES ${LANGS})
 set( CMAKE_VERBOSE_MAKEFILE off )
 set( CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
 set( CMAKE_CXX_COMPILER "/usr/local/Cellar/gcc/9.3.0_1/bin/g++-9" )
-set( CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++11 -fopenmp -DTHREADS=4 -DEVOLI2018")
+set( CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++11 -fopenmp -DTHREADS=4 -DEVOLI2019")
 set( CRAMS_EXTRA_INCLUDES )
 set( CRAMS_EXTRA_LIBRARIES )
 
@@ -22,7 +22,7 @@ set(git_revision_cpp "${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp")
 configure_file("src/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
 
 set( CRAMS_SRCS 
-     src/xsecs/Evoli2018.cpp 
+     src/xsecs/Evoli2019.cpp 
      src/xsecs/Tripathi99.cpp
 #     src/chi2.cpp
      src/csvreader.cpp
