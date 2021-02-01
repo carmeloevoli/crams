@@ -1,26 +1,26 @@
 #ifndef INCLUDE_LOSSES_H_
 #define INCLUDE_LOSSES_H_
 
-#include "params.h"
+#include "input.h"
 #include "pid.h"
 
+namespace CRAMS {
 class Losses {
-public:
-	Losses();
-	Losses(const PID& pid, const Params& params);
-	virtual ~Losses();
-	double get(const double& T) const;
-	double dE_dx_adiabatic(const double& T) const;
-	double dE_dx_ionization(const double& T) const;
-	//double dE_dt_adiabatic(const double& T) const;
-	//double dE_dt_ionization(const double& T) const;
-	double get_derivative(const double& T);
+ public:
+  Losses();
+  Losses(const PID& pid, const Input& input);
+  virtual ~Losses();
+  double get(const double& T) const;
+  double dEdx_adiabatic(const double& T) const;
+  double dEdx_ionization(const double& T) const;
+  double getDerivative(const double& T);
 
-protected:
-	int A = 0;
-	int Z = 0;
-	double factor_ad = 0;
-	double mu = 0;
+ protected:
+  PID m_pid;
+  double m_factorAdv = 0;
+  double m_mu = 0;
 };
 
-#endif /* INCLUDE_LOSSES_H_ */
+}  // namespace CRAMS
+
+#endif  // INCLUDE_LOSSES_H_

@@ -1,21 +1,22 @@
 #ifndef INCLUDE_PRIMARY_H_
 #define INCLUDE_PRIMARY_H_
 
-#include "params.h"
 #include "pid.h"
 
-class SnrSource {
-public:
-	SnrSource();
-	SnrSource(const PID& pid, const double& epsilon, const Params& params);
-	virtual ~SnrSource();
-	double get(const double& T) const;
+namespace CRAMS {
+class PrimarySource {
+ public:
+  PrimarySource();
+  PrimarySource(const PID& pid, const double& abundance, const double& slope, const double& surfaceDensity);
+  virtual ~PrimarySource();
+  double get(const double& T) const;
 
-protected:
-	int A = 0;
-	int Z = 0;
-	double slope = 0.;
-	double factor = 0.;
+ protected:
+  PID m_pid;
+  double m_slope = 4.0;
+  double m_energyFactor = 0.;
 };
 
-#endif /* INCLUDE_PRIMARY_H_ */
+}  // namespace CRAMS
+
+#endif  // INCLUDE_PRIMARY_H_

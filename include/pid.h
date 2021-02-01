@@ -3,107 +3,89 @@
 
 #include <cassert>
 #include <cmath>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <string>
 
+//#include "spdlog/fmt/ostr.h"  // must be included
+//#include "spdlog/spdlog.h"    // must be included
+
+namespace CRAMS {
+
 class PID {
-public:
-	PID() {
-		set(0, 0, false);
-	}
+ public:
+  PID() { set(0, 0, false); }
 
-	PID(const int& Z, const int& A, const bool& isTertiary = false) {
-		assert(A > 0);
-		assert(Z <= A);
-		set(Z, A, isTertiary);
-	}
+  PID(const int& Z, const int& A, const bool& isTertiary = false) {
+    assert(A > 0);
+    assert(Z <= A);
+    set(Z, A, isTertiary);
+  }
 
-	virtual ~PID() {
-	}
+  virtual ~PID() {}
 
-	void set(const int& Z, const int& A, const bool& isTertiary) {
-		_Z = Z;
-		_A = A;
-		_id = A * 1000 + Z;
-		_isTertiary = isTertiary;
-	}
+  void set(const int& Z, const int& A, const bool& isTertiary) {
+    m_Z = Z;
+    m_A = A;
+    m_id = A * 1000 + Z;
+    m_isTertiary = isTertiary;
+  }
 
-	int get_Z() const {
-		return _Z;
-	}
+  int getZ() const { return m_Z; }
+  int getA() const { return m_A; }
+  double getZoverA() const { return (m_A > 0) ? fabs((double)m_Z / (double)m_A) : 0; }
+  double getAoverZ() const { return (m_A > 0) ? fabs((double)m_A / (double)m_Z) : 0; }
+  int getId() const { return m_id; }
 
-	int get_A() const {
-		return _A;
-	}
+  bool operator==(const PID& other) const { return m_id == other.m_id && m_isTertiary == other.m_isTertiary; }
+  bool operator!=(const PID& other) const { return m_id != other.m_id || m_isTertiary != other.m_isTertiary; }
 
-	double get_Z_over_A() const {
-		return (_A > 0) ? fabs((double) _Z / (double) _A) : 0;
-	}
+  bool operator<(const PID& other) const {
+    // Be10
+    if (m_id == 10005 && other.m_id == 10004) return true;
+    if (m_id == 10004 && other.m_id == 10005) return false;
+    // C14
+    if (m_id == 14007 && other.m_id == 14006) return true;
+    if (m_id == 14006 && other.m_id == 14007) return false;
+    // Cl36
+    if (m_id == 54026 && other.m_id == 54025) return true;
+    if (m_id == 54025 && other.m_id == 54026) return false;
+    // Mn54
+    if (m_id == 36018 && other.m_id == 36017) return true;
+    if (m_id == 36017 && other.m_id == 36018) return false;
+    // others
+    if (m_id != other.m_id)
+      return m_id < other.m_id;
+    else
+      return m_isTertiary;
+  }
 
-	double get_A_over_Z() const {
-		return (_A > 0) ? fabs((double) _A / (double) _Z) : 0;
-	}
+  bool isH() const { return (m_Z == 1); }
+  bool isHe() const { return (m_Z == 2); }
+  bool isTertiary() const { return m_isTertiary; }
 
-	int get_id() const {
-		return _id;
-	}
+  friend std::ostream& operator<<(std::ostream& stream, const PID& pid) {
+    stream << "(" << pid.getA() << "," << pid.getZ() << ")";
+    return stream;
+  }
 
-	bool operator==(const PID &other) const {
-		return _id == other._id && _isTertiary == other._isTertiary;
-	}
+  // template <typename OStream>
+  // friend OStream& operator<<(OStream& os, const PID& c) {
+  //   return os << "pid";
+  // }
 
-	bool operator!=(const PID &other) const {
-		return _id != other._id || _isTertiary != other._isTertiary;
-	}
+  std::string toString() const {
+    std::string ss;
+    ss = "(" + std::to_string(m_Z) + "," + std::to_string(m_A) + ")";
+    return ss;
+  }
 
-	bool operator<(const PID &other) const {
-		if (_id == 10005 && other._id == 10004)
-			return true;
-		if (_id == 10004 && other._id == 10005)
-			return false;
-		if (_id != other._id)
-			return _id < other._id;
-		else
-			return _isTertiary;
-	}
-
-//	bool operator>(const PID &other) const {
-//		if (_id != other._id)
-//			return _id > other._id;
-//		else
-//			return !_isTertiary;
-//	}
-
-	bool is_H() const {
-		return (_Z == 1);
-	}
-
-	bool is_He() const {
-		return (_Z == 2);
-	}
-
-	bool is_tertiary() const {
-		return _isTertiary;
-	}
-
-	friend std::ostream& operator<<(std::ostream& stream, const PID& pid) {
-		stream << "(" << pid.get_A() << "," << pid.get_Z() << ")";
-		return stream;
-	}
-
-	std::string to_string() const {
-		std::string ss;
-		ss = "(" + std::to_string(_Z) + "," + std::to_string(_A) + ")";
-		return ss;
-	}
-
-protected:
-	int _Z;
-	int _A;
-	int _id;
-	bool _isTertiary;
-};
+ protected:
+  int m_Z;
+  int m_A;
+  int m_id;
+  bool m_isTertiary;
+};  // namespace CRAMS
 
 typedef std::pair<PID, PID> Channel;
 
@@ -145,62 +127,62 @@ static const PID Si32 = PID(14, 32);
 static const PID P31 = PID(15, 31);
 static const PID P32 = PID(15, 32);
 static const PID P33 = PID(15, 33);
+static const PID S32 = PID(16, 32);
+static const PID S33 = PID(16, 33);
+static const PID S34 = PID(16, 34);
+static const PID S36 = PID(16, 36);
+static const PID Cl35 = PID(17, 35);
+static const PID Cl36 = PID(17, 36);
+static const PID Cl37 = PID(17, 37);
+static const PID Ar36 = PID(18, 36);
+static const PID Ar37 = PID(18, 37);
+static const PID Ar38 = PID(18, 38);
+static const PID Ar40 = PID(18, 40);
+static const PID K39 = PID(19, 39);
+static const PID K40 = PID(19, 40);
+static const PID K41 = PID(19, 41);
+static const PID Ca40 = PID(20, 40);
+static const PID Ca41 = PID(20, 41);
+static const PID Ca42 = PID(20, 42);
+static const PID Ca43 = PID(20, 43);
+static const PID Ca44 = PID(20, 44);
+static const PID Ca46 = PID(20, 46);
+static const PID Ca48 = PID(20, 48);
+static const PID Sc45 = PID(21, 45);
+static const PID Ti44 = PID(22, 44);
+static const PID Ti46 = PID(22, 46);
+static const PID Ti47 = PID(22, 47);
+static const PID Ti48 = PID(22, 48);
+static const PID Ti49 = PID(22, 49);
+static const PID Ti50 = PID(22, 50);
+static const PID V49 = PID(23, 49);
+static const PID V50 = PID(23, 50);
+static const PID V51 = PID(23, 51);
+static const PID Cr48 = PID(24, 48);
+static const PID Cr50 = PID(24, 50);
+static const PID Cr51 = PID(24, 51);
+static const PID Cr52 = PID(24, 52);
+static const PID Cr53 = PID(24, 53);
+static const PID Cr54 = PID(24, 54);
+static const PID Mn53 = PID(25, 53);
+static const PID Mn54 = PID(25, 54);
+static const PID Mn55 = PID(25, 55);
+static const PID Fe54 = PID(26, 54);
+static const PID Fe55 = PID(26, 55);
 static const PID Fe56 = PID(26, 56);
+static const PID Fe57 = PID(26, 57);
+static const PID Fe58 = PID(26, 58);
+static const PID Fe60 = PID(26, 60);
+static const PID Co57 = PID(27, 57);
+static const PID Co59 = PID(27, 59);
+static const PID Ni56 = PID(28, 56);
+static const PID Ni58 = PID(28, 58);
+static const PID Ni59 = PID(28, 59);
+static const PID Ni60 = PID(28, 60);
+static const PID Ni61 = PID(28, 61);
+static const PID Ni62 = PID(28, 62);
+static const PID Ni64 = PID(28, 64);
 
-//33  	 15 	  2189376 2189376             	  B-      		  P
-//32  	 16 	  -1	-1	STABLE                 	          	  S
-//33  	 16 	  -1	-1	STABLE                 	          	  S
-//34  	 16 	  -1	-1	STABLE                 	          	  S
-//35  	 16 	  7560864 7560864              	  B-      		  S
-//36  	 16 	  -1	-1	STABLE                 	          	  S
-//35  	 17 	  -1	-1	STABLE                 	          	  Cl
-//36  	 17 	  9.499E12 9.499E12            	  B-      		  Cl
-//37  	 17 	  -1	-1	STABLE                 	          	  Cl
-//36  	 18 	  -1	-1	STABLE                 	          	  Ar
-//37  	 18 	  3019680.0 3019680.0       	  EC      		  Ar
-//38  	 18 	  -1	-1	STABLE                 	          	  Ar
-//39  	 18 	  8.489E9 8.489E9             	  B-      		  Ar
-//40  	 18 	  -1	-1	STABLE                 	          	  Ar
-//42  	 18 	  1.0382E9 1.0382E9            	  B-      		  Ar
-//39  	 19 	  -1	-1	STABLE                 	          	  K
-//40  	 19 	  3.938E16 3.938E16            	  B-      		  K
-//41  	 19 	  -1	-1	STABLE                 	          	  K
-//41  	 20 	  3.219E12 3.219E12            	  EC      		  Ca
-//42  	 20 	  -1	-1	STABLE                 	          	  Ca
-//43  	 20 	  -1	-1	STABLE                 	          	  Ca
-//44  	 20 	  -1	-1	STABLE                 	          	  Ca
-//45  	 20 	  1.405E7 1.405E7              	  B-      		  Ca
-//47  	 20 	  391910.4 391910.4            	  B-      		  Ca
-//48  	 20 	  5.996E26 5.996E26            	  BB      		  Ca
-//44  	 21 	  210996 210996               	  B-      		  Sc
-//45  	 21 	  -1	-1	STABLE                	          	  Sc
-//46  	 21 	  7239456.0 7239456.0        	  B-      		  Sc
-//47  	 21 	  289370.88 289370.88             B-      		  Sc
-//48  	 21 	  157212 157212                   B-      		  Sc
-//44  	 22 	  1.893E9 1.893E9                 EC      		  Ti
-//46  	 22 	  -1	-1	STABLE                 	          	  Ti
-//47  	 22 	  -1	-1	STABLE                 	          	  Ti
-//48  	 22 	  -1	-1	STABLE                 	          	  Ti
-//49  	 22 	  -1	-1	STABLE                 	          	  Ti
-//50  	 22 	  -1	-1	STABLE                 	          	  Ti
-//48  	 23 	  1380110.4 1380110.4             EC      		  V
-//49  	 23 	  2.851E7 2.851E7                 EC      		  V
-//50  	 23 	  4.418E24 4.418E24               EC      		  V
-//51  	 23 	  -1	-1	STABLE                 	          	  V
-//51  	 24 	  2393496 2393496                 EC      		  Cr
-//52  	 24 	  -1	-1	STABLE                 	          	  Cr
-//53  	 24 	  -1	-1	STABLE                 	          	  Cr
-//54  	 24 	  -1	-1	STABLE                 	          	  Cr
-//52  	 25 	  483062.4 483062.4               EC      		  Mn
-//53  	 25 	  1.18E14 1.18E14                 EC      		  Mn
-//54  	 25 	  2.69817e+07 1.98813e+13         ECB-      		  Mn
-//55  	 25 	  -1	-1	STABLE                 	          	  Mn
-//54  	 26 	  -1	-1	STABLE                 	          	  Fe
-//55  	 26 	  8.61522e+7 8.61522e+7         EC      		  Fe
-//56  	 26 	  -1	-1	STABLE                 	          	  Fe
-//57  	 26 	  -1	-1	STABLE                 	          	  Fe
-//58  	 26 	  -1	-1	STABLE                 	          	  Fe
-//59  	 26 	  3844368 3844368                 B-      		  Fe
-//60  	 26 	  4.734E13 4.734E13               B-      		  Fe
+}  // namespace CRAMS
 
-#endif /* INCLUDE_PID_H_ */
+#endif  // INCLUDE_PID_H_

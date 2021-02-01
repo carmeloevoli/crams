@@ -1,72 +1,60 @@
+#include "losses.h"
+
+#include <gsl/gsl_deriv.h>
+#include <plog/Log.h>
+
 #include <cmath>
 #include <string>
-#include <gsl/gsl_deriv.h>
+
 #include "cgs.h"
-#include "losses.h"
 #include "utilities.h"
 
-Losses::Losses() {
+namespace CRAMS {
+
+Losses::Losses() {}
+
+Losses::Losses(const PID& pid, const Input& input) : m_pid(pid), m_mu(input.mu) {
+  m_factorAdv = 2. * input.v_A / 3. / input.mu / CGS::cLight;
 }
 
-Losses::Losses(const PID& pid, const Params& params) {
-	A = pid.get_A();
-	Z = pid.get_Z();
-	factor_ad = 2. * params.v_A / 3. / params.mu / cgs::c_light;
-	mu = params.mu;
+Losses::~Losses() { LOGD << "deleted Losses for particle " << m_pid; }
+
+double Losses::get(const double& T) const { return dEdx_adiabatic(T) + dEdx_ionization(T); }
+
+double Losses::dEdx_adiabatic(const double& T) const {
+  double value = m_factorAdv * std::sqrt(T * (T + 2. * CGS::protonMassC2));
+  return -value;
 }
 
-Losses::~Losses() {
-#ifdef DEBUG
-	std::cout << "delete losses for particle " << A << " " << Z << "\n";
-#endif
+double Losses::dEdx_ionization(const double& T) const {
+  const double beta = Utilities::T2beta(T);
+  const double gamma = Utilities::T2gamma(T);
+  constexpr double mec2 = CGS::electronMassC2;
+  constexpr double twoPiRe2 = 2. * M_PI * pow2(CGS::electronRadius);
+  double Q_max = 2. * CGS::electronMassC2 * pow2(beta) * pow2(gamma);
+  Q_max /= 1. + 2. * gamma * CGS::electronMass / ((double)m_pid.getA() * CGS::protonMass);
+  double B_H = std::log(2. * mec2 * (pow2(gamma) - 1.) * Q_max / pow2(CGS::IsH));
+  B_H -= 2. * pow2(beta);
+  double B_He = std::log(2. * mec2 * (pow2(gamma) - 1.) * Q_max / pow2(CGS::IsHe));
+  B_He -= 2. * pow2(beta);
+  double dEdx = twoPiRe2 * mec2 * (double)pow2(m_pid.getZ()) * (B_H + B_He * CGS::f_He);
+  dEdx /= CGS::protonMass * (1. + 4. * CGS::f_He) * (double)m_pid.getA() * pow2(beta);
+  return -dEdx;
 }
 
-double Losses::get(const double& T) const {
-	return dE_dx_adiabatic(T) + dE_dx_ionization(T);
+double gslLossesClassWrapper(double x, void* pp) {
+  Losses* losses = (Losses*)pp;
+  return losses->dEdx_adiabatic(x) + losses->dEdx_ionization(x);
 }
 
-double Losses::dE_dx_adiabatic(const double& T) const {
-	double value = factor_ad * std::sqrt(T * (T + 2. * cgs::proton_mass_c2));
-	return -value;
+double Losses::getDerivative(const double& T) {
+  double result, abserr;
+  gsl_function F;
+  F.function = &gslLossesClassWrapper;
+  F.params = this;
+  double h_start = 0.01 * T;
+  gsl_deriv_central(&F, T, h_start, &result, &abserr);
+  return result;
 }
 
-double Losses::dE_dx_ionization(const double& T) const {
-	double beta = beta_func(T);
-	double gamma = gamma_func(T);
-	constexpr double me_c2 = cgs::electron_mass_c2;
-	constexpr double two_PI_re2 = 2. * M_PI * pow2(cgs::electron_radius);
-	double Q_max = 2. * cgs::electron_mass_c2 * pow2(beta) * pow2(gamma);
-	Q_max /= 1. + 2. * gamma * cgs::electron_mass / ((double) A * cgs::proton_mass);
-	double B_H = std::log(2. * me_c2 * (pow2(gamma) - 1.) * Q_max / pow2(cgs::Is_H));
-	B_H -= 2. * pow2(beta);
-	double B_He = std::log(2. * me_c2 * (pow2(gamma) - 1.) * Q_max / pow2(cgs::Is_He));
-	B_He -= 2. * pow2(beta);
-	double dEdx = two_PI_re2 * me_c2 * (double) pow2(Z) * (B_H + B_He * cgs::f_He);
-	dEdx /= cgs::proton_mass * (1. + 4. * cgs::f_He) * (double) A * pow2(beta);
-	return -dEdx;
-}
-
-/* double Losses::dE_dt_adiabatic(const double& T) const {
- double v = beta_func(T) * cgs::c_light;
- return v * dE_dx_adiabatic(T) * cgs::rho_ism;
- }*/
-
-/* double Losses::dE_dt_ionization(const double& T) const {
- double v = beta_func(T) * cgs::c_light;
- return v * dE_dx_ionization(T) * cgs::rho_ism;
- }*/
-
-double gslLossesClassWrapper(double x, void * pp) {
-	Losses * losses = (Losses *) pp;
-	return losses->dE_dx_adiabatic(x) + losses->dE_dx_ionization(x);
-}
-
-double Losses::get_derivative(const double& T) {
-	double result, abserr;
-	gsl_function F;
-	F.function = &gslLossesClassWrapper;
-	F.params = this;
-	double h_start = 0.01 * T;
-	gsl_deriv_central(&F, T, h_start, &result, &abserr);
-	return result;
-}
+}  // namespace CRAMS

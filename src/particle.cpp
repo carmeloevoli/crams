@@ -1,308 +1,279 @@
+#include "particle.h"
+
+#include <plog/Log.h>
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <string>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_errno.h>
-#include <gsl/gsl_integration.h>
 
-#include "particle.h"
 #include "cgs.h"
 #include "utilities.h"
+#include "xsecs/Evoli2019.h"
 
-#define LIMIT 2000
-#define EPSREL 1e-3
+namespace CRAMS {
 
-#define ARRAYSIZE 300
-#define INFTY4INTEGRAL 1e3
+#define ARRAYSIZE 400
+
+Particle::Particle(const PID& pid, const NucleusParameters& nucleusParameters)
+    : m_pid(pid),
+      m_abundance(nucleusParameters.abundance),
+      m_slope(nucleusParameters.slope),
+      m_decayTime(nucleusParameters.decayTime) {}
+
+Particle::Particle(const PID& pid) : m_pid(pid) {}
+
+Particle::~Particle() { LOGD << "released memory of particle " << m_pid; }
+
+void Particle::reset() {
+  m_X.reset();
+  m_Q_p.reset();
+  m_Q_sec.reset();
+  m_Q_Xs.reset();
+  m_sigmaIn.reset();
+  m_dEdX.reset();
+}
+
+void Particle::buildVectors(const Input& input) {
+  m_T = Utilities::LogAxis(input.TSimMin, input.TSimMax, input.TSimSize);
+  m_I_T.resize(input.TSimSize);
+}
+
+void Particle::buildGrammage(const Input& input) {
+  if (isStable())
+    m_X = std::make_shared<Grammage>(m_pid, input);
+  else
+    m_X = std::make_shared<Grammage>(m_pid, input, m_decayTime);
+}
+
+void Particle::buildPrimarySource(const Input& input) {
+  m_Q_p = std::make_shared<PrimarySource>(m_pid, m_abundance, m_slope, input.mu);
+}
+
+void Particle::buildLosses(const Input& input) { m_dEdX = std::make_shared<Losses>(m_pid, input); }
+
+void Particle::buildInelasticXsecs(const Input& input) {
+  m_sigmaIn = (input.id == 0) ? std::make_shared<InXsecTripathi99>(m_pid, false)
+                              : std::make_shared<InXsecTripathi99>(m_pid, true);
+}
 
 #define COTH(A) (1. / std::tanh(A))
 
-Particle::Particle() {
+double Particle::productionProfileFromUnstable(const Input& input, const double& T, const double& decayTimeAtRest) {
+  const double v = Utilities::T2beta(T) * CGS::cLight;
+  const double u = input.v_A;
+  const double H = input.H;
+  const double D = m_X->D(T);
+  const double value = 2. * u / input.mu / v;
+  const double decayTimeAtT = Utilities::T2gamma(T) * decayTimeAtRest;
+  const double Delta = std::sqrt(1. + 4. * D / (pow2(u) * decayTimeAtT));
+  const double profile = Delta * COTH(u * H * Delta / 2. / D) - COTH(u * H / 2. / D);
+  return value * profile;
 }
 
-Particle::Particle(PID pid, double efficiency) :
-		_pid(pid), _efficiency(efficiency) {
+void Particle::buildSecondarySource(const Input& input, const std::vector<Particle>& particles) {
+  m_doSecondary = input.doSecondary;
+  const auto id = input.id;
+  const auto fudge = input.xsecsFudge;
+  const auto xsecs = (id == 0) ? SpallationXsecs(m_pid, fudge) : SpallationXsecs(m_pid, fudge, true);
+  const auto T_s = Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, ARRAYSIZE);
+  std::vector<double> Q_s;
+  for (auto& T : T_s) {
+    double value = 0;
+    for (auto& particle : particles) {
+      if (particle.getPid().getA() > m_pid.getA() && particle.isDone()) {
+        value += xsecs.getXsecOnISM(particle.getPid(), T) * particle.I_T_interpol(T);
+      }
+    }
+    value /= CGS::meanISMmass;
+    Q_s.push_back(value);
+  }
+
+  if (m_pid == B10) {
+    const auto ptr_Be10 = std::find(particles.begin(), particles.end(), Particle(Be10));
+    const auto tau_Be10 = ptr_Be10->getDecayTime();
+    size_t counter = 0;
+    for (auto& T : T_s) {
+      const double Q_Be10 = productionProfileFromUnstable(input, T, tau_Be10) * ptr_Be10->I_T_interpol(T);
+      Q_s.at(counter) += Q_Be10;
+      counter++;
+    }
+  }
+
+  if (m_pid == N14) {
+    const auto ptr_C14 = std::find(particles.begin(), particles.end(), Particle(C14));
+    const auto tau_C14 = ptr_C14->getDecayTime();
+    size_t counter = 0;
+    for (auto& T : T_s) {
+      const double Q_C14 = productionProfileFromUnstable(input, T, tau_C14) * ptr_C14->I_T_interpol(T);
+      Q_s.at(counter) += Q_C14;
+      counter++;
+    }
+  }
+
+  if (m_pid == Mg26) {
+    const auto ptr_Al26 = std::find(particles.begin(), particles.end(), Particle(Al26));
+    const auto tau_Al26 = ptr_Al26->getDecayTime();
+    size_t counter = 0;
+    for (auto& T : T_s) {
+      const double Q_Al26 = productionProfileFromUnstable(input, T, tau_Al26) * ptr_Al26->I_T_interpol(T);
+      Q_s.at(counter) += Q_Al26;
+      counter++;
+    }
+  }
+
+  if (m_pid == Ar36) {
+    const auto ptr_Cl36 = std::find(particles.begin(), particles.end(), Particle(Cl36));
+    const auto tau_Cl36 = ptr_Cl36->getDecayTime();
+    size_t counter = 0;
+    for (auto& T : T_s) {
+      const double Q_Cl36 = productionProfileFromUnstable(input, T, tau_Cl36) * ptr_Cl36->I_T_interpol(T);
+      Q_s.at(counter) += Q_Cl36;
+      counter++;
+    }
+  }
+
+  if (m_pid == Fe54) {
+    const auto ptr_Mn54 = std::find(particles.begin(), particles.end(), Particle(Mn54));
+    const auto tau_Mn54 = ptr_Mn54->getDecayTime();
+    size_t counter = 0;
+    for (auto& T : T_s) {
+      const double Q_Mn54 = productionProfileFromUnstable(input, T, tau_Mn54) * ptr_Mn54->I_T_interpol(T);
+      Q_s.at(counter) += Q_Mn54;
+      counter++;
+    }
+  }
+
+  m_Q_sec = std::make_shared<SecondarySource>(m_pid, T_s, Q_s);
 }
 
-std::string Particle::make_filename() const {
-	std::string filename = "particle";
-	filename += "_" + std::to_string(_pid.get_Z());
-	filename += "_" + std::to_string(_pid.get_A()) + ".log";
-	return filename;
-}
+// void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
+//   auto T_t = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, ARRAYSIZE);
+//   std::vector<double> Q_t;
+//   for (auto& T : T_t) {
+//     const double T_prime = T / cgs::inelasticity;
+//     double sigma_ISM = sigma_pp(T_prime);
+//     sigma_ISM *= (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
+//     double value = sigma_ISM / cgs::inelasticity;
+//     value *= (T_prime + cgs::proton_mass_c2) / (T + cgs::proton_mass_c2);
+//     value *= std::pow(T * (T + 2. * cgs::proton_mass_c2), 1.5) /
+//              std::pow(T_prime * (T_prime + 2. * cgs::proton_mass_c2), 1.5);
+//     for (auto& particle : particles) {
+//       if (particle.get_pid() == H1 && particle.isDone()) {
+//         value *= particle.I_T_interpol(T_prime);
+//       }
+//     }
+//     value /= cgs::mean_ism_mass;
+//     Q_t.push_back(value);
+//   }
+//   _Q_ter = new SourceTerm(T_t, Q_t);
+// }
 
-void Particle::clear() {
-	if (_X != nullptr)
-		delete _X;
-	if (_Q != nullptr)
-		delete _Q;
-	if (_Q_sec != nullptr)
-		delete _Q_sec;
-	if (_Q_ter != nullptr)
-		delete _Q_ter;
-	if (_sigma != nullptr)
-		delete _sigma;
-	if (_dEdx != nullptr)
-		delete _dEdx;
-}
-
-Particle::~Particle() {
-}
-
-void Particle::build_grammage(const Params& params) {
-	_X = new Grammage(_pid, params);
-}
-
-void Particle::build_snr_source(const Params& params) {
-	_Q = new SnrSource(_pid, _efficiency, params);
-}
-
-void Particle::build_inelastic_Xsec(const Params& params) {
-	_sigma = (params.id == 0) ? new InXsecTripathi99(_pid, false) : new InXsecTripathi99(_pid, true);
-}
-
-void Particle::build_losses(const Params& params) {
-	_dEdx = new Losses(_pid, params);
-}
-
-void Particle::build_secondary_source(const std::vector<Particle>& particles,
-		const Params& params) {
-	auto id = params.id;
-	auto norm = params.xsecs_norm;
-	auto xsecs = (id == 0) ? SpallationXsecs(_pid, norm) : SpallationXsecs(_pid, norm, true);
-	auto T_s = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, ARRAYSIZE);
-	std::vector<double> Q_s;
-	for (auto& T : T_s) {
-		double value = 0;
-		for (auto& particle : particles) {
-			if (particle.get_pid().get_A() > _pid.get_A() && particle.isDone()) {
-				value += xsecs.get_ISM(particle.get_pid(), T) * particle.I_T_interpol(T);
-			}
-		}
-		value /= cgs::mean_ism_mass;
-		Q_s.push_back(value);
-	}
-
-	if (_pid == B10) {
-		auto I_Be10 = std::find(particles.begin(), particles.end(), Particle(Be10, 0));
-		size_t counter = 0;
-		for (auto& T : T_s) {
-			double v = beta_func(T) * cgs::c_light;
-			double u = params.v_A;
-			double H = params.H;
-			double D = _X->D(T);
-			double value = 2. * u / params.mu / v;
-			double Delta = std::sqrt(1. + 4. * D / (pow2(u) * gamma_func(T) * cgs::tau_Be10));
-			double profile = Delta * COTH(u * H * Delta / 2. / D) - COTH(u * H / 2. / D);
-			double Q_Be10 = value * profile * I_Be10->I_T_interpol(T);
-			Q_s.at(counter) += Q_Be10;
-			counter++;
-		}
-	}
-
-	_Q_sec = new SourceTerm(T_s, Q_s);
-}
-
-void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
-	auto T_t = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, ARRAYSIZE);
-	std::vector<double> Q_t;
-	for (auto& T : T_t) {
-		const double T_prime = T / cgs::inelasticity;
-		double sigma_ISM = sigma_pp(T_prime);
-		sigma_ISM *= (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
-		double value = sigma_ISM / cgs::inelasticity;
-		value *= (T_prime + cgs::proton_mass_c2) / (T + cgs::proton_mass_c2);
-		value *= std::pow(T * (T + 2. * cgs::proton_mass_c2), 1.5)
-				/ std::pow(T_prime * (T_prime + 2. * cgs::proton_mass_c2), 1.5);
-		for (auto& particle : particles) {
-			if (particle.get_pid() == H1 && particle.isDone()) {
-				value *= particle.I_T_interpol(T_prime);
-			}
-		}
-		value /= cgs::mean_ism_mass;
-		Q_t.push_back(value);
-	}
-	_Q_ter = new SourceTerm(T_t, Q_t);
-}
-
-void Particle::build_grammage_at_source(const std::vector<Particle>& particles,
-		const Params& params) {
-	_doGrammageAtSource = true;
-	auto id = params.id;
-	auto norm = params.xsecs_norm;
-	auto xsecs = (id == 0) ? SpallationXsecs(_pid, norm) : SpallationXsecs(_pid, norm, true);
-	auto T_X = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, ARRAYSIZE);
-	std::vector<double> Q_X;
-	for (auto& T : T_X) {
-		double value = 0;
-		for (auto& particle : particles) {
-			if (particle.get_pid().get_A() > _pid.get_A() && particle.isDone()) {
-				double r = params.X_s / cgs::mean_ism_mass * xsecs.get_ISM(particle.get_pid(), T);
-				auto Q = new SnrSource(particle.get_pid(), particle.get_efficiency(), params);
-				value += r * Q->get(T);
-			}
-		}
-		Q_X.push_back(value);
-	}
-	_Q_Xs = new SourceTerm(T_X, Q_X);
+void Particle::buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles) {
+  m_doGrammageAtSource = true;
+  const auto id = input.id;
+  const auto fudge = input.xsecsFudge;
+  const auto xsecs = (id == 0) ? SpallationXsecs(m_pid, fudge) : SpallationXsecs(m_pid, fudge, true);
+  const auto T_X = Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, ARRAYSIZE);
+  std::vector<double> Q_X;
+  for (const auto& T : T_X) {
+    double value = 0;
+    for (const auto& particle : particles) {
+      if (particle.getPid().getA() > m_pid.getA() && particle.isDone()) {
+        const double r = input.X_s / CGS::meanISMmass * xsecs.getXsecOnISM(particle.getPid(), T);
+        const auto Q_p = PrimarySource(particle.getPid(), particle.getAbundance(), particle.getSlope(), input.mu);
+        value += r * Q_p.get(T);
+      }
+    }
+    Q_X.push_back(value);
+  }
+  m_Q_Xs = std::make_shared<SecondarySource>(m_pid, T_X, Q_X);
 }
 
 double Particle::I_T_interpol(const double& T) const {
-	return LinearInterpolatorLog(_T, _I_T, T);
+  double value = 0;
+  if (T > m_T.front() && T < m_T.back()) {
+    value = Utilities::LinearInterpolatorLog(m_T, m_I_T, T);
+  }
+  return value;
 }
 
 double Particle::I_R_LIS(const double& R) const {
-	double value = 0;
-	constexpr double mp_2 = pow2(cgs::proton_mass_c2);
-	double E_2 = pow2(R * _pid.get_Z_over_A()) + mp_2;
-	double T_ = std::sqrt(E_2) - cgs::proton_mass_c2;
-	{
-		double Z_A_squared = pow2(_pid.get_Z_over_A());
-		double dTdR = R * Z_A_squared;
-		dTdR /= std::sqrt(Z_A_squared * pow2(R) + mp_2);
-		value = I_T_interpol(T_) * dTdR;
-	}
-	return value;
+  double value = 0;
+  {
+    constexpr double mpSquared = pow2(CGS::protonMassC2);
+    const double ZOverASquared = pow2(m_pid.getZoverA());
+    const double ESquared = pow2(R) * ZOverASquared + mpSquared;
+    const double T = std::sqrt(ESquared) - CGS::protonMassC2;
+    double dTdR = R * ZOverASquared;
+    dTdR /= std::sqrt(ZOverASquared * pow2(R) + mpSquared);
+    value = I_T_interpol(T) * dTdR;
+  }
+  return value;
 }
 
-double Particle::I_R_TOA(const double& R, const double& modulation_potential) const {
-	// see arXiv:1511.08790
-	double value = 0;
-	double E_2 = pow2(R * _pid.get_Z_over_A()) + pow2(cgs::proton_mass_c2);
-	double T = std::sqrt(E_2) - cgs::proton_mass_c2;
-	double Phi = _pid.get_Z_over_A() * modulation_potential;
-	double T_ISM = std::min(T + Phi, _T.back());
-	double Z_A_squared = pow2(_pid.get_Z_over_A());
-	double dTdR = R * Z_A_squared;
-	dTdR /= std::sqrt(Z_A_squared * pow2(R) + pow2(cgs::proton_mass_c2));
-	double factor = T * (T + 2. * cgs::proton_mass_c2);
-	factor /= (T + Phi) * (T + Phi + 2. * cgs::proton_mass_c2);
-	value = factor * I_T_interpol(T_ISM) * dTdR;
-	return value;
+double Particle::I_R_TOA(const double& R, const double& modulationPotential) const {
+  // see arXiv:1511.08790
+  double value = 0;
+  {
+    constexpr double mpSquared = pow2(CGS::protonMassC2);
+    const double ZOverASquared = pow2(m_pid.getZoverA());
+    const double ESquared = pow2(R) * ZOverASquared + mpSquared;
+    const double T = std::sqrt(ESquared) - CGS::protonMassC2;
+    const double Phi = m_pid.getZoverA() * modulationPotential;
+    const double T_ISM = std::min(T + Phi, m_T.back());
+    double dTdR = R * ZOverASquared;
+    dTdR /= std::sqrt(ZOverASquared * pow2(R) + mpSquared);
+    double factor = T * (T + 2. * CGS::protonMassC2);
+    factor /= (T + Phi) * (T + Phi + 2. * CGS::protonMassC2);
+    value = factor * I_T_interpol(T_ISM) * dTdR;
+  }
+  return value;
 }
 
-bool Particle::run(const std::vector<double>& T) {
-	_T = std::vector<double>(T);
-	_I_T.resize(T.size());
-#pragma omp parallel for schedule(dynamic) num_threads(THREADS)
-	for (size_t i = 0; i < _T.size(); ++i) {
-		_I_T.at(i) = compute_integral(_T.at(i));
-	}
-	return _I_T.size() == _T.size();
+double Particle::Q_total(const double& T) const {
+  //  if (_pid == H1_ter) value = _Q_ter->get(T); TODO do this
+  const double Q_sec_total = m_Q_sec->get(T) + ((m_doGrammageAtSource) ? m_Q_Xs->get(T) : 0.);
+  return m_Q_p->get(T) + ((m_doSecondary) ? Q_sec_total : 0.);
 }
 
-double Particle::Lambda_1(const double& T) {
-	double value = 0;
-	if (_pid == Be10) {
-		value = 1. / _X->get(T, cgs::tau_Be10) + _sigma->get_ISM(T) / cgs::mean_ism_mass
-				+ _dEdx->get_derivative(T);
-	} else {
-		value = 1. / _X->get(T) + _sigma->get_ISM(T) / cgs::mean_ism_mass
-				+ _dEdx->get_derivative(T);
-	}
-	return value;
+void Particle::computeIntensity() {
+  //#pragma omp parallel for schedule(dynamic) num_threads(THREADS)
+  for (size_t i = 0; i < m_T.size(); ++i) {
+    m_I_T[i] = computeFluxAtEnergy(m_T[i]);
+  }
+
+  if (Utilities::isGoodAndPositive(m_I_T))
+    setDone();
+  else
+    throw std::runtime_error("Houston, we've had a problem here.");
 }
 
-double Particle::Lambda_2(const double& T) {
-	double value = _dEdx->get(T);
-	return std::fabs(value);
-}
-
-double Particle::Q(const double& T) {
-	double value = 0;
-	if (_pid == H1_ter) {
-		value = _Q_ter->get(T);
-	} else {
-		value = _Q->get(T) + _Q_sec->get(T) + ((_doGrammageAtSource) ? _Q_Xs->get(T) : 0.);
-	}
-	return value;
-}
-
-double compute_integral_qags(gsl_integration_workspace * w, gsl_function * F, double x_lo,
-		double x_hi) {
-	double result, error;
-	gsl_integration_qags(F, x_lo, x_hi, 0, EPSREL, LIMIT, w, &result, &error);
-	return result;
-}
-
-double compute_integral_qag(gsl_integration_workspace * w, gsl_function * F, double x_lo,
-		double x_hi) {
-	double result, error;
-	int key = 2;
-	gsl_integration_qag(F, x_lo, x_hi, 0, EPSREL, LIMIT, key, w, &result, &error);
-	return result;
-}
-
-double Particle::internal_integrand(const double& T_second) {
-	return Lambda_1(T_second) / Lambda_2(T_second);
-}
-
-double gslParticleClassExpWrapper(double x, void * pp) {
-	double E_second = std::exp(x);
-	Particle * particle = (Particle *) pp;
-	return E_second * particle->internal_integrand(E_second);
-}
-
-double Particle::ExpIntegral(const double& T, const double& T_prime) {
-	double result = 0;
-	gsl_function F;
-	F.params = this;
-	F.function = &gslParticleClassExpWrapper;
-	gsl_integration_workspace * w = gsl_integration_workspace_alloc(LIMIT);
-	result = compute_integral_qags(w, &F, std::log(T), std::log(T_prime));
-	gsl_integration_workspace_free(w);
-	return result;
-}
-
-double Particle::external_integrand(const double& T_prime, const double& T) {
-	double value = Q(T_prime) * std::exp(-ExpIntegral(T, T_prime));
-	value /= Lambda_2(T_prime);
-	return value;
-}
-
-struct gsl_f_pars {
-	double T;
-	Particle * pt_Particle;
-};
-
-double gslParticleClassWrapper(double x, void * pp) {
-	gsl_f_pars *p = (gsl_f_pars *) pp;
-	double T = p->T;
-	double T_prime = std::exp(x);
-	return T_prime * p->pt_Particle->external_integrand(T_prime, T);
-}
-
-double Particle::compute_integral(const double& T) {
-	double result = 0;
-	gsl_f_pars pars = { T, this };
-	gsl_function F;
-	F.params = &pars;
-	F.function = &gslParticleClassWrapper;
-	gsl_integration_workspace * w = gsl_integration_workspace_alloc(LIMIT);
-	result = compute_integral_qag(w, &F, std::log(T), std::log(INFTY4INTEGRAL * T));
-	gsl_integration_workspace_free(w);
-	return result;
+std::string makeParticleFilename(const PID& pid) {
+  std::string filename = "output/crams_particle_dump";
+  filename += "_" + std::to_string(pid.getZ());
+  filename += "_" + std::to_string(pid.getA()) + ".log";
+  return filename;
 }
 
 void Particle::dump() const {
-	auto filename = make_filename();
-	std::ofstream outfile(filename);
-	outfile << std::scientific;
-	for (double T = cgs::GeV; T < 1.1 * cgs::TeV; T *= 1.1) {
-		outfile << T / cgs::GeV << "\t";
-		double E = T + cgs::proton_mass_c2;
-		double R = pc_func(_pid.get_A(), T) / (double) _pid.get_Z();
-		outfile << R / cgs::GeV << "\t";
-		outfile << _Q->get(T) << "\t";
-		outfile << _Q_sec->get(T) << "\t";
-		outfile << _X->get(T) / (cgs::gram / cgs::cm2) << "\t";
-		outfile << _X->diffusion_timescale(T) / cgs::year << "\t";
-		outfile << _X->advection_timescale() / cgs::year << "\t";
-		outfile << cgs::mean_ism_mass / _sigma->get_ISM(T) / (cgs::gram / cgs::cm2) << "\t";
-		outfile << "\n";
-	}
-	outfile.close();
+  std::ofstream outfile(makeParticleFilename(m_pid));
+  outfile << std::scientific;
+  for (double T = CGS::GeV; T < 1.1 * CGS::TeV; T *= 1.1) {
+    outfile << T / CGS::GeV << "\t";
+    double R = Utilities::T2pc(T, m_pid) / (double)m_pid.getZ();
+    outfile << R / CGS::GeV << "\t";
+    outfile << m_Q_p->get(T) << "\t";
+    outfile << m_Q_sec->get(T) << "\t";
+    outfile << m_X->get(T) / (CGS::gram / CGS::cm2) << "\t";
+    outfile << m_X->diffusionTimescale(T) / CGS::year << "\t";
+    outfile << m_X->advectionTimescale() / CGS::year << "\t";
+    outfile << CGS::meanISMmass / m_sigmaIn->getXsecOnISM(T) / (CGS::gram / CGS::cm2) << "\t";
+    outfile << m_dEdX->get(T) << "\t";  // TODO how to transform in time?
+    outfile << "\n";
+  }
+  outfile.close();
 }
 
-#undef LIMIT
+}  // namespace CRAMS

@@ -1,39 +1,34 @@
-#include "cgs.h"
 #include "primary.h"
+
+#include <plog/Log.h>
+
+#include "cgs.h"
 #include "utilities.h"
 
-SnrSource::SnrSource() {
+namespace CRAMS {
+
+PrimarySource::PrimarySource() {}
+
+PrimarySource::~PrimarySource() { LOGD << "deleted PrimarySource for particle " << m_pid; }
+
+PrimarySource::PrimarySource(const PID& pid, const double& abundance, const double& slope, const double& surfaceDensity)
+    : m_pid(pid), m_slope(slope) {
+  if (abundance > 0.) {
+    constexpr double L_SN_surface = CGS::E_SN * CGS::snRate / M_PI / pow2(CGS::galaxySize);
+    m_energyFactor = (double)pid.getA() * abundance * L_SN_surface;
+    m_energyFactor /= surfaceDensity * Utilities::GammaIntegral(slope) * pow2(CGS::protonMassC2);
+  }
 }
 
-SnrSource::~SnrSource() {
-#ifdef DEBUG
-	std::cout << "delete primary source for particle " << A << " " << Z << "\n";
-#endif
+double PrimarySource::get(const double& T) const {
+  double value = 0.;
+  if (m_energyFactor > 0.) {
+    const double beta = Utilities::T2beta(T);
+    const double pc = Utilities::T2pc(T, m_pid);
+    value = m_energyFactor / beta;
+    value *= std::pow(pc / CGS::protonMassC2, 2. - m_slope);
+  }
+  return value;
 }
 
-SnrSource::SnrSource(const PID& pid, const double& epsilon, const Params& params) {
-	A = pid.get_A();
-	Z = pid.get_Z();
-	if (pid.get_Z() == 1)
-		slope = params.H_slope;
-	else if (pid.get_Z() == 2)
-		slope = params.He_slope;
-	else
-		slope = params.nuclei_slope;
-	if (epsilon > 0.) {
-		constexpr double L_SN_surface = cgs::E_SN * cgs::sn_rate / M_PI / pow2(cgs::galaxy_size);
-		factor = (double) A * epsilon * L_SN_surface;
-		factor /= params.mu * Gamma_Integral(slope) * pow2(cgs::proton_mass_c2);
-	}
-}
-
-double SnrSource::get(const double& T) const {
-	double value = 0.;
-	if (factor > 0.) {
-		double beta = beta_func(T);
-		double pc = pc_func(A, T);
-		value = factor / beta;
-		value *= std::pow(pc / cgs::proton_mass_c2, 2. - slope);
-	}
-	return value;
-}
+}  // namespace CRAMS
