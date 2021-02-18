@@ -28,26 +28,42 @@ void Input::setParam(const std::string& key, const double& value) {
     m_R_b = value * CGS::GeV;
   else if (key == "va")
     m_v_A = value * CGS::km / CGS::sec;
-  else if (key == "phi")
+  else if (key == "phi") {
     m_modulationPotential = value * CGS::GeV;
-  else if (key == "xsecsfudge")
+    LOGI << "changed modulation potential to " << m_modulationPotential / CGS::GeV << " GeV";
+  } else if (key == "xsecsfudge")
     m_xsecsFudge = value;
   else if (key == "id")
     m_id = (int)value;
 }
 
 void Input::readParamsFromFile(const std::string& filename) {
-  //   std::ifstream infile(filename.c_str());
-  //   std::string line;
-  //   while (std::getline(infile, line)) {
-  //     std::istringstream iss(line);
-  //     std::string key;
-  //     double value;
-  //     if (!(iss >> key >> value)) {
-  //       break;
-  //     }  // error
-  //     setParam(key, value);
-  //   }
+  std::ifstream infile(filename.c_str());
+  std::string line;
+  while (std::getline(infile, line)) {
+    std::istringstream iss(line);
+    std::string key;
+    double value;
+    if (!(iss >> key >> value)) {
+      break;
+    }  // error
+    setParam(key, value);
+  }
+}
+
+void eraseSubStr(std::string* main_string, const std::string& sub_string) {
+  // Search for the substring in string
+  size_t pos = main_string->find(sub_string);
+  if (pos != std::string::npos) {
+    main_string->erase(pos, sub_string.length());
+  }
+}
+
+void Input::set_simname(const std::string& params_filename) {
+  m_simname = params_filename;
+  const auto size = m_simname.length();
+  eraseSubStr(&m_simname, ".ini");
+  if (m_simname.length() != size - 4) throw std::runtime_error("Problem with the input filename!");
 }
 
 void Input::print() const {

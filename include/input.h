@@ -2,6 +2,7 @@
 #define INCLUDE_INPUT_H_
 
 #include <map>
+#include <string>
 
 #include "cgs.h"
 #include "particlelist.h"
@@ -12,9 +13,9 @@ class Input {
  private:
   double m_TSimMin = 0.1 * CGS::GeV;
   double m_TSimMax = 10. * CGS::TeV;
-  size_t m_TSimSize = 100;
+  size_t m_TSimSize = 5 * 64;
 
-  double m_ROutputMin = 2 * CGS::GeV;
+  double m_ROutputMin = 2. * CGS::GeV;
   double m_ROutputMax = 10. * CGS::TeV;
   size_t m_ROutputSize = 100;
 
@@ -32,6 +33,7 @@ class Input {
   double m_modulationPotential = 4.87754e-01 * CGS::GeV;
   double m_xsecsFudge = 1;
   size_t m_id = 0;
+  std::string m_simname = "test";
 
  public:
   Input() {}
@@ -40,6 +42,7 @@ class Input {
   void print() const;
   void readParamsFromFile(const std::string& filename);
   void setParam(const std::string& key, const double& value);
+  void set_simname(const std::string& inifilename);
 
   const double& TSimMin = m_TSimMin;
   const double& TSimMax = m_TSimMax;
@@ -63,6 +66,7 @@ class Input {
   const double& modulationPotential = m_modulationPotential;
   const double& xsecsFudge = m_xsecsFudge;
   const size_t& id = m_id;
+  const std::string& simname = m_simname;
 };
 
 }  // namespace CRAMS
