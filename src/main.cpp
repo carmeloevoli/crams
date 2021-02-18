@@ -15,6 +15,7 @@ int main(int argc, char* argv[]) {
   try {
     if (argc == 2) {
       CRAMS::Input input;
+      input.set_simname(argv[1]);
       input.readParamsFromFile(argv[1]);
       input.print();
 
@@ -49,6 +50,7 @@ int main(int argc, char* argv[]) {
 
       CRAMS::OutputManager outputManager(particles, input);
       outputManager.dumpSpectra();
+      outputManager.dumpSpectraEkn();
 
       // 		std::ofstream fchi2("chi2_results.txt", std::ofstream::out);
 
