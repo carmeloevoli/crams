@@ -22,17 +22,16 @@ class Particle {
 
   bool operator==(const Particle& other) const { return m_pid == other.m_pid; }
   const PID getPid() const { return m_pid; }
-  const double getDecayTime() const { return m_decayTime; }
   const bool isDone() const { return m_isDone; }
   const bool isChargeZ(const int& Z) const { return (m_pid.getZ() == Z) ? true : false; }
   const bool isStable() const { return m_decayTime < 0.; }
+  const double getDecayTime() const { return m_decayTime; }
+  const double getAbundance() const { return m_abundance; }
+  const double getSlope() const { return m_slope; }
+  const std::vector<double>& getEnergyVector() const { return m_T; }
+  const std::vector<double>& getIntensityVector() const { return m_I_T; }
   void setDone() { m_isDone = true; }
   void unsetDone() { m_isDone = false; }
-
-  double getAbundance() const { return m_abundance; }
-  double getSlope() const { return m_slope; }
-  const std::vector<double>& getEnergyVector() const { return m_T; }
-  std::vector<double>& getIntensityVector() { return m_I_T; }
 
   void buildVectors(const Input& input);
   void buildGrammage(const Input& input);
@@ -44,13 +43,8 @@ class Particle {
   void reset();
   // void build_tertiary_source(const std::vector<Particle>& particles);
   void computeIntensity();
-  double I_R_TOA(const double& R, const double& modulationPotential) const;
   void dump() const;
-
- protected:
-  double I_R_LIS(const double& R) const;
   double I_T_interpol(const double& T) const;
-  double productionProfileFromUnstable(const Input& input, const double& T, const double& decayTimeAtRest);
 
  public:
   // publicsolver.cpp
@@ -61,6 +55,9 @@ class Particle {
   double internalIntegrand(const double& T_second);
   double ExpIntegral(const double& T, const double& T_prime);
   double computeFluxAtEnergy(const double& T);
+
+ protected:
+  double productionProfileFromUnstable(const Input& input, const double& T, const double& decayTimeAtRest);
 
  protected:
   PID m_pid;

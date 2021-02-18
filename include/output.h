@@ -11,15 +11,22 @@ class OutputManager {
   OutputManager(const Particles& particles, const Input& input);
   virtual ~OutputManager();
   void dumpSpectra() const;
+  void dumpSpectraEkn() const;
 
  private:
   const Particles& m_particles;
   double m_phi = 0;
   size_t m_id = 0;
   std::vector<double> m_R;
+  std::string m_simname;
 
  private:
+  double I_R_TOA(const Particle& particle, const double& R, const double& modulationPotential) const;
   double getFluxChargeGroup(const int Z, const double& R) const;
+  double getFluxChargeGroupEkn(const int Z, const double& T) const;
+
+  // double I_R_LIS(const double& R) const;
+  // double I_R_TOA(const double& R, const double& modulationPotential) const;
 
   //   ptr_Particle ptr_H1_ter = find_ptr(H1_ter);
   //   ptr_Particle ptr_H1 = find_ptr(H1);

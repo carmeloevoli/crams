@@ -199,39 +199,6 @@ double Particle::I_T_interpol(const double& T) const {
   return value;
 }
 
-double Particle::I_R_LIS(const double& R) const {
-  double value = 0;
-  {
-    constexpr double mpSquared = pow2(CGS::protonMassC2);
-    const double ZOverASquared = pow2(m_pid.getZoverA());
-    const double ESquared = pow2(R) * ZOverASquared + mpSquared;
-    const double T = std::sqrt(ESquared) - CGS::protonMassC2;
-    double dTdR = R * ZOverASquared;
-    dTdR /= std::sqrt(ZOverASquared * pow2(R) + mpSquared);
-    value = I_T_interpol(T) * dTdR;
-  }
-  return value;
-}
-
-double Particle::I_R_TOA(const double& R, const double& modulationPotential) const {
-  // see arXiv:1511.08790
-  double value = 0;
-  {
-    constexpr double mpSquared = pow2(CGS::protonMassC2);
-    const double ZOverASquared = pow2(m_pid.getZoverA());
-    const double ESquared = pow2(R) * ZOverASquared + mpSquared;
-    const double T = std::sqrt(ESquared) - CGS::protonMassC2;
-    const double Phi = m_pid.getZoverA() * modulationPotential;
-    const double T_ISM = std::min(T + Phi, m_T.back());
-    double dTdR = R * ZOverASquared;
-    dTdR /= std::sqrt(ZOverASquared * pow2(R) + mpSquared);
-    double factor = T * (T + 2. * CGS::protonMassC2);
-    factor /= (T + Phi) * (T + Phi + 2. * CGS::protonMassC2);
-    value = factor * I_T_interpol(T_ISM) * dTdR;
-  }
-  return value;
-}
-
 double Particle::Q_total(const double& T) const {
   //  if (_pid == H1_ter) value = _Q_ter->get(T); TODO do this
   const double Q_sec_total = m_Q_sec->get(T) + ((m_doGrammageAtSource) ? m_Q_Xs->get(T) : 0.);
@@ -239,7 +206,7 @@ double Particle::Q_total(const double& T) const {
 }
 
 void Particle::computeIntensity() {
-  //#pragma omp parallel for schedule(dynamic) num_threads(THREADS)
+#pragma omp parallel for schedule(dynamic) num_threads(THREADS)
   for (size_t i = 0; i < m_T.size(); ++i) {
     m_I_T[i] = computeFluxAtEnergy(m_T[i]);
   }
