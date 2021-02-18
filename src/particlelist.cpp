@@ -126,7 +126,7 @@ void ParticleList::readParamsFromFile(const std::string& filename) {
   setAbundanceChargeGroup(13, 2.7e-4);       // q_Al
   setAbundanceChargeGroup(14, 2.77911e-03);  // q_Si
   setAbundanceChargeGroup(15, 1e-4);         // q_P
-  setAbundanceChargeGroup(16, 4.80499e-04);  // q_S
+  setAbundanceChargeGroup(16, 4.94800e-04);  // q_S
   setAbundanceChargeGroup(17, 0.);           // q_Cl
   setAbundanceChargeGroup(18, 3e-4);         // q_Ar
   setAbundanceChargeGroup(19, 0.);           // q_K
@@ -136,7 +136,7 @@ void ParticleList::readParamsFromFile(const std::string& filename) {
   setAbundanceChargeGroup(23, 0.);           // q_V
   setAbundanceChargeGroup(24, 2.5e-4);       // q_Cr
   setAbundanceChargeGroup(25, 0.);           // q_Mn
-  setAbundanceChargeGroup(26, 6.9e-3);       // q_Fe
+  setAbundanceChargeGroup(26, 6.46480e-03);  // q_Fe
   setAbundanceChargeGroup(27, 0.);           // q_Co
   setAbundanceChargeGroup(28, 4e-4);         // q_Ni
   setSlopeChargeGroup(1, 4.37326e+00);
