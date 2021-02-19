@@ -28,10 +28,9 @@ void Input::setParam(const std::string& key, const double& value) {
     m_R_b = value * CGS::GeV;
   else if (key == "va")
     m_v_A = value * CGS::km / CGS::sec;
-  else if (key == "phi") {
+  else if (key == "phi")
     m_modulationPotential = value * CGS::GeV;
-    LOGI << "changed modulation potential to " << m_modulationPotential / CGS::GeV << " GeV";
-  } else if (key == "xsecsfudge")
+  else if (key == "xsecsfudge")
     m_xsecsFudge = value;
   else if (key == "id")
     m_id = (int)value;
