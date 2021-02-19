@@ -220,12 +220,13 @@ void Particle::computeIntensity() {
 std::string makeParticleFilename(const PID& pid) {
   std::string filename = "output/crams_particle_dump";
   filename += "_" + std::to_string(pid.getZ());
-  filename += "_" + std::to_string(pid.getA()) + ".log";
+  filename += "_" + std::to_string(pid.getA()) + ".txt";
   return filename;
 }
 
 void Particle::dump() const {
   std::ofstream outfile(makeParticleFilename(m_pid));
+  outfile << "# T [GeV] - R [GV] - Q_pri - Q_sec - X [gr/cm2] - tau_esc [yr] - tau_adv [yr] - X_cr [gr/cm2] - dEdX\n";
   outfile << std::scientific;
   for (double T = CGS::GeV; T < 1.1 * CGS::TeV; T *= 1.1) {
     outfile << T / CGS::GeV << "\t";
