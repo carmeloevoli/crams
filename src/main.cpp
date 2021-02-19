@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
         //         // // 				particle.build_tertiary_source(particles);
         //         if (input.X_s > 0.) particle.buildGrammageAtSource(input, particles);
         particle.computeIntensity();
-        particle.dump();
+        // particle.dump();
         particle.reset();
       }
 
