@@ -14,25 +14,34 @@ Input::~Input() { LOGD << "released memory from Input"; }
 
 void Input::setParam(const std::string& key, const double& value) {
   const auto simpleKey = Utilities::simplifyKey(key);
-  if (key == "d0")
+  if (key == "d0") {
     m_D_0 = value * 1e28 * CGS::cm2 / CGS::sec;
-  else if (key == "xs")
+    LOGD << "changed D_0 value to " << m_D_0 / CGS::cm2 * CGS::sec << " cm2/s";
+  } else if (key == "xs") {
     m_X_s = value * CGS::gram / CGS::cm2;
-  else if (key == "h")
+    LOGD << "changed X_s value to " << m_X_s / CGS::gram * CGS::cm2 << " gr/cm2";
+  } else if (key == "h") {
     m_H = value * CGS::kpc;
-  else if (key == "delta")
+    LOGD << "changed H value to " << m_H / CGS::kpc << " kpc";
+  } else if (key == "delta") {
     m_delta = value;
-  else if (key == "ddelta")
+    LOGD << "chanded delta value to " << m_delta;
+  } else if (key == "ddelta") {
     m_ddelta = value;
-  else if (key == "rb")
+    LOGD << "chanded ddelta value to " << m_ddelta;
+  } else if (key == "rb") {
     m_R_b = value * CGS::GeV;
-  else if (key == "va")
+    LOGD << "chanded R_b value to " << m_R_b / CGS::GeV << " GeV";
+  } else if (key == "va") {
     m_v_A = value * CGS::km / CGS::sec;
-  else if (key == "phi")
+    LOGD << "changed v_A value to " << m_v_A / CGS::km * CGS::sec << " km/s";
+  } else if (key == "phi") {
     m_modulationPotential = value * CGS::GeV;
-  else if (key == "xsecsfudge")
+    LOGD << "changed modulationPotential value to " << m_modulationPotential / CGS::GeV << " GV";
+  } else if (key == "xsecsfudge") {
     m_xsecsFudge = value;
-  else if (key == "id")
+    LOGD << "changed xsecs fudge value to " << m_xsecsFudge;
+  } else if (key == "id")
     m_id = (int)value;
 }
 

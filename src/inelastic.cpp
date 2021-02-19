@@ -98,9 +98,7 @@ void InXsecCROSEC::loadXsecTable(const std::string& filename) {
     if (PID(Z_proj, A_proj) == m_proj && inf.good()) copy(x.begin(), x.end(), back_inserter(m_table));
   }
   inf.close();
-#ifdef DEBUG
-  std::cout << "inelastic table read with " << m_table.size() << " points.\n";
-#endif
+  LOGD << "inelastic table read with " << m_table.size() << " points";
 }
 
 }  // namespace CRAMS

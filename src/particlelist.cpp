@@ -24,14 +24,10 @@ ParticleList::~ParticleList() {
 
 bool ParticleList::insert(const PID& key, const NucleusParameters& params) {
   auto res = m_list.insert(std::make_pair(key, params));
-#ifdef DEBUG
   if (!res.second) {
-    std::cout << "particle " << key << " already exists "
-              << " with injection " << (res.first)->second << std::endl;
-  } else {
-    // spdlog::debug("created particle {}", 1);  // << key << " with parameters " << params << std::endl;
+    LOGD << "particle " << key << " already exists "
+         << " with injection " << (res.first)->second;
   }
-#endif
   return res.second;
 }
 
@@ -39,13 +35,9 @@ void ParticleList::setAbundance(const PID& key, const double& value) {
   auto it = m_list.find(key);
   if (it != m_list.end()) {
     it->second.abundance = value;
-#ifdef DEBUG
-    std::cout << "PID : " << key << " abundance modified to " << value << ".\n";
-#endif
+    LOGD << "PID : " << key << " abundance modified to " << value;
   } else {
-#ifdef DEBUG
-    std::cout << "PID : " << key << " not found in particle list.\n";
-#endif
+    LOGD << "PID : " << key << " not found in particle list";
   }
 }
 
@@ -53,44 +45,11 @@ void ParticleList::setSlope(const PID& key, const double& value) {
   auto it = m_list.find(key);
   if (it != m_list.end()) {
     it->second.slope = value;
-#ifdef DEBUG
-    std::cout << "PID : " << key << " slope modified to " << value << ".\n";
-#endif
+    LOGD << "PID : " << key << " slope modified to " << value;
   } else {
-#ifdef DEBUG
-    std::cout << "PID : " << key << " not found in particle list.\n";
-#endif
+    LOGD << "PID : " << key << " not found in particle list";
   }
 }
-
-// void ParticleList::set_from_file(const std::string& filename) {
-//   const std::ifstream infile(filename.c_str());
-//   std::string line;
-//   while (std::getline(infile, line)) {
-//     std::istringstream iss(line);
-//     std::string key;
-//     double value;
-//     if (!(iss >> key >> value)) {
-//       break;
-//     }  // error
-//     if (key == "q_H")
-//       set_abundance(H1, value);
-//     else if (key == "q_He")
-//       set_abundance(He4, value);
-//     else if (key == "q_Li")
-//       set_abundance(Li6, value);
-//     else if (key == "q_Be")
-//       set_abundance(Be9, value);
-//     else if (key == "q_B")
-//       set_abundance(B10, value);
-//     else if (key == "q_C")
-//       set_abundance(C12, value);
-//     else if (key == "q_N")
-//       set_abundance(N14, value);
-//     else if (key == "q_O")
-//       set_abundance(O16, value);
-//   }
-// }
 
 void ParticleList::setAbundanceChargeGroup(const int& charge, const double& abundance) {
   for (auto& p : m_list) {
