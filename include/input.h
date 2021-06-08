@@ -23,14 +23,14 @@ class Input {
 
   double m_H = 7. * CGS::kpc;
   double m_mu = 2.3 * CGS::mgram / CGS::cm2;
-  double m_v_A = 4.40940 * CGS::km / CGS::sec;
-  double m_R_b = 312. * CGS::GeV;  // Evoli, PRD, 2019
-  double m_delta = 5.65132e-01;
-  double m_ddelta = 0.2;      // Evoli, PRD, 2019
-  double m_smoothness = 0.1;  // Evoli, PRD, 2019
-  double m_D_0 = 2.48255e28 * CGS::cm2 / CGS::sec;
+  double m_v_A = 4.41 * CGS::km / CGS::sec;
+  double m_R_b = 290. * CGS::GeV;
+  double m_delta = 5.65e-01;
+  double m_ddelta = 0.22;
+  double m_smoothness = 0.1;
+  double m_D_0 = 2.48e28 * CGS::cm2 / CGS::sec;
   double m_X_s = -1;  // CGS::gram / CGS::cm2;
-  double m_modulationPotential = 4.87754e-01 * CGS::GeV;
+  double m_modulationPotential = 4.88e-01 * CGS::GeV;
   double m_xsecsFudge = 1;
   size_t m_id = 0;
   std::string m_simname = "test";
@@ -42,7 +42,7 @@ class Input {
   void print() const;
   void readParamsFromFile(const std::string& filename);
   void setParam(const std::string& key, const double& value);
-  void set_simname(const std::string& inifilename);
+  void setSimname(const std::string& inifilename);
 
   const double& TSimMin = m_TSimMin;
   const double& TSimMax = m_TSimMax;

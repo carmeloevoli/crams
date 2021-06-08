@@ -67,7 +67,7 @@ void eraseSubStr(std::string* main_string, const std::string& sub_string) {
   }
 }
 
-void Input::set_simname(const std::string& params_filename) {
+void Input::setSimname(const std::string& params_filename) {
   m_simname = params_filename;
   const auto size = m_simname.length();
   eraseSubStr(&m_simname, ".ini");
