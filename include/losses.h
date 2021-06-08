@@ -11,9 +11,10 @@ class Losses {
   Losses(const PID& pid, const Input& input);
   virtual ~Losses();
   double get(const double& T) const;
-  double dEdx_adiabatic(const double& T) const;
-  double dEdx_ionization(const double& T) const;
+  double dEdX_adiabatic(const double& T) const;
+  double dEdX_ionization(const double& T) const;
   double getDerivative(const double& T);
+  double dTdt_ionization(const double& T, const double& n_H) const;
 
  protected:
   PID m_pid;
