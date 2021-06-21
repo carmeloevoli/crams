@@ -6,8 +6,8 @@ project(CRAMS VERSION ${VERSION} LANGUAGES ${LANGS})
 
 set( CMAKE_VERBOSE_MAKEFILE off )
 set( CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
-set( CMAKE_CXX_COMPILER "/usr/local/Cellar/gcc/9.3.0_1/bin/g++-9" )
-set( CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++11 -fopenmp -DTHREADS=4 -DEVOLI2019")
+set( CMAKE_CXX_COMPILER "/usr/local/bin/g++-10" )
+set( CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++14 -fopenmp -DTHREADS=16 -DEVOLI2019")
 set( CRAMS_EXTRA_INCLUDES )
 set( CRAMS_EXTRA_LIBRARIES )
 
@@ -24,7 +24,7 @@ configure_file("src/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
 set( CRAMS_SRCS 
      src/xsecs/Evoli2019.cpp 
      src/xsecs/Tripathi99.cpp
-#     src/chi2.cpp
+     src/chi2.cpp
      src/csvreader.cpp
      src/grammage.cpp
      src/inelastic.cpp
@@ -77,5 +77,6 @@ message (STATUS "BUILD_SHARED_LIBS ..... = ${BUILD_SHARED_LIBS}")
 message (STATUS "CMAKE_CXX_COMPILER .... = ${CMAKE_CXX_COMPILER}")
 message (STATUS "CMAKE_CXX_FLAGS ....... = ${CMAKE_CXX_FLAGS}")
 message (STATUS "CMAKE_INCLUDE_PATH .... = ${CMAKE_INCLUDE_PATH}")
+message (STATUS "CRAMS_VERSION ......... = ${VERSION}")
 message (STATUS "CRAMS_INCLUDES ........ = ${CRAMS_EXTRA_INCLUDES}")
 message (STATUS "CRAMS_LIBRARIES ....... = ${CRAMS_EXTRA_LIBRARIES}")
