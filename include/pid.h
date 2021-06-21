@@ -7,9 +7,6 @@
 #include <iostream>
 #include <string>
 
-//#include "spdlog/fmt/ostr.h"  // must be included
-//#include "spdlog/spdlog.h"    // must be included
-
 namespace CRAMS {
 
 class PID {
@@ -65,14 +62,12 @@ class PID {
   bool isTertiary() const { return m_isTertiary; }
 
   friend std::ostream& operator<<(std::ostream& stream, const PID& pid) {
-    stream << "(" << pid.getA() << "," << pid.getZ() << ")";
+    if (pid.isTertiary())
+      stream << "(" << pid.getA() << "," << pid.getZ() << ",tertiary)";
+    else
+      stream << "(" << pid.getA() << "," << pid.getZ() << ")";
     return stream;
   }
-
-  // template <typename OStream>
-  // friend OStream& operator<<(OStream& os, const PID& c) {
-  //   return os << "pid";
-  // }
 
   std::string toString() const {
     std::string ss;
@@ -85,7 +80,7 @@ class PID {
   int m_A;
   int m_id;
   bool m_isTertiary;
-};  // namespace CRAMS
+};
 
 typedef std::pair<PID, PID> Channel;
 
