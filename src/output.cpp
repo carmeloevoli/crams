@@ -19,37 +19,11 @@ OutputManager::OutputManager(const Particles& particles, const Input& input)
 
 OutputManager::~OutputManager() { LOGD << "deleted OutputManager"; }
 
-// ptr_Particle OutputManager::find_ptr(const PID& pid) {
-//   auto it = find(_particles.begin(), _particles.end(), Particle(pid, 0));
-//   bool isPresent = !(it == _particles.end());
-//   return {isPresent, it};
-// }
-
-double OutputManager::I_R_TOA(const Particle& particle, const double& R, const double& modulationPotential) const {
-  // see arXiv:1511.08790
-  const auto pid = particle.getPid();
-  double value = 0;
-  {
-    constexpr double mpSquared = pow2(CGS::protonMassC2);
-    const double ZOverASquared = pow2(pid.getZoverA());
-    const double ESquared = pow2(R) * ZOverASquared + mpSquared;
-    const double T = std::sqrt(ESquared) - CGS::protonMassC2;
-    const double Phi = pid.getZoverA() * modulationPotential;
-    const double T_ISM = T + Phi;
-    double dTdR = R * ZOverASquared;
-    dTdR /= std::sqrt(ZOverASquared * pow2(R) + mpSquared);
-    double factor = T * (T + 2. * CGS::protonMassC2);
-    factor /= (T + Phi) * (T + Phi + 2. * CGS::protonMassC2);
-    value = factor * particle.I_T_interpol(T_ISM) * dTdR;
-  }
-  return value;
-}
-
 double OutputManager::getFluxChargeGroup(const int Z, const double& R) const {
   double value = 0.;
   for (const auto& particle : m_particles) {
     if (particle.isChargeZ(Z)) {
-      value += I_R_TOA(particle, R, m_phi);
+      value += particle.I_R_TOA(R, m_phi);
     }
   }
   return value;

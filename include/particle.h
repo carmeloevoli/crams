@@ -40,11 +40,12 @@ class Particle {
   void buildInelasticXsecs(const Input& input);
   void buildSecondarySource(const Input& input, const std::vector<Particle>& particles);
   void buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles);
+  void buildTertiarySource(const std::vector<Particle>& particles);
   void reset();
-  // void build_tertiary_source(const std::vector<Particle>& particles);
   void computeIntensity();
   void dump() const;
   double I_T_interpol(const double& T) const;
+  double I_R_TOA(const double& R, const double& modulationPotential) const;
 
  public:
   // publicsolver.cpp
@@ -72,13 +73,14 @@ class Particle {
   std::shared_ptr<Grammage> m_X;
   std::shared_ptr<PrimarySource> m_Q_p;
   std::shared_ptr<SecondarySource> m_Q_sec;
-  // SourceTerm* m_Q_ter = nullptr;
+  std::shared_ptr<SecondarySource> m_Q_ter;
   std::shared_ptr<SecondarySource> m_Q_Xs;
   std::shared_ptr<InelasticXsec> m_sigmaIn;
   std::shared_ptr<Losses> m_dEdX;
 };
 
 typedef std::vector<Particle> Particles;
+typedef std::pair<bool, std::vector<Particle>::iterator> itParticle;
 
 }  // namespace CRAMS
 

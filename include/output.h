@@ -21,7 +21,6 @@ class OutputManager {
   std::string m_simname;
 
  private:
-  double I_R_TOA(const Particle& particle, const double& R, const double& modulationPotential) const;
   double getFluxChargeGroup(const int Z, const double& R) const;
   double getFluxChargeGroupEkn(const int Z, const double& T) const;
 

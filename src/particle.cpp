@@ -30,6 +30,7 @@ void Particle::reset() {
   m_X.reset();
   m_Q_p.reset();
   m_Q_sec.reset();
+  m_Q_ter.reset();
   m_Q_Xs.reset();
   m_sigmaIn.reset();
   m_dEdX.reset();
@@ -148,27 +149,27 @@ void Particle::buildSecondarySource(const Input& input, const std::vector<Partic
   m_Q_sec = std::make_shared<SecondarySource>(m_pid, T_s, Q_s);
 }
 
-// void Particle::build_tertiary_source(const std::vector<Particle>& particles) {
-//   auto T_t = LogAxis(0.1 * cgs::GeV, 10. * cgs::TeV, ARRAYSIZE);
-//   std::vector<double> Q_t;
-//   for (auto& T : T_t) {
-//     const double T_prime = T / cgs::inelasticity;
-//     double sigma_ISM = sigma_pp(T_prime);
-//     sigma_ISM *= (1. + cgs::K_He * cgs::f_He) / (1. + cgs::f_He);
-//     double value = sigma_ISM / cgs::inelasticity;
-//     value *= (T_prime + cgs::proton_mass_c2) / (T + cgs::proton_mass_c2);
-//     value *= std::pow(T * (T + 2. * cgs::proton_mass_c2), 1.5) /
-//              std::pow(T_prime * (T_prime + 2. * cgs::proton_mass_c2), 1.5);
-//     for (auto& particle : particles) {
-//       if (particle.get_pid() == H1 && particle.isDone()) {
-//         value *= particle.I_T_interpol(T_prime);
-//       }
-//     }
-//     value /= cgs::mean_ism_mass;
-//     Q_t.push_back(value);
-//   }
-//   _Q_ter = new SourceTerm(T_t, Q_t);
-// }
+void Particle::buildTertiarySource(const std::vector<Particle>& particles) {
+  const auto T_t = Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, ARRAYSIZE);
+  const double mp = CGS::protonMassC2;
+  std::vector<double> Q_t;
+  for (auto& T : T_t) {
+    const double T_prime = T / CGS::inelasticity;
+    double sigma_ISM = sigma_pp(T_prime);
+    sigma_ISM *= (1. + CGS::K_He * CGS::f_He) / (1. + CGS::f_He);
+    double value = sigma_ISM / CGS::inelasticity;
+    value *= (T_prime + mp) / (T + mp);
+    value *= std::pow(T * (T + 2. * mp), 1.5) / std::pow(T_prime * (T_prime + 2. * mp), 1.5);
+    for (auto& particle : particles) {
+      if (particle.getPid() == H1 && particle.isDone()) {
+        value *= particle.I_T_interpol(T_prime);
+      }
+    }
+    value /= CGS::meanISMmass;
+    Q_t.push_back(value);
+  }
+  m_Q_ter = std::make_shared<SecondarySource>(m_pid, T_t, Q_t);
+}
 
 void Particle::buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles) {
   m_doGrammageAtSource = true;
@@ -199,10 +200,31 @@ double Particle::I_T_interpol(const double& T) const {
   return value;
 }
 
+double Particle::I_R_TOA(const double& R, const double& modulationPotential) const {
+  // see arXiv:1511.08790
+  double value = 0;
+  {
+    constexpr double mpSquared = pow2(CGS::protonMassC2);
+    const double ZOverASquared = pow2(m_pid.getZoverA());
+    const double ESquared = pow2(R) * ZOverASquared + mpSquared;
+    const double T = std::sqrt(ESquared) - CGS::protonMassC2;
+    const double Phi = m_pid.getZoverA() * modulationPotential;
+    const double T_ISM = T + Phi;
+    double dTdR = R * ZOverASquared;
+    dTdR /= std::sqrt(ZOverASquared * pow2(R) + mpSquared);
+    double factor = T * (T + 2. * CGS::protonMassC2);
+    factor /= (T + Phi) * (T + Phi + 2. * CGS::protonMassC2);
+    value = factor * I_T_interpol(T_ISM) * dTdR;
+  }
+  return value;
+}
+
 double Particle::Q_total(const double& T) const {
-  //  if (_pid == H1_ter) value = _Q_ter->get(T); TODO do this
-  const double Q_sec_total = m_Q_sec->get(T) + ((m_doGrammageAtSource) ? m_Q_Xs->get(T) : 0.);
-  return m_Q_p->get(T) + ((m_doSecondary) ? Q_sec_total : 0.);
+  const double Q_ter = (m_pid == H1_ter) ? m_Q_ter->get(T) : 0.;
+  const double Q_sec = (m_doSecondary) ? m_Q_sec->get(T) : 0.;
+  const double Q_sec_source = (m_doGrammageAtSource) ? m_Q_Xs->get(T) : 0.;
+  const double Q_p = (m_abundance > 0.) ? m_Q_p->get(T) : 0.;
+  return Q_p + Q_sec + Q_sec_source + Q_ter;
 }
 
 void Particle::computeIntensity() {
@@ -228,17 +250,19 @@ void Particle::dump() const {
   std::ofstream outfile(makeParticleFilename(m_pid));
   outfile << "# T [GeV] - R [GV] - Q_pri - Q_sec - X [gr/cm2] - tau_esc [yr] - tau_adv [yr] - X_cr [gr/cm2] - dEdX\n";
   outfile << std::scientific;
-  for (double T = CGS::GeV; T < 1.1 * CGS::TeV; T *= 1.1) {
+  for (auto T : m_T) {  // TODO take from input
+    const double R = Utilities::T2pc(T, m_pid) / (double)m_pid.getZ();
     outfile << T / CGS::GeV << "\t";
-    double R = Utilities::T2pc(T, m_pid) / (double)m_pid.getZ();
     outfile << R / CGS::GeV << "\t";
     outfile << m_Q_p->get(T) << "\t";
     outfile << m_Q_sec->get(T) << "\t";
     outfile << m_X->get(T) / (CGS::gram / CGS::cm2) << "\t";
-    outfile << m_X->diffusionTimescale(T) / CGS::year << "\t";
-    outfile << m_X->advectionTimescale() / CGS::year << "\t";
+    outfile << m_X->diffusionTimescale(T) / CGS::Myr << "\t";
+    outfile << m_X->advectionTimescale() / CGS::Myr << "\t";
     outfile << CGS::meanISMmass / m_sigmaIn->getXsecOnISM(T) / (CGS::gram / CGS::cm2) << "\t";
-    outfile << m_dEdX->get(T) << "\t";  // TODO how to transform in time?
+    outfile << m_dEdX->get(T) << "\t";
+    outfile << T / m_dEdX->dTdt_ionization(T, 1. / CGS::cm3) / CGS::Myr << "\t";
+    outfile << 1. / (Utilities::T2beta(T) * m_sigmaIn->getXsecOnISM(T) * CGS::cLight / CGS::cm3) / CGS::Myr << "\t";
     outfile << "\n";
   }
   outfile.close();
