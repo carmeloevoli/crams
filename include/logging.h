@@ -10,19 +10,19 @@
 #include <plog/Log.h>
 
 void log_startup_information() {
-  //   static plog::RollingFileAppender<plog::CsvFormatter> fileAppender("cramslog.csv", 8000, 3);
-  //   static plog::ConsoleAppender<plog::TxtFormatter> consoleAppender;
-  //#ifdef DEBUG
-  //   plog::init(plog::debug, &fileAppender).addAppender(&consoleAppender);
-  // #else
-  //   plog::init(plog::warning, &fileAppender).addAppender(&consoleAppender);
-  // #endif
+  static plog::RollingFileAppender<plog::CsvFormatter> fileAppender("output/cramslog.csv", 8000, 3);
   static plog::ConsoleAppender<plog::TxtFormatter> consoleAppender;
 #ifdef DEBUG
-  plog::init(plog::debug, &consoleAppender);
+  plog::init(plog::debug, &fileAppender).addAppender(&consoleAppender);
 #else
-  plog::init(plog::info, &consoleAppender);
+  plog::init(plog::info, &fileAppender).addAppender(&consoleAppender);
 #endif
+  //   static plog::ConsoleAppender<plog::TxtFormatter> consoleAppender;
+  // #ifdef DEBUG
+  //   plog::init(plog::debug, &consoleAppender);
+  // #else
+  //   plog::init(plog::info, &consoleAppender);
+  // #endif
   LOGI << "Welcome to CRAMS version " << get_version();
   LOGI << "was built on " << __DATE__ << " at " << __TIME__;
   LOGI << "git version is " << git_sha1();
