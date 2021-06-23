@@ -242,7 +242,9 @@ void Particle::computeIntensity() {
 std::string makeParticleFilename(const PID& pid) {
   std::string filename = "output/crams_particle_dump";
   filename += "_" + std::to_string(pid.getZ());
-  filename += "_" + std::to_string(pid.getA()) + ".txt";
+  filename += "_" + std::to_string(pid.getA());
+  if (pid.isTertiary()) filename += "_tertiary";
+  filename += ".txt";
   return filename;
 }
 
@@ -266,6 +268,7 @@ void Particle::dump() const {
     outfile << "\n";
   }
   outfile.close();
+  LOGD << "dumped " << m_pid << " to file " << makeParticleFilename(m_pid);
 }
 
 }  // namespace CRAMS

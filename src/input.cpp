@@ -12,37 +12,41 @@ namespace CRAMS {
 
 Input::~Input() { LOGD << "released memory from Input"; }
 
-void Input::setParam(const std::string& key, const double& value) {
-  const auto simpleKey = Utilities::simplifyKey(key);
-  if (key == "d0") {
+void Input::setParam(const std::string& KEY, const double& value) {
+  const auto simpleKey = Utilities::simplifyKey(KEY);
+  // std::cout << simpleKey << "\n";
+  if (simpleKey == "d0") {
     m_D_0 = value * 1e28 * CGS::cm2 / CGS::sec;
     LOGD << "changed D_0 value to " << m_D_0 / CGS::cm2 * CGS::sec << " cm2/s";
-  } else if (key == "xs") {
+  } else if (simpleKey == "xs") {
     m_X_s = value * CGS::gram / CGS::cm2;
     LOGD << "changed X_s value to " << m_X_s / CGS::gram * CGS::cm2 << " gr/cm2";
-  } else if (key == "h") {
+  } else if (simpleKey == "h") {
     m_H = value * CGS::kpc;
     LOGD << "changed H value to " << m_H / CGS::kpc << " kpc";
-  } else if (key == "delta") {
+  } else if (simpleKey == "delta") {
     m_delta = value;
     LOGD << "chanded delta value to " << m_delta;
-  } else if (key == "ddelta") {
+  } else if (simpleKey == "ddelta") {
     m_ddelta = value;
     LOGD << "chanded ddelta value to " << m_ddelta;
-  } else if (key == "rb") {
+  } else if (simpleKey == "rb") {
     m_R_b = value * CGS::GeV;
     LOGD << "chanded R_b value to " << m_R_b / CGS::GeV << " GeV";
-  } else if (key == "va") {
+  } else if (simpleKey == "va") {
     m_v_A = value * CGS::km / CGS::sec;
     LOGD << "changed v_A value to " << m_v_A / CGS::km * CGS::sec << " km/s";
-  } else if (key == "phi") {
+  } else if (simpleKey == "phi") {
     m_modulationPotential = value * CGS::GeV;
     LOGD << "changed modulationPotential value to " << m_modulationPotential / CGS::GeV << " GV";
-  } else if (key == "xsecsfudge") {
+  } else if (simpleKey == "xsecsfudge") {
     m_xsecsFudge = value;
     LOGD << "changed xsecs fudge value to " << m_xsecsFudge;
-  } else if (key == "id")
+  } else if (simpleKey == "id") {
     m_id = (int)value;
+  }  // else {
+     //   throw std::invalid_argument("input params not found!");
+     // }
 }
 
 void Input::readParamsFromFile(const std::string& filename) {
