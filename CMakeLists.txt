@@ -7,7 +7,7 @@ project(CRAMS VERSION ${VERSION} LANGUAGES ${LANGS})
 set( CMAKE_VERBOSE_MAKEFILE off )
 set( CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
 set( CMAKE_CXX_COMPILER "/usr/local/bin/g++-10" )
-set( CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++14 -fopenmp -DTHREADS=16 -DEVOLI2019")
+set( CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++14 -fopenmp -DTHREADS=16 -DEVOLI2019 -DDEBUG")
 set( CRAMS_EXTRA_INCLUDES )
 set( CRAMS_EXTRA_LIBRARIES )
 

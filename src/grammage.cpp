@@ -8,7 +8,7 @@
 
 namespace CRAMS {
 
-Grammage::Grammage() {}  // TODO add cout for building classes with logger
+Grammage::Grammage() {}
 
 Grammage::Grammage(const PID& pid, const Input& input) : m_pid(pid) { setParameters(input); }
 
