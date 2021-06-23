@@ -11,9 +11,40 @@
 namespace CRAMS {
 
 ParticleList::ParticleList() {
-  if (Utilities::fileExists(nucleilistFilename))
+  if (Utilities::fileExists(nucleilistFilename)) {
     loadNucleilist(nucleilistFilename);
-  else
+    setAbundanceChargeGroup(1, 5.06605e-02);   // q_H
+    setAbundanceChargeGroup(2, 2.54369e-02);   // q_He
+    setAbundanceChargeGroup(3, 0.);            // q_Li
+    setAbundanceChargeGroup(4, 0.);            // q_Be
+    setAbundanceChargeGroup(5, 0.);            // q_B
+    setAbundanceChargeGroup(6, 3.98879e-03);   // q_C
+    setAbundanceChargeGroup(7, 3.36117e-04);   // q_N
+    setAbundanceChargeGroup(8, 7.15129e-03);   // q_O
+    setAbundanceChargeGroup(9, 0.);            // q_F
+    setAbundanceChargeGroup(10, 1.34031e-03);  // q_Ne
+    setAbundanceChargeGroup(11, 0.5e-4);       // q_Na
+    setAbundanceChargeGroup(12, 2.38948e-03);  // q_Mg
+    setAbundanceChargeGroup(13, 2.7e-4);       // q_Al
+    setAbundanceChargeGroup(14, 2.77911e-03);  // q_Si
+    setAbundanceChargeGroup(15, 1e-4);         // q_P
+    setAbundanceChargeGroup(16, 4.87000e-04);  // q_S
+    setAbundanceChargeGroup(17, 0.);           // q_Cl
+    setAbundanceChargeGroup(18, 3e-4);         // q_Ar
+    setAbundanceChargeGroup(19, 0.);           // q_K
+    setAbundanceChargeGroup(20, 4e-4);         // q_Ca
+    setAbundanceChargeGroup(21, 0.);           // q_Sc
+    setAbundanceChargeGroup(22, 0.);           // q_Ti
+    setAbundanceChargeGroup(23, 0.);           // q_V
+    setAbundanceChargeGroup(24, 2.5e-4);       // q_Cr
+    setAbundanceChargeGroup(25, 0.);           // q_Mn
+    setAbundanceChargeGroup(26, 6.80000e-03);  // q_Fe
+    setAbundanceChargeGroup(27, 0.);           // q_Co
+    setAbundanceChargeGroup(28, 4e-4);         // q_Ni
+    setSlopeChargeGroup(1, 4.37486);
+    setSlopeChargeGroup(2, 4.30995);
+    setSlopeNuclei(3, 4.32798);
+  } else
     throw std::runtime_error("nuclelist file not found");
 }
 
@@ -69,38 +100,116 @@ void ParticleList::setSlopeNuclei(const int& minCharge, const double& slope) {
   }
 }
 
+void ParticleList::setParam(const std::string& KEY, const double& value) {
+  const auto simpleKey = Utilities::simplifyKey(KEY);
+  if (simpleKey == "qh") {
+    setAbundanceChargeGroup(1, value);
+    LOGD << "changed H abundance to " << value;
+  } else if (simpleKey == "qhe") {
+    setAbundanceChargeGroup(2, value);
+    LOGD << "changed He abundance to " << value;
+  } else if (simpleKey == "qli") {
+    setAbundanceChargeGroup(3, value);
+    LOGD << "changed Li abundance to " << value;
+  } else if (simpleKey == "qbe") {
+    LOGD << "changed Be abundance to " << value;
+    setAbundanceChargeGroup(4, value);
+  } else if (simpleKey == "qb") {
+    setAbundanceChargeGroup(5, value);
+    LOGD << "changed B abundance to " << value;
+  } else if (simpleKey == "qc") {
+    setAbundanceChargeGroup(6, value);
+    LOGD << "changed C abundance to " << value;
+  } else if (simpleKey == "qn") {
+    setAbundanceChargeGroup(7, value);
+    LOGD << "changed N abundance to " << value;
+  } else if (simpleKey == "qo") {
+    setAbundanceChargeGroup(8, value);
+    LOGD << "changed O abundance to " << value;
+  } else if (simpleKey == "qf") {
+    setAbundanceChargeGroup(9, value);
+    LOGD << "changed F abundance to " << value;
+  } else if (simpleKey == "qne") {
+    setAbundanceChargeGroup(10, value);
+    LOGD << "changed Ne abundance to " << value;
+  } else if (simpleKey == "qna") {
+    setAbundanceChargeGroup(11, value);
+    LOGD << "changed Na abundance to " << value;
+  } else if (simpleKey == "qmg") {
+    setAbundanceChargeGroup(12, value);
+    LOGD << "changed Mg abundance to " << value;
+  } else if (simpleKey == "qal") {
+    setAbundanceChargeGroup(13, value);
+    LOGD << "changed Al abundance to " << value;
+  } else if (simpleKey == "qsi") {
+    setAbundanceChargeGroup(14, value);
+    LOGD << "changed Si abundance to " << value;
+  } else if (simpleKey == "qp") {
+    setAbundanceChargeGroup(15, value);
+    LOGD << "changed P abundance to " << value;
+  } else if (simpleKey == "qs") {
+    setAbundanceChargeGroup(16, value);
+    LOGD << "changed S abundance to " << value;
+  } else if (simpleKey == "qcl") {
+    setAbundanceChargeGroup(17, value);
+    LOGD << "changed Cl abundance to " << value;
+  } else if (simpleKey == "qar") {
+    setAbundanceChargeGroup(18, value);
+    LOGD << "changed Ar abundance to " << value;
+  } else if (simpleKey == "qk") {
+    setAbundanceChargeGroup(19, value);
+    LOGD << "changed K abundance to " << value;
+  } else if (simpleKey == "qca") {
+    setAbundanceChargeGroup(20, value);
+    LOGD << "changed Ca abundance to " << value;
+  } else if (simpleKey == "qsc") {
+    setAbundanceChargeGroup(21, value);
+    LOGD << "changed Sc abundance to " << value;
+  } else if (simpleKey == "qti") {
+    setAbundanceChargeGroup(22, value);
+    LOGD << "changed Ti abundance to " << value;
+  } else if (simpleKey == "qv") {
+    setAbundanceChargeGroup(23, value);
+    LOGD << "changed V abundance to " << value;
+  } else if (simpleKey == "qcr") {
+    setAbundanceChargeGroup(24, value);
+    LOGD << "changed Cr abundance to " << value;
+  } else if (simpleKey == "qmn") {
+    setAbundanceChargeGroup(25, value);
+    LOGD << "changed Mn abundance to " << value;
+  } else if (simpleKey == "qfe") {
+    setAbundanceChargeGroup(26, value);
+    LOGD << "changed Fe abundance to " << value;
+  } else if (simpleKey == "qco") {
+    setAbundanceChargeGroup(27, value);
+    LOGD << "changed Co abundance to " << value;
+  } else if (simpleKey == "qni") {
+    setAbundanceChargeGroup(28, value);
+    LOGD << "changed Ni abundance to " << value;
+  } else if (simpleKey == "slopeh") {
+    setSlopeChargeGroup(1, value);
+    LOGD << "changed H slope to " << value;
+  } else if (simpleKey == "slopehe") {
+    setSlopeChargeGroup(2, value);
+    LOGD << "changed He slope to " << value;
+  } else if (simpleKey == "slope") {
+    setSlopeNuclei(3, value);
+    LOGD << "changed nuclei slope to " << value;
+  }
+}
+
 void ParticleList::readParamsFromFile(const std::string& filename) {
-  setAbundanceChargeGroup(1, 5.06605e-02);   // q_H
-  setAbundanceChargeGroup(2, 2.54369e-02);   // q_He
-  setAbundanceChargeGroup(3, 0.);            // q_Li
-  setAbundanceChargeGroup(4, 0.);            // q_Be
-  setAbundanceChargeGroup(5, 0.);            // q_B
-  setAbundanceChargeGroup(6, 3.98879e-03);   // q_C
-  setAbundanceChargeGroup(7, 3.36117e-04);   // q_N
-  setAbundanceChargeGroup(8, 7.15129e-03);   // q_O
-  setAbundanceChargeGroup(9, 0.);            // q_F
-  setAbundanceChargeGroup(10, 1.34031e-03);  // q_Ne
-  setAbundanceChargeGroup(11, 0.5e-4);       // q_Na
-  setAbundanceChargeGroup(12, 2.38948e-03);  // q_Mg
-  setAbundanceChargeGroup(13, 2.7e-4);       // q_Al
-  setAbundanceChargeGroup(14, 2.77911e-03);  // q_Si
-  setAbundanceChargeGroup(15, 1e-4);         // q_P
-  setAbundanceChargeGroup(16, 4.87000e-04);  // q_S
-  setAbundanceChargeGroup(17, 0.);           // q_Cl
-  setAbundanceChargeGroup(18, 3e-4);         // q_Ar
-  setAbundanceChargeGroup(19, 0.);           // q_K
-  setAbundanceChargeGroup(20, 4e-4);         // q_Ca
-  setAbundanceChargeGroup(21, 0.);           // q_Sc
-  setAbundanceChargeGroup(22, 0.);           // q_Ti
-  setAbundanceChargeGroup(23, 0.);           // q_V
-  setAbundanceChargeGroup(24, 2.5e-4);       // q_Cr
-  setAbundanceChargeGroup(25, 0.);           // q_Mn
-  setAbundanceChargeGroup(26, 6.80000e-03);  // q_Fe
-  setAbundanceChargeGroup(27, 0.);           // q_Co
-  setAbundanceChargeGroup(28, 4e-4);         // q_Ni
-  setSlopeChargeGroup(1, 4.37486);
-  setSlopeChargeGroup(2, 4.30995);
-  setSlopeNuclei(3, 4.32798);
+  std::ifstream infile(filename.c_str());
+  std::string line;
+  while (std::getline(infile, line)) {
+    std::istringstream iss(line);
+    std::string key;
+    double value;
+    if (!(iss >> key >> value)) {
+      break;
+    }  // error
+    setParam(key, value);
+  }
 }
 
 void ParticleList::loadNucleilist(const std::string& filename) {

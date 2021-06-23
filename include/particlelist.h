@@ -43,12 +43,11 @@ class ParticleList {
   void readParamsFromFile(const std::string& filename);
 
  protected:
+  void setParam(const std::string& KEY, const double& value);
   void loadNucleilist(const std::string& filename);
   void setAbundanceChargeGroup(const int& charge, const double& abundance);
   void setSlopeChargeGroup(const int& charge, const double& slope);
   void setSlopeNuclei(const int& minCharge, const double& slope);
-
-  // void set_from_file(const std::string& filename);
 };
 
 }  // namespace CRAMS
