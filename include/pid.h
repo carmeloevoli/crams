@@ -84,6 +84,7 @@ class PID {
 
 typedef std::pair<PID, PID> Channel;
 
+static const PID pbar = PID(-1, 1);
 static const PID H1_ter = PID(1, 1, true);
 static const PID H1 = PID(1, 1);
 static const PID H2 = PID(1, 2);
