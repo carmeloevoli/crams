@@ -120,46 +120,6 @@ std::vector<double> LogAxis(const double& min, const double& max, const size_t& 
   return v;
 }
 
-double LinearInterpolator(const std::vector<double>& x, const std::vector<double>& y, const double& x_new) {
-  if (x_new < x.front() || x_new > x.back())
-    throw std::invalid_argument("x_new out of vector range in LinearInterpolator");
-
-  size_t const i = std::lower_bound(x.begin(), x.end(), x_new) - x.begin();
-  const auto t = (x_new - x.at(i - 1)) / (x.at(i) - x.at(i - 1));
-  return y.at(i - 1) * (1. - t) + y.at(i) * t;
-}
-
-// double LinearInterpolatorLog(const std::vector<double>& x, const std::vector<double>& y,
-//		const double& x_new) {
-//	auto value = double();
-//	if (x_new >= x.front() && x_new <= x.back()) {
-//		size_t const i = std::lower_bound(x.begin(), x.end(), x_new) - x.begin();
-//		double t = std::log(x_new) - std::log(x.at(i - 1));
-//		t /= std::log(x.at(i)) - std::log(x.at(i - 1));
-//		value = std::log(y.at(i - 1)) * (1. - t) + std::log(y.at(i)) * t;
-//		value = std::exp(value);
-//	}
-//	return value;
-//}
-
-size_t getLowerIndex(const std::vector<double>& v, double x) {  // TODO speed up this function?
-  assert(x >= v.front());
-  size_t i = 0;
-  while (v.at(i + 1) < x) i++;
-  return i;
-}
-
-double LinearInterpolatorLog(const std::vector<double>& x, const std::vector<double>& y, const double& x_new) {
-  if (x_new < x.front() || x_new > x.back())
-    throw std::invalid_argument("x_new out of vector range in LinearInterpolatorLog");
-
-  size_t const i = getLowerIndex(x, x_new);  // TODO uniformize with LinearInterpolator
-  double t = std::log(x_new) - std::log(x.at(i));
-  t /= std::log(x.at(i + 1)) - std::log(x.at(i));
-  double v = std::log(y.at(i)) * (1. - t) + std::log(y.at(i + 1)) * t;
-  return std::exp(v);
-}
-
 bool isGoodAndPositive(const std::vector<double>& v) {
   bool isBad = std::any_of(v.begin(), v.end(), [](double d) { return std::isnan(d); });
   bool isNegative = std::any_of(v.begin(), v.end(), [](double d) { return (d < 0.); });
