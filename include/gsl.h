@@ -1,11 +1,14 @@
 #ifndef INCLUDE_GSL_H
 #define INCLUDE_GSL_H
 
-#include <gsl/gsl_errno.h>
 #include <gsl/gsl_integration.h>
+#include <gsl/gsl_interp2d.h>
 #include <gsl/gsl_math.h>
+#include <gsl/gsl_spline2d.h>
+#include <gsl/gsl_vector.h>
 
 #include <functional>
+#include <stdexcept>
 
 namespace GSL {
 
@@ -103,6 +106,35 @@ T simpsonIntegration(std::function<T(T)> f, T start, T stop, int N = 100) {
   }
 
   return h * (XI0 + 2 * XI2 + 4 * XI1) / 3.0;
+}
+
+template <typename T>
+T interpolate2d(const std::vector<T> &x, const std::vector<T> &y, const std::vector<T> &z, T xi, T yj) {
+  const gsl_interp2d_type *I = gsl_interp2d_bilinear;
+  const T *xa = &x[0];
+  const T *ya = &y[0];
+  const size_t nx = x.size();
+  const size_t ny = y.size();
+  T za[nx * ny];
+  gsl_spline2d *spline = gsl_spline2d_alloc(I, nx, ny);
+  gsl_interp_accel *xacc = gsl_interp_accel_alloc();
+  gsl_interp_accel *yacc = gsl_interp_accel_alloc();
+
+  /* set z grid values */
+  for (size_t i = 0; i < nx; i++)
+    for (size_t j = 0; j < ny; j++) {
+      gsl_spline2d_set(spline, za, i, j, z.at(j + ny * i));
+    }
+
+  /* initialize interpolation */
+  gsl_spline2d_init(spline, xa, ya, za, nx, ny);
+
+  T zij = gsl_spline2d_eval(spline, xi, yj, xacc, yacc);
+
+  gsl_spline2d_free(spline);
+  gsl_interp_accel_free(xacc);
+  gsl_interp_accel_free(yacc);
+  return zij;
 }
 
 }  // namespace GSL

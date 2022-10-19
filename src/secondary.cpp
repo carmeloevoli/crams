@@ -2,6 +2,8 @@
 
 #include <plog/Log.h>
 
+#include "gsl.h"
+
 namespace CRAMS {
 
 SecondarySource::SecondarySource() {}  // TODO have spallation inside, too stupid as it is?
@@ -16,7 +18,7 @@ SecondarySource::~SecondarySource() { LOGD << "deleted SecondarySource for parti
 double SecondarySource::get(const double& T) const {
   double value = 0;
   if (T > m_T.front() && T < m_T.back()) {
-    value = Utilities::LinearInterpolatorLog(m_T, m_Q, T);
+    value = GSL::LinearInterpolatorLog<double>(m_T, m_Q, T);
   }
   return value;
 }

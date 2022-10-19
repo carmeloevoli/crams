@@ -4,12 +4,12 @@ file(STRINGS ${CMAKE_SOURCE_DIR}/VERSION VERSION)
 set(LANGS CXX)
 project(CRAMS VERSION ${VERSION} LANGUAGES ${LANGS})
 
-set( CMAKE_VERBOSE_MAKEFILE off )
-set( CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
-set( CMAKE_CXX_COMPILER "/usr/local/bin/g++-10" )
-set( CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++14 -fopenmp -DTHREADS=16 -DEVOLI2019 -DDEBUG")
-set( CRAMS_EXTRA_INCLUDES )
-set( CRAMS_EXTRA_LIBRARIES )
+set(CMAKE_VERBOSE_MAKEFILE off)
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_CXX_COMPILER "/usr/local/Cellar/gcc/12.2.0/bin/g++-12")
+set(CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++14 -fopenmp -DTHREADS=16 -DEVOLI2019 -DDEBUG")
+set(CRAMS_EXTRA_INCLUDES)
+set(CRAMS_EXTRA_LIBRARIES)
 
 include_directories( "${CMAKE_SOURCE_DIR}" )
 include_directories( include/ )
@@ -23,6 +23,7 @@ configure_file("src/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
 
 set( CRAMS_SRCS 
      src/xsecs/Evoli2019.cpp 
+     src/xsecs/Korsmeier2018.cpp
      src/xsecs/Tripathi99.cpp
      src/chi2.cpp
      src/csvreader.cpp
@@ -71,8 +72,11 @@ target_link_libraries (sandbox CRAMS_LIB ${CRAMS_EXTRA_LIBRARIES})
 add_executable(inelastic tests/inelasticPlot.cpp)
 target_link_libraries (inelastic CRAMS_LIB ${CRAMS_EXTRA_LIBRARIES})
 
+add_executable(apXsecs tests/apXsecsPlot.cpp)
+target_link_libraries (apXsecs CRAMS_LIB ${CRAMS_EXTRA_LIBRARIES})
+
 # Show summary.
-message (STATUS "CMAKE_SYSTEM .......... = ${CMAKE_SYSTEM}")
+message (STATUS "CMAKE_SYSTEM .......... =   ${CMAKE_SYSTEM}")
 message (STATUS "BUILD_SHARED_LIBS ..... = ${BUILD_SHARED_LIBS}")
 message (STATUS "CMAKE_CXX_COMPILER .... = ${CMAKE_CXX_COMPILER}")
 message (STATUS "CMAKE_CXX_FLAGS ....... = ${CMAKE_CXX_FLAGS}")

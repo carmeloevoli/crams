@@ -8,6 +8,7 @@
 #include <fstream>
 #include <iostream>
 #include <random>
+#include <sstream>
 
 #include "cgs.h"
 
@@ -141,20 +142,33 @@ std::string simplifyKey(const std::string& key) {
   return value;
 }
 
-std::vector<std::string> split(const std::string& str, const std::string& delim) {
-  if (str == "" || delim == "") throw std::invalid_argument("str or delim cannot be empty");
-
-  std::vector<std::string> tokens;
-  size_t prev = 0, pos = 0;
-  do {
-    pos = str.find(delim, prev);
-    if (pos == std::string::npos) pos = str.length();
-    auto token = str.substr(prev, pos - prev);
-    if (!token.empty()) tokens.push_back(token);
-    prev = pos + delim.length();
-  } while (pos < str.length() && prev < str.length());
-  return tokens;
+std::vector<std::string> splitrow(std::string s, std::string delimiter) {
+  std::vector<std::string> result;
+  std::istringstream iss(s);
+  for (std::string s; iss >> s;) result.push_back(s);
+  return result;
 }
+
+std::vector<double> loadColumn(const std::string& filename, size_t useCol, size_t nHeaderLines) {
+  std::vector<double> v;
+  std::string line;
+  std::ifstream file(filename.c_str());
+  size_t count = 0;
+  while (getline(file, line)) {
+    if (count >= nHeaderLines) {
+      auto items = splitrow(line, " ");
+      if (items.size() > 0) {
+        auto s = items.at(useCol);
+        v.push_back(atof(s.c_str()));
+      }
+    }
+    count++;
+  }
+  file.close();
+  return v;
+}
+
+bool inRange(double x, std::pair<double, double> range) { return (x >= range.first && x <= range.second); }
 
 #undef LIMIT
 

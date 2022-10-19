@@ -24,7 +24,8 @@ std::vector<double> LogAxis(const double& min, const double& max, const size_t& 
 bool isGoodAndPositive(const std::vector<double>& v);
 bool fileExists(const std::string& filename);
 std::string simplifyKey(const std::string& key);
-std::vector<std::string> split(const std::string& str, const std::string& delim);
+std::vector<double> loadColumn(const std::string& filename, size_t useCol, size_t nHeaderLines);
+bool inRange(double x, std::pair<double, double> range);
 
 }  // namespace Utilities
 }  // namespace CRAMS

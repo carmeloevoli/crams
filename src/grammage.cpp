@@ -32,7 +32,7 @@ void Grammage::setParameters(const Input& input) {
 
 double Grammage::D(const double& T) const {
   const double pc = Utilities::T2pc(T, m_pid);
-  const double R = pc / m_pid.getZ();
+  const double R = pc / fabs(m_pid.getZ());
   const double x = R / m_R_b;
   double value = Utilities::T2beta(T) * std::pow(R / CGS::GeV, m_delta);
   value /= std::pow(1. + std::pow(x, m_ddelta / m_s), m_s);

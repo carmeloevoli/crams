@@ -1,5 +1,6 @@
 # CRAMS v1.1 - List of nuclei
 #Z,  A, isTertiary, decay time [Myr], ISM_isotopic_fraction, injection_abundance, injection_slope
+-1,  1,   0,      -1,         0,      0.,   4.33
  1,  1,   1,      -1,         0,      0.,   4.33
  1,  1,   0,      -1,  99.99806,      0.,   4.33
  1,  2,   0,      -1,   0.00194,      0.,   4.33

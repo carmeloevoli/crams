@@ -4,6 +4,7 @@
 
 #include <random>
 
+#include "gsl.h"
 #include "utilities.h"
 #include "xsecs/Tripathi99.h"
 
@@ -17,6 +18,17 @@ double sigma_pp(const double& T) {
     value = 30.7 - 0.96 * log(x) + 0.18 * pow2(log(x));
     value *= pow3(1 - pow(x, -1.9));
   }
+  return value * CGS::mbarn;
+}
+
+double sigma_pbarp(const double& T) {
+  const double a_0 = -107.9;
+  const double a_1 = 29.43;
+  const double a_2 = -1.655;
+  const double a_alpha = 189.9;
+  auto R = std::sqrt(T * T + 2. * CGS::protonMassC2 * T);
+  auto lnR = std::log(R);
+  auto value = a_0 + a_1 * lnR + a_2 * pow2(lnR) + a_alpha * std::pow(R, -1. / 3.);
   return value * CGS::mbarn;
 }
 
@@ -51,9 +63,11 @@ double InXsecTripathi99::getXsecOnHtarget(const double& T) const {
   double sigma = 0;
   if (m_proj == H1)
     sigma = sigma_pp(T);
+  else if (m_proj == pbar)
+    sigma = sigma_pbarp(T);
   else
     sigma = Tripathi99::inelastic_sigma(1, 1, m_proj.getA(), m_proj.getZ(), T);
-  return std::max(sigma, 1e-10 * CGS::mbarn);
+  return std::max(sigma, CGS::mbarn);
 }
 
 InXsecCROSEC::InXsecCROSEC() {}
@@ -79,7 +93,7 @@ double InXsecCROSEC::getXsecOnHtarget(const double& T) const {
   if (m_proj == H1)
     sigma = sigma_pp(T);
   else
-    sigma = (T >= m_T.back()) ? m_table.back() : Utilities::LinearInterpolator(m_T, m_table, T);
+    sigma = (T >= m_T.back()) ? m_table.back() : GSL::LinearInterpolator<double>(m_T, m_table, T);
   return std::max(sigma, 1e-10 * CGS::mbarn);
 }
 

@@ -22,7 +22,6 @@ int main(int argc, char* argv[]) {
       CRAMS::ParticleList particleList;
       particleList.readParamsFromFile(argv[1]);
       particleList.print();
-      return 0;
 
       CRAMS::Particles particles;
       auto list = particleList.getList();
@@ -42,9 +41,10 @@ int main(int argc, char* argv[]) {
         particle.buildInelasticXsecs(input);
         particle.buildSecondarySource(input, particles);
         if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(particles);
-        //         if (input.X_s > 0.) particle.buildGrammageAtSource(input, particles);
-        particle.computeIntensity();
+        if (particle.getPid() == CRAMS::pbar) particle.buildAntiprotonSource(particles);
+        // if (input.X_s > 0.) particle.buildGrammageAtSource(input, particles);
         particle.dump();
+        particle.computeIntensity();
         particle.reset();
       }
 

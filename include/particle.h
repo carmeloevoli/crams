@@ -41,6 +41,7 @@ class Particle {
   void buildSecondarySource(const Input& input, const std::vector<Particle>& particles);
   void buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles);
   void buildTertiarySource(const std::vector<Particle>& particles);
+  void buildAntiprotonSource(const std::vector<Particle>& particles);
   void reset();
   void computeIntensity();
   void dump() const;
@@ -74,6 +75,7 @@ class Particle {
   std::shared_ptr<PrimarySource> m_Q_p;
   std::shared_ptr<SecondarySource> m_Q_sec;
   std::shared_ptr<SecondarySource> m_Q_ter;
+  std::shared_ptr<SecondarySource> m_Q_ap;
   std::shared_ptr<SecondarySource> m_Q_Xs;
   std::shared_ptr<InelasticXsec> m_sigmaIn;
   std::shared_ptr<Losses> m_dEdX;

@@ -3,6 +3,7 @@
 #include <plog/Log.h>
 
 #include "csvreader.h"
+#include "gsl.h"
 #include "utilities.h"
 
 namespace CRAMS {
@@ -38,7 +39,7 @@ double SpallationXsecs::getXsecOnHtarget(const PID& projectile, const double& T)
   auto it = m_table.find(projectile);
   if (it != m_table.end()) {
     double T_now = std::min(T, m_T.back());
-    value = Utilities::LinearInterpolatorLog(m_T, it->second, T_now);
+    value = GSL::LinearInterpolatorLog<double>(m_T, it->second, T_now);
     auto it_error = m_randomFactors.find(projectile);
     value *= (m_doRandom) ? it_error->second : 1.;
   }

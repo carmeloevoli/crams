@@ -9,8 +9,10 @@
 #include <string>
 
 #include "cgs.h"
+#include "gsl.h"
 #include "utilities.h"
 #include "xsecs/Evoli2019.h"
+#include "xsecs/Korsmeier2018.h"
 
 namespace CRAMS {
 
@@ -34,6 +36,7 @@ void Particle::reset() {
   m_Q_Xs.reset();
   m_sigmaIn.reset();
   m_dEdX.reset();
+  m_Q_ap.reset();
 }
 
 void Particle::buildVectors(const Input& input) {
@@ -66,7 +69,7 @@ double Particle::productionProfileFromUnstable(const Input& input, const double&
   const double u = input.v_A;
   const double H = input.H;
   const double D = m_X->D(T);
-  const double value = 2. * u / input.mu / v;
+  const double value = u / input.mu / v;
   const double decayTimeAtT = Utilities::T2gamma(T) * decayTimeAtRest;
   const double Delta = std::sqrt(1. + 4. * D / (pow2(u) * decayTimeAtT));
   const double profile = Delta * COTH(u * H * Delta / 2. / D) - COTH(u * H / 2. / D);
@@ -171,6 +174,28 @@ void Particle::buildTertiarySource(const std::vector<Particle>& particles) {
   m_Q_ter = std::make_shared<SecondarySource>(m_pid, T_t, Q_t);
 }
 
+void Particle::buildAntiprotonSource(const std::vector<Particle>& particles) {
+  const auto T_ap = Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, ARRAYSIZE);
+  std::vector<double> Q_ap;
+  const auto ptr_H = std::find(particles.begin(), particles.end(), Particle(H1));
+  const auto ptr_He = std::find(particles.begin(), particles.end(), Particle(He4));
+  const auto xs = Korsmeier2018SecAp();
+  for (auto& T_i : T_ap) {
+    const auto T_proj = Utilities::LogAxis(T_i, 1e4 * T_i, ARRAYSIZE);
+    const auto lnr = std::log(T_proj[1] / T_proj[0]);
+    double q_H = 0;
+    double q_He = 0;
+    for (auto& T_j : T_proj) {
+      q_H += T_j * ptr_H->I_T_interpol(T_j) *
+             (xs.get(PbarChannel::pp, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::pHe, T_j, T_i));
+      q_He += T_j * ptr_He->I_T_interpol(T_j) *
+              (xs.get(PbarChannel::Hep, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::HeHe, T_j, T_i));
+    }
+    Q_ap.push_back(lnr * (q_H + q_He) / CGS::meanISMmass);
+  }
+  m_Q_ap = std::make_shared<SecondarySource>(m_pid, T_ap, Q_ap);
+}
+
 void Particle::buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles) {
   m_doGrammageAtSource = true;
   const auto id = input.id;
@@ -195,7 +220,7 @@ void Particle::buildGrammageAtSource(const Input& input, const std::vector<Parti
 double Particle::I_T_interpol(const double& T) const {
   double value = 0;
   if (T > m_T.front() && T < m_T.back()) {
-    value = Utilities::LinearInterpolatorLog(m_T, m_I_T, T);
+    value = GSL::LinearInterpolatorLog<double>(m_T, m_I_T, T);
   }
   return value;
 }
@@ -224,7 +249,8 @@ double Particle::Q_total(const double& T) const {
   const double Q_sec = (m_doSecondary) ? m_Q_sec->get(T) : 0.;
   const double Q_sec_source = (m_doGrammageAtSource) ? m_Q_Xs->get(T) : 0.;
   const double Q_p = (m_abundance > 0.) ? m_Q_p->get(T) : 0.;
-  return Q_p + Q_sec + Q_sec_source + Q_ter;
+  const double Q_ap = (m_pid == pbar) ? m_Q_ap->get(T) : 0.;
+  return Q_p + Q_sec + Q_sec_source + Q_ter + Q_ap;
 }
 
 void Particle::computeIntensity() {
@@ -253,7 +279,7 @@ void Particle::dump() const {
   outfile << "# T [GeV] - R [GV] - Q_pri - Q_sec - X [gr/cm2] - tau_esc [yr] - tau_adv [yr] - X_cr [gr/cm2] - dEdX\n";
   outfile << std::scientific;
   for (auto T : m_T) {  // TODO take from input
-    const double R = Utilities::T2pc(T, m_pid) / (double)m_pid.getZ();
+    const double R = Utilities::T2pc(T, m_pid) / fabs((double)m_pid.getZ());
     outfile << T / CGS::GeV << "\t";
     outfile << R / CGS::GeV << "\t";
     outfile << m_Q_p->get(T) << "\t";
