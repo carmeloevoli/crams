@@ -186,10 +186,10 @@ void ParticleList::setParam(const std::string& KEY, const double& value) {
   } else if (simpleKey == "qni") {
     setAbundanceChargeGroup(28, value);
     LOGD << "changed Ni abundance to " << value;
-  } else if (simpleKey == "slopeh") {
+  } else if (simpleKey == "hslope") {
     setSlopeChargeGroup(1, value);
     LOGD << "changed H slope to " << value;
-  } else if (simpleKey == "slopehe") {
+  } else if (simpleKey == "heslope") {
     setSlopeChargeGroup(2, value);
     LOGD << "changed He slope to " << value;
   } else if (simpleKey == "slope") {
