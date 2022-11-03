@@ -38,8 +38,8 @@ void OutputManager::dumpSpectra() const {
     const double units = 1. / (CGS::GeV * pow2(CGS::meter) * CGS::sec);
     for (const auto& R_i : m_R) {
       outfile << R_i / CGS::GeV << "\t";
-      outfile << getFluxChargeGroup(-1, R_i) / units << "\t";
       for (int iZ = 1; iZ <= 28; ++iZ) outfile << getFluxChargeGroup(iZ, R_i) / units << "\t";
+      outfile << getFluxChargeGroup(-1, R_i) / units << "\t";
       outfile << "\n";
     }
     outfile.close();
@@ -71,8 +71,8 @@ void OutputManager::dumpSpectraEkn() const {
     outfile << std::scientific;
     for (const auto& T_i : T) {
       outfile << T_i / CGS::GeV << "\t";
-      outfile << getFluxChargeGroupEkn(-1, T_i) / units << "\t";
       for (int iZ = 1; iZ <= 28; ++iZ) outfile << getFluxChargeGroupEkn(iZ, T_i) / units << "\t";
+      outfile << getFluxChargeGroupEkn(-1, T_i) / units << "\t";
       outfile << "\n";
     }
     outfile.close();
