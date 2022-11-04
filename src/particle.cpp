@@ -191,7 +191,9 @@ void Particle::buildAntiprotonSource(const std::vector<Particle>& particles) {
       q_He += T_j * ptr_He->I_T_interpol(T_j) *
               (xs.get(PbarChannel::Hep, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::HeHe, T_j, T_i));
     }
-    Q_ap.push_back(lnr * (q_H + q_He) / CGS::meanISMmass);
+    q_H *= lnr / (1. + CGS::f_He);
+    q_He *= lnr / (1. + CGS::f_He);
+    Q_ap.push_back(1.1 * (q_H + q_He) / CGS::meanISMmass);
   }
   m_Q_ap = std::make_shared<SecondarySource>(m_pid, T_ap, Q_ap);
 }
