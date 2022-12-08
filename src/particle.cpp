@@ -178,22 +178,33 @@ void Particle::buildAntiprotonSource(const std::vector<Particle>& particles) {
   const auto T_ap = Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, ARRAYSIZE);
   std::vector<double> Q_ap;
   const auto ptr_H = std::find(particles.begin(), particles.end(), Particle(H1));
-  const auto ptr_He = std::find(particles.begin(), particles.end(), Particle(He4));
+  const auto ptr_d = std::find(particles.begin(), particles.end(), Particle(H2));
+  const auto ptr_He3 = std::find(particles.begin(), particles.end(), Particle(He3));
+  const auto ptr_He4 = std::find(particles.begin(), particles.end(), Particle(He4));
+  const auto ptr_C12 = std::find(particles.begin(), particles.end(), Particle(C12));
+  const auto ptr_O16 = std::find(particles.begin(), particles.end(), Particle(O16));
+
   const auto xs = Korsmeier2018SecAp();
   for (auto& T_i : T_ap) {
     const auto T_proj = Utilities::LogAxis(T_i, 1e4 * T_i, ARRAYSIZE);
     const auto lnr = std::log(T_proj[1] / T_proj[0]);
-    double q_H = 0;
-    double q_He = 0;
+    double q_ap = 0;
     for (auto& T_j : T_proj) {
-      q_H += T_j * ptr_H->I_T_interpol(T_j) *
-             (xs.get(PbarChannel::pp, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::pHe, T_j, T_i));
-      q_He += T_j * ptr_He->I_T_interpol(T_j) *
-              (xs.get(PbarChannel::Hep, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::HeHe, T_j, T_i));
+      q_ap += T_j * ptr_H->I_T_interpol(T_j) *
+              (xs.get(PbarChannel::pp, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::pHe, T_j, T_i));
+      q_ap += T_j * ptr_d->I_T_interpol(T_j) *
+              (xs.get(PbarChannel::dp, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::dHe, T_j, T_i));
+      q_ap += T_j * ptr_He3->I_T_interpol(T_j) *
+              (xs.get(PbarChannel::He3p, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::He3He, T_j, T_i));
+      q_ap += T_j * ptr_He4->I_T_interpol(T_j) *
+              (xs.get(PbarChannel::He4p, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::He4He, T_j, T_i));
+      q_ap += T_j * ptr_C12->I_T_interpol(T_j) *
+              (xs.get(PbarChannel::C12p, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::C12He, T_j, T_i));
+      q_ap += T_j * ptr_O16->I_T_interpol(T_j) *
+              (xs.get(PbarChannel::O16p, T_j, T_i) + CGS::f_He * xs.get(PbarChannel::O16He, T_j, T_i));
     }
-    q_H *= lnr / (1. + CGS::f_He);
-    q_He *= lnr / (1. + CGS::f_He);
-    Q_ap.push_back(1.1 * (q_H + q_He) / CGS::meanISMmass);
+    q_ap *= lnr / (1. + CGS::f_He);
+    Q_ap.push_back(q_ap / CGS::meanISMmass);
   }
   m_Q_ap = std::make_shared<SecondarySource>(m_pid, T_ap, Q_ap);
 }

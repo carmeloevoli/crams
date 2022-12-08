@@ -14,8 +14,16 @@ int main() {
     std::cout << T_ap / CGS::GeV << " ";
     std::cout << xs.get(PbarChannel::pp, T_p, T_ap) / units << " ";
     std::cout << xs.get(PbarChannel::pHe, T_p, T_ap) / units << " ";
-    std::cout << xs.get(PbarChannel::Hep, T_p, T_ap) / units << " ";
-    std::cout << xs.get(PbarChannel::HeHe, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::dp, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::dHe, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::He3p, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::He3He, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::He4p, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::He4He, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::C12p, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::C12He, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::O16p, T_p, T_ap) / units << " ";
+    std::cout << xs.get(PbarChannel::O16He, T_p, T_ap) / units << " ";
     std::cout << std::endl;
   }
 }

@@ -7,7 +7,7 @@
 
 namespace CRAMS {
 
-enum class PbarChannel { pp, pHe, Hep, HeHe };
+enum class PbarChannel { pp, pHe, dp, dHe, He3p, He3He, He4p, He4He, C12p, C12He, O16p, O16He };
 
 class Korsmeier2018SecAp {
  public:
@@ -27,9 +27,17 @@ class Korsmeier2018SecAp {
   std::vector<double> m_lgTapAxis;
 
   Grid<double> m_sigma_pp;
-  Grid<double> m_sigma_Hep;
   Grid<double> m_sigma_pHe;
-  Grid<double> m_sigma_HeHe;
+  Grid<double> m_sigma_dp;
+  Grid<double> m_sigma_dHe;
+  Grid<double> m_sigma_He3p;
+  Grid<double> m_sigma_He3He;
+  Grid<double> m_sigma_He4p;
+  Grid<double> m_sigma_He4He;
+  Grid<double> m_sigma_C12p;
+  Grid<double> m_sigma_C12He;
+  Grid<double> m_sigma_O16p;
+  Grid<double> m_sigma_O16He;
 };
 
 }  // namespace CRAMS
