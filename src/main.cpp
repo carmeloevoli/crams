@@ -44,7 +44,7 @@ int main(int argc, char* argv[]) {
         if (particle.getPid() == CRAMS::pbar) particle.buildAntiprotonSource(particles);
         // if (input.X_s > 0.) particle.buildGrammageAtSource(input, particles);
         particle.dump();
-        particle.computeIntensity();
+        particle.computeIntensity(input);
         particle.reset();
       }
 

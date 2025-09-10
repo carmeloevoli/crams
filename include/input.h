@@ -13,7 +13,7 @@ class Input {
  private:
   double m_TSimMin = 0.01 * CGS::GeV;
   double m_TSimMax = 10. * CGS::TeV;
-  size_t m_TSimSize = 5 * 32;
+  size_t m_TSimSize = 5 * 32*3;
 
   double m_ROutputMin = 0.1 * CGS::GeV;
   double m_ROutputMax = 10. * CGS::TeV;
@@ -33,6 +33,7 @@ class Input {
   double m_modulationPotential = 4.87754e-01 * CGS::GeV;
   double m_xsecsFudge = 1;
   size_t m_id = 0;
+  bool m_num = false;
   std::string m_simname = "test";
 
  public:
@@ -66,6 +67,7 @@ class Input {
   const double& modulationPotential = m_modulationPotential;
   const double& xsecsFudge = m_xsecsFudge;
   const size_t& id = m_id;
+  const bool& num = m_num;
   const std::string& simname = m_simname;
 };
 

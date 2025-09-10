@@ -266,11 +266,15 @@ double Particle::Q_total(const double& T) const {
   return Q_p + Q_sec + Q_sec_source + Q_ter + Q_ap;
 }
 
-void Particle::computeIntensity() {
+void Particle::computeIntensity(const Input& input) {
+    if (input.num){//if num=True use numerical method
+        computeFluxAtEnergy_num();
+    } else{//if not numerical then use analytical method
 #pragma omp parallel for schedule(dynamic) num_threads(THREADS)
-  for (size_t i = 0; i < m_T.size(); ++i) {
-    m_I_T[i] = computeFluxAtEnergy(m_T[i]);
-  }
+      for (size_t i = 0; i < m_T.size(); ++i) {
+        m_I_T[i] = computeFluxAtEnergy(m_T[i]);
+      }
+    }
 
   if (Utilities::isGoodAndPositive(m_I_T))
     setDone();
@@ -309,5 +313,40 @@ void Particle::dump() const {
   outfile.close();
   LOGD << "dumped " << m_pid << " to file " << makeParticleFilename(m_pid);
 }
+
+void Particle::computeFluxAtEnergy_num(){//Crank-Nicholson, factor 5 speed-up, but needs 3* more points in E than Euler to converge. Or we change Emin to Emin*10, then it works with same amount of points
+  double lam1_ip = Lambda_1(m_T[m_T.size()-1]);
+  double lam2_ip = Lambda_2(m_T[m_T.size()-1]);
+  double Q_ip    = Q_total(m_T[m_T.size()-1]);
+  for (int i = m_T.size()-2; i >= 0; --i) {
+    double h_i = (m_T[i+1]-m_T[i]);
+    double lam1_i = Lambda_1(m_T[i]);
+    double lam2_i = -Lambda_2(m_T[i]);//- because lambda2 is defined as abs because that appears in Green's function..
+    double Q_i = Q_total(m_T[i]);
+
+    double numerator = 0.5*(-2./h_i*m_I_T[i+1] +  Q_i/lam2_i+ (Q_ip-lam1_ip*m_I_T[i+1]) / lam2_ip );
+    double denominator = 0.5*lam1_i/lam2_i-1./h_i;
+
+    m_I_T[i] = numerator / denominator;
+    //to save some time, redefine instead of calling functions in next step again
+    lam1_ip = lam1_i;
+    lam2_ip = lam2_i;
+    Q_ip    = Q_i;
+
+  }
+}
+/*
+void Particle::computeFluxAtEnergy_num(){//backward Euler, factor 5 speed-up
+  for (int i = m_T.size()-2; i >= 0; --i) {
+    double h = m_T[i+1]-m_T[i];
+    double lambda1 = Lambda_1(m_T[i]);
+    double lambda2 = Lambda_2(m_T[i]);
+    double q_val = Q_total(m_T[i]);
+    // Backward Euler, stepping from i+1 to i
+    m_I_T[i] = (q_val + lambda2 * m_I_T[i+1]/h) / (lambda1 + lambda2/h);
+  }
+}
+*/
+
 
 }  // namespace CRAMS

@@ -43,8 +43,9 @@ class Particle {
   void buildTertiarySource(const std::vector<Particle>& particles);
   void buildAntiprotonSource(const std::vector<Particle>& particles);
   void reset();
-  void computeIntensity();
+  void computeIntensity(const Input& input);
   void dump() const;
+  void computeFluxAtEnergy_num();
   double I_T_interpol(const double& T) const;
   double I_R_TOA(const double& R, const double& modulationPotential) const;
 

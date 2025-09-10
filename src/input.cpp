@@ -42,6 +42,9 @@ void Input::setParam(const std::string& KEY, const double& value) {
   } else if (simpleKey == "xsecsfudge") {
     m_xsecsFudge = value;
     LOGD << "changed xsecs fudge value to " << m_xsecsFudge;
+  } else if (simpleKey == "num") {
+    m_num = value;
+    LOGD << "changed numerical method value to " << m_num;
   } else if (simpleKey == "id") {
     m_id = (int)value;
   }  // else {
@@ -97,6 +100,7 @@ void Input::print() const {
   LOGD << "E_max  [GeV]        : " << m_TSimMax / CGS::GeV;
   LOGD << "E_size []           : " << m_TSimSize;
   LOGD << "do Secondary        : " << std::boolalpha << m_doSecondary;
+  LOGD << "numerical method           : "<< std::boolalpha << m_num;
 }
 
 }  // namespace CRAMS
