@@ -335,6 +335,7 @@ void Particle::computeFluxAtEnergy_num(){//Crank-Nicholson, factor 5 speed-up, b
 
   }
 }
+
 /*
 void Particle::computeFluxAtEnergy_num(){//backward Euler, factor 5 speed-up
   for (int i = m_T.size()-2; i >= 0; --i) {
