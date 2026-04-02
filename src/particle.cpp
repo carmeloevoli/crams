@@ -87,7 +87,14 @@ void Particle::buildSecondarySource(const Input& input, const std::vector<Partic
     double value = 0;
     for (auto& particle : particles) {
       if (particle.getPid().getA() > m_pid.getA() && particle.isDone()) {
-        value += xsecs.getXsecOnISM(particle.getPid(), T) * particle.I_T_interpol(T);
+        //value += xsecs.getXsecOnISM(particle.getPid(), T) * particle.I_T_interpol(T);
+          if (m_pid==Be7 or m_pid==Be9 or m_pid==Be10){//BS
+                value += 0.95*xsecs.getXsecOnISM(particle.getPid(), T) * particle.I_T_interpol(T);//BS
+          //} else if (m_pid==Mg24 or m_pid==Mg25 or m_pid==Mg26){//BS
+          //      value += 1.3*xsecs.getXsecOnISM(particle.getPid(), T) * particle.I_T_interpol(T);//BS
+          } else {//BS
+                value += xsecs.getXsecOnISM(particle.getPid(), T) * particle.I_T_interpol(T);
+          } //BS
       }
     }
     value /= CGS::meanISMmass;
@@ -238,6 +245,19 @@ double Particle::I_T_interpol(const double& T) const {
   return value;
 }
 
+double Particle::I_T_TOA(const double& T, const double& modulationPotential) const {
+  // see arXiv:1511.08790
+  double value = 0;
+  {
+    const double Phi = m_pid.getZoverA() * modulationPotential;
+    const double T_ISM = T + Phi;
+    double factor = T * (T + 2. * CGS::protonMassC2);
+    factor /= (T + Phi) * (T + Phi + 2. * CGS::protonMassC2);
+    value = factor * I_T_interpol(T_ISM) ;
+  }
+  return value;
+}
+
 double Particle::I_R_TOA(const double& R, const double& modulationPotential) const {
   // see arXiv:1511.08790
   double value = 0;
@@ -348,6 +368,5 @@ void Particle::computeFluxAtEnergy_num(){//backward Euler, factor 5 speed-up
   }
 }
 */
-
 
 }  // namespace CRAMS

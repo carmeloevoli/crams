@@ -31,6 +31,8 @@ class Input {
   double m_D_0 = 2.48255e28 * CGS::cm2 / CGS::sec;
   double m_X_s = -1;  // CGS::gram / CGS::cm2;
   double m_modulationPotential = 4.87754e-01 * CGS::GeV;
+  double m_a_C = 1.0;
+  double m_a_D = 1.0;
   double m_xsecsFudge = 1;
   size_t m_id = 0;
   bool m_num = false;
@@ -65,6 +67,8 @@ class Input {
   const double& D_0 = m_D_0;
   const double& X_s = m_X_s;
   const double& modulationPotential = m_modulationPotential;
+  const double& a_C = m_a_C;
+  const double& a_D = m_a_D;
   const double& xsecsFudge = m_xsecsFudge;
   const size_t& id = m_id;
   const bool& num = m_num;

@@ -22,6 +22,7 @@ class OutputManager {
 
  private:
   double getFluxChargeGroup(const int Z, const double& R) const;
+  double getFluxChargeIsotope(const int Z, const int A, const double& R) const; 
   double getFluxChargeGroupEkn(const int Z, const double& T) const;
 };
 

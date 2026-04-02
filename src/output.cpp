@@ -29,6 +29,16 @@ double OutputManager::getFluxChargeGroup(const int Z, const double& R) const {
   return value;
 }
 
+double OutputManager::getFluxChargeIsotope(const int Z, const int A, const double& R) const {
+  double value = 0.;
+  for (const auto& particle : m_particles) {
+    if (particle.isChargeZ(Z) && particle.getPid().getA() == A) {
+      value += particle.I_R_TOA(R, m_phi);
+    }
+  }
+  return value;
+}
+
 void OutputManager::dumpSpectra() const {
   const std::string spectraFilename = "output/" + m_simname + "_spectra_R_" + std::to_string(m_id) + ".txt";
   LOGW << "writing spectra to " << spectraFilename;
@@ -40,6 +50,8 @@ void OutputManager::dumpSpectra() const {
       outfile << R_i / CGS::GeV << "\t";
       for (int iZ = 1; iZ <= 28; ++iZ) outfile << getFluxChargeGroup(iZ, R_i) / units << "\t";
       outfile << getFluxChargeGroup(-1, R_i) / units << "\t";
+      outfile << getFluxChargeIsotope(4, 9, R_i) / units << "\t";
+      outfile << getFluxChargeIsotope(4, 10, R_i) / units << "\t";
       outfile << "\n";
     }
     outfile.close();

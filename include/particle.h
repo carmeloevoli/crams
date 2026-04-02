@@ -47,6 +47,7 @@ class Particle {
   void dump() const;
   void computeFluxAtEnergy_num();
   double I_T_interpol(const double& T) const;
+  double I_T_TOA(const double& T, const double& modulationPotential) const;
   double I_R_TOA(const double& R, const double& modulationPotential) const;
 
  public:
