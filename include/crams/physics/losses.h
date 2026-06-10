@@ -1,27 +1,32 @@
-#ifndef CRAMS_LOSSES_H_
-#define CRAMS_LOSSES_H_
+#ifndef CRAMS_PHYSICS_LOSSES_H_
+#define CRAMS_PHYSICS_LOSSES_H_
 
 #include "crams/core/input.h"
 #include "crams/core/pid.h"
 
 namespace CRAMS {
+
 class Losses {
  public:
-  Losses();
   Losses(const PID& pid, const Input& input);
-  virtual ~Losses();
-  double get(const double& T) const;
-  double dEdX_adiabatic(const double& T) const;
-  double dEdX_ionization(const double& T) const;
-  double getDerivative(const double& T);
-  double dTdt_ionization(const double& T, const double& n_H) const;
+  ~Losses();
 
- protected:
+  double get(double T) const;
+  double dEdX_adiabatic(double T) const;
+  double dEdX_ionization(double T) const;
+  double getDerivative(double T) const;
+
+  // Ionization cooling rate [erg/s] at kinetic energy T and hydrogen number density n_H
+  double dTdt_ionization(double T, double n_H) const;
+
+ private:
+  // Effective Bethe-Bloch logarithm: B_H + f_He * B_He
+  double betheBlochLog(double T) const;
+
   PID m_pid;
-  double m_factorAdv = 0;
-  double m_mu = 0;
+  double m_factorAdv = 0;  // 2*v_A / (3*mu*c) [cm²/g]
 };
 
 }  // namespace CRAMS
 
-#endif  // CRAMS_LOSSES_H_
+#endif  // CRAMS_PHYSICS_LOSSES_H_

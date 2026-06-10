@@ -1,5 +1,5 @@
-#ifndef CRAMS_PRIMARY_H_
-#define CRAMS_PRIMARY_H_
+#ifndef CRAMS_PHYSICS_PRIMARY_H_
+#define CRAMS_PHYSICS_PRIMARY_H_
 
 #include "crams/core/pid.h"
 
@@ -21,4 +21,4 @@ class PrimarySource {
 
 }  // namespace CRAMS
 
-#endif  // CRAMS_PRIMARY_H_
+#endif  // CRAMS_PHYSICS_PRIMARY_H_

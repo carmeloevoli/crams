@@ -1,5 +1,5 @@
-#ifndef CRAMS_GRAMMAGE_H_
-#define CRAMS_GRAMMAGE_H_
+#ifndef CRAMS_PHYSICS_GRAMMAGE_H_
+#define CRAMS_PHYSICS_GRAMMAGE_H_
 
 #include "crams/core/input.h"
 #include "crams/core/pid.h"
@@ -38,4 +38,4 @@ class Grammage {
 
 }  // namespace CRAMS
 
-#endif  // CRAMS_GRAMMAGE_H_
+#endif  // CRAMS_PHYSICS_GRAMMAGE_H_

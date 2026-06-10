@@ -1,33 +1,40 @@
 #ifndef CRAMS_PARTICLE_H_
 #define CRAMS_PARTICLE_H_
 
-#include <algorithm>
 #include <memory>
+#include <utility>
 #include <vector>
 
-#include "crams/grammage.h"
-#include "crams/inelastic.h"
-#include "crams/losses.h"
 #include "crams/core/pid.h"
-#include "crams/primary.h"
-#include "crams/secondary.h"
-#include "crams/xsecs/Evoli2019.h"
 
 namespace CRAMS {
+
+class Grammage;
+class InelasticXsec;
+class Input;
+class Losses;
+class PrimarySource;
+class SecondarySource;
+struct NucleusParameters;
+
 class Particle {
  public:
-  Particle(const PID& pid);
+  explicit Particle(const PID& pid);
   Particle(const PID& pid, const NucleusParameters& nucleusParameters);
-  virtual ~Particle();
+  Particle(const Particle& other) = delete;
+  Particle& operator=(const Particle& other) = delete;
+  Particle(Particle&& other) noexcept;
+  Particle& operator=(Particle&& other) noexcept;
+  ~Particle();
 
   bool operator==(const Particle& other) const { return m_pid == other.m_pid; }
-  const PID getPid() const { return m_pid; }
-  const bool isDone() const { return m_isDone; }
-  const bool isChargeZ(const int& Z) const { return (m_pid.getZ() == Z) ? true : false; }
-  const bool isStable() const { return m_decayTime < 0.; }
-  const double getDecayTime() const { return m_decayTime; }
-  const double getAbundance() const { return m_abundance; }
-  const double getSlope() const { return m_slope; }
+  const PID& getPid() const { return m_pid; }
+  bool isDone() const { return m_isDone; }
+  bool isChargeZ(int Z) const { return m_pid.getZ() == Z; }
+  bool isStable() const { return m_decayTime < 0.; }
+  double getDecayTime() const { return m_decayTime; }
+  double getAbundance() const { return m_abundance; }
+  double getSlope() const { return m_slope; }
   const std::vector<double>& getEnergyVector() const { return m_T; }
   const std::vector<double>& getIntensityVector() const { return m_I_T; }
   void setDone() { m_isDone = true; }
@@ -41,27 +48,25 @@ class Particle {
   void buildSecondarySource(const Input& input, const std::vector<Particle>& particles);
   void buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles);
   void buildTertiarySource(const std::vector<Particle>& particles);
-  void buildAntiprotonSource(const std::vector<Particle>& particles);
   void reset();
   void computeIntensity(const Input& input);
   void dump() const;
   void computeFluxAtEnergy_num();
-  double I_T_interpol(const double& T) const;
-  double I_T_TOA(const double& T, const double& modulationPotential) const;
-  double I_R_TOA(const double& R, const double& modulationPotential) const;
+  double I_T_interpol(double T) const;
+  double I_T_TOA(double T, double modulationPotential) const;
+  double I_R_TOA(double R, double modulationPotential) const;
 
  public:
-  // publicsolver.cpp
-  double Q_total(const double& T) const;
-  double Lambda_1(const double& T) const;
-  double Lambda_2(const double& T) const;
-  double externalIntegrand(const double& T_prime, const double& T);
-  double internalIntegrand(const double& T_second);
-  double ExpIntegral(const double& T, const double& T_prime);
-  double computeFluxAtEnergy(const double& T);
+  double Q_total(double T) const;
+  double Lambda_1(double T) const;
+  double Lambda_2(double T) const;
+  double externalIntegrand(double T_prime, double T) const;
+  double internalIntegrand(double T_second) const;
+  double ExpIntegral(double T, double T_prime) const;
+  double computeFluxAtEnergy(double T) const;
 
  protected:
-  double productionProfileFromUnstable(const Input& input, const double& T, const double& decayTimeAtRest);
+  double productionProfileFromUnstable(const Input& input, double T, double decayTimeAtRest) const;
 
  protected:
   PID m_pid;
@@ -73,18 +78,17 @@ class Particle {
   double m_decayTime = -1;
   std::vector<double> m_T;
   std::vector<double> m_I_T;
-  std::shared_ptr<Grammage> m_X;
-  std::shared_ptr<PrimarySource> m_Q_p;
-  std::shared_ptr<SecondarySource> m_Q_sec;
-  std::shared_ptr<SecondarySource> m_Q_ter;
-  std::shared_ptr<SecondarySource> m_Q_ap;
-  std::shared_ptr<SecondarySource> m_Q_Xs;
-  std::shared_ptr<InelasticXsec> m_sigmaIn;
-  std::shared_ptr<Losses> m_dEdX;
+  std::unique_ptr<Grammage> m_X;
+  std::unique_ptr<PrimarySource> m_Q_p;
+  std::unique_ptr<SecondarySource> m_Q_sec;
+  std::unique_ptr<SecondarySource> m_Q_ter;
+  std::unique_ptr<SecondarySource> m_Q_Xs;
+  std::unique_ptr<InelasticXsec> m_sigmaIn;
+  std::unique_ptr<Losses> m_dEdX;
 };
 
-typedef std::vector<Particle> Particles;
-typedef std::pair<bool, std::vector<Particle>::iterator> itParticle;
+using Particles = std::vector<Particle>;
+using itParticle = std::pair<bool, Particles::iterator>;
 
 }  // namespace CRAMS
 

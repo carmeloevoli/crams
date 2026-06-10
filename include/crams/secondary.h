@@ -4,20 +4,21 @@
 #include <vector>
 
 #include "crams/core/pid.h"
-#include "crams/utils/utilities.h"
 
 namespace CRAMS {
+
 class SecondarySource {
  public:
-  SecondarySource();
   SecondarySource(const PID& pid, const std::vector<double>& T, const std::vector<double>& Q);
-  virtual ~SecondarySource();
-  double get(const double& T) const;
+  ~SecondarySource();
+
+  // Returns the interpolated secondary source at kinetic energy T, or 0 outside the grid.
+  double get(double T) const;
 
  private:
+  PID m_pid;
   std::vector<double> m_T;
   std::vector<double> m_Q;
-  PID m_pid;
 };
 
 }  // namespace CRAMS

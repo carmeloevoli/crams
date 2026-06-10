@@ -3,6 +3,8 @@
 
 #include <iomanip>
 #include <map>
+#include <ostream>
+#include <string>
 #include <vector>
 
 #include "crams/core/pid.h"
@@ -10,12 +12,12 @@
 namespace CRAMS {
 
 struct NucleusParameters {
-  double abundance;
-  double slope;
-  double isotopicFractionISM;
-  double decayTime;
-  bool isStable;
-  bool doPropagate;
+  double abundance = 0.;
+  double slope = 0.;
+  double isotopicFractionISM = 0.;
+  double decayTime = -1.;
+  bool isStable = true;
+  bool doPropagate = false;
 
   friend std::ostream& operator<<(std::ostream& stream, const NucleusParameters& inj) {
     stream << "(" << std::scientific << std::setprecision(3) << inj.abundance << ",";
@@ -25,32 +27,45 @@ struct NucleusParameters {
   }
 };
 
-typedef std::map<PID, NucleusParameters> List;
+using List = std::map<PID, NucleusParameters>;
 
 class ParticleList {
  private:
   List m_list;
-  const std::string nucleilistFilename = "data/nucleilist.csv";
+  std::map<int, std::vector<List::iterator>> m_particlesByCharge;
+  bool m_rebuildChargeIndexBeforeUpdate = false;
 
  public:
   ParticleList();
-  virtual ~ParticleList();
+  ParticleList(const ParticleList& other);
+  ParticleList& operator=(const ParticleList& other);
+  ParticleList(ParticleList&& other);
+  ParticleList& operator=(ParticleList&& other);
+  ~ParticleList() = default;
 
   const List& getList() const { return m_list; }
-  List& getList() { return m_list; }
+  List& getList() {
+    m_rebuildChargeIndexBeforeUpdate = true;
+    return m_list;
+  }
 
   bool insert(const PID& key, const NucleusParameters& params);
-  void setAbundance(const PID& key, const double& value);
-  void setSlope(const PID& key, const double& value);
+  void setAbundance(const PID& key, double value);
+  void setSlope(const PID& key, double value);
   void print() const;
   void readParamsFromFile(const std::string& filename);
 
  protected:
-  void setParam(const std::string& KEY, const double& value);
+  void setParam(const std::string& key, double value);
   void loadNucleilist(const std::string& filename);
-  void setAbundanceChargeGroup(const int& charge, const double& abundance);
-  void setSlopeChargeGroup(const int& charge, const double& slope);
-  void setSlopeNuclei(const int& minCharge, const double& slope);
+  void setAbundanceChargeGroup(int charge, double abundance);
+  void setSlopeChargeGroup(int charge, double slope);
+  void setSlopeNuclei(int minCharge, double slope);
+
+ private:
+  void applyDefaultInjectionParameters();
+  void ensureChargeIndexFresh();
+  void rebuildChargeIndex();
 };
 
 }  // namespace CRAMS

@@ -32,15 +32,15 @@ set( CRAMS_SRCS
      src/xsecs/Tripathi99.cpp
      src/utils/csvreader.cpp
      src/utils/utilities.cpp
-     src/grammage.cpp
+     src/physics/grammage.cpp
      src/inelastic.cpp
      src/core/input.cpp
-     src/losses.cpp
+     src/physics/losses.cpp
      src/core/output.cpp
      src/particle.cpp
      src/particlelist.cpp
      src/particlesolver.cpp
-     src/primary.cpp
+     src/physics/primary.cpp
      src/secondary.cpp
      "${git_revision_cpp}"
 )
@@ -100,6 +100,14 @@ add_executable(test_input tests/test_input.cpp)
 target_link_libraries(test_input crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_input COMMAND test_input)
 
+add_executable(test_particlelist tests/test_particlelist.cpp)
+target_link_libraries(test_particlelist crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_particlelist COMMAND test_particlelist)
+
+add_executable(test_particle tests/test_particle.cpp)
+target_link_libraries(test_particle crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_particle COMMAND test_particle)
+
 add_executable(test_grammage tests/test_grammage.cpp)
 target_link_libraries(test_grammage crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_grammage COMMAND test_grammage)
@@ -107,6 +115,14 @@ add_test(NAME test_grammage COMMAND test_grammage)
 add_executable(test_primary tests/test_primary.cpp)
 target_link_libraries(test_primary crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_primary COMMAND test_primary)
+
+add_executable(test_secondary tests/test_secondary.cpp)
+target_link_libraries(test_secondary crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_secondary COMMAND test_secondary)
+
+add_executable(test_losses tests/test_losses.cpp)
+target_link_libraries(test_losses crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_losses COMMAND test_losses)
 
 # Show summary.
 message (STATUS "CMAKE_SYSTEM .......... =   ${CMAKE_SYSTEM}")
