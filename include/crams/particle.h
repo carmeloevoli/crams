@@ -44,7 +44,7 @@ class Particle {
   void buildGrammage(const Input& input);
   void buildPrimarySource(const Input& input);
   void buildLosses(const Input& input);
-  void buildInelasticXsecs(const Input& input);
+  void buildInelasticXsecs(const InelasticXsec& sigmaIn);
   void buildSecondarySource(const Input& input, const std::vector<Particle>& particles);
   void buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles);
   void buildTertiarySource(const std::vector<Particle>& particles);
@@ -84,7 +84,7 @@ class Particle {
   std::unique_ptr<SecondarySource> m_Q_sec;
   std::unique_ptr<SecondarySource> m_Q_ter;
   std::unique_ptr<SecondarySource> m_Q_Xs;
-  std::unique_ptr<InelasticXsec> m_sigmaIn;
+  const InelasticXsec* m_sigmaIn = nullptr;
   std::unique_ptr<Losses> m_dEdX;
 };
 

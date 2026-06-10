@@ -28,7 +28,6 @@ configure_file("src/utils/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
 
 set( CRAMS_SRCS
      src/xsecs/Evoli2019.cpp
-     src/xsecs/Tripathi99.cpp
      src/utils/csvreader.cpp
      src/utils/utilities.cpp
      src/physics/grammage.cpp
@@ -122,6 +121,10 @@ add_test(NAME test_secondary COMMAND test_secondary)
 add_executable(test_losses tests/test_losses.cpp)
 target_link_libraries(test_losses crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_losses COMMAND test_losses)
+
+add_executable(test_inelastic tests/test_inelastic.cpp)
+target_link_libraries(test_inelastic crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_inelastic COMMAND test_inelastic)
 
 add_executable(test_output tests/test_output.cpp)
 target_link_libraries(test_output crams_core ${CRAMS_EXTRA_LIBRARIES})

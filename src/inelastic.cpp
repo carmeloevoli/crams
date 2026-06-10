@@ -2,13 +2,13 @@
 
 #include <plog/Log.h>
 
-#include <random>
-
+#include <algorithm>
 #include <fstream>
+#include <stdexcept>
+#include <sstream>
 
 #include "crams/utils/numeric.h"
 #include "crams/utils/utilities.h"
-#include "crams/xsecs/Tripathi99.h"
 
 namespace CRAMS {
 
@@ -34,77 +34,60 @@ double sigma_ST(const double& T, const int& A) {
   return value * CGS::mbarn;
 }
 
-InelasticXsec::InelasticXsec() {}
+InelasticXsec::~InelasticXsec() { LOGD << "deleted InelasticXsec"; }
 
-InelasticXsec::InelasticXsec(const PID& proj, bool doRandom) : m_proj(proj), m_doRandom(doRandom) {
-  if (proj != H1) {
-    m_randomFactor = (m_doRandom) ? Utilities::computeRandomFactor(m_randomFactorVariance) : 1.;
-  }
+double InelasticXsec::getXsecOnISM(const PID& projectile, const double& T) const {
+  const double sigma_H = getXsecOnHtarget(projectile, T);
+  return sigma_H * (1. + CGS::K_He * CGS::f_He) / (1. + CGS::f_He);
 }
 
-InelasticXsec::~InelasticXsec() { LOGD << "deleted InelasticXsec for particle " << m_proj; }
-
-double InelasticXsec::getXsecOnISM(const double& T) const {
-  const double sigma_H = getXsecOnHtarget(T);
-  return m_randomFactor * sigma_H * (1. + CGS::K_He * CGS::f_He) / (1. + CGS::f_He);
-}
-
-InXsecTripathi99::InXsecTripathi99() {}
-
-InXsecTripathi99::InXsecTripathi99(const PID& proj, bool doError) : InelasticXsec(proj, doError) {}
-
-double InXsecTripathi99::getXsecOnHtarget(const double& T) const {
-  double sigma = 0;
-  if (m_proj == H1)
-    sigma = sigma_pp(T);
-  else
-    sigma = Tripathi99::inelastic_sigma(1, 1, m_proj.getA(), m_proj.getZ(), T);
-  return std::max(sigma, CGS::mbarn);
-}
-
-InXsecCROSEC::InXsecCROSEC() {}
-
-InXsecCROSEC::InXsecCROSEC(const PID& proj, bool doError) : InelasticXsec(proj, doError) {
+InXsecTripathi99::InXsecTripathi99() {
   buildEnergyArray();
   if (Utilities::fileExists(m_tableFilename))
     loadXsecTable(m_tableFilename);
   else
-    throw std::runtime_error("CROSEC xsecs file not found");
+    throw std::runtime_error("Tripathi1999 inelastic xsecs file not found: " + m_tableFilename);
+  if (m_table.empty()) throw std::runtime_error("Tripathi1999 inelastic xsecs table is empty: " + m_tableFilename);
+  LOGD << "Tripathi1999 inelastic table read with " << m_table.size() << " projectiles";
 }
 
-void InXsecCROSEC::buildEnergyArray() {
-  double T = m_T_min;
-  for (size_t i = 0; i < m_T_size; ++i) {
-    m_T.push_back(T);
-    T *= m_T_ratio;
-  }
+void InXsecTripathi99::buildEnergyArray() {
+  const double logRatio = std::log(m_T_max / m_T_min) / (m_T_size - 1);
+  for (size_t i = 0; i < m_T_size; ++i) m_T.push_back(m_T_min * std::exp(i * logRatio));
 }
 
-double InXsecCROSEC::getXsecOnHtarget(const double& T) const {
+double InXsecTripathi99::getXsecOnHtarget(const PID& projectile, const double& T) const {
   double sigma = 0;
-  if (m_proj == H1)
+  if (projectile.getZ() == 1 && projectile.getA() == 1) {
     sigma = sigma_pp(T);
-  else
-    sigma = (T >= m_T.back()) ? m_table.back() : Numeric::LinearInterpolator<double>(m_T, m_table, T);
+  } else {
+    const auto it = m_table.find(projectile);
+    if (it == m_table.end())
+      throw std::runtime_error("Tripathi1999 inelastic xsec not found for projectile " + projectile.toString());
+    const double T_now = std::min(std::max(T, m_T.front()), m_T.back());
+    sigma = Numeric::LinearInterpolator<double>(m_T, it->second, T_now);
+  }
   return std::max(sigma, 1e-10 * CGS::mbarn);
 }
 
-void InXsecCROSEC::loadXsecTable(const std::string& filename) {
+void InXsecTripathi99::loadXsecTable(const std::string& filename) {
   std::ifstream inf(filename.c_str());
+  std::string line;
   int Z_proj, A_proj;
   double x_temp;
-  while (inf) {
-    inf >> Z_proj >> A_proj;
+  while (std::getline(inf, line)) {
+    if (line.empty() || line[0] == '#') continue;
+    std::istringstream iss(line);
+    if (!(iss >> Z_proj >> A_proj)) continue;
     std::vector<double> x;
     x.reserve(m_T_size);
     for (size_t i = 0; i < m_T_size; ++i) {
-      inf >> x_temp;
+      if (!(iss >> x_temp)) throw std::runtime_error("malformed Tripathi1999 inelastic xsecs row: " + line);
       x.emplace_back(x_temp * CGS::mbarn);
     }
-    if (PID(Z_proj, A_proj) == m_proj && inf.good()) copy(x.begin(), x.end(), back_inserter(m_table));
+    m_table[PID(Z_proj, A_proj)] = x;
   }
   inf.close();
-  LOGD << "inelastic table read with " << m_table.size() << " points";
 }
 
 }  // namespace CRAMS

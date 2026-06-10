@@ -44,15 +44,13 @@ class Input {
   double D_0() const { return m_D_0; }
   double X_s() const { return m_X_s; }
   double modulationPotential() const { return m_modulationPotential; }
-  double a_C() const { return m_a_C; }
-  double a_D() const { return m_a_D; }
   size_t id() const { return m_id; }
   FluxSolver fluxSolver() const { return m_fluxSolver; }
   std::string fluxSolverName() const;
   const std::string& simname() const { return m_simname; }
 
  private:
-  double m_TSimMin = 0.01 * CGS::GeV;
+  double m_TSimMin = 0.1 * CGS::GeV;
   double m_TSimMax = 10. * CGS::TeV;
   size_t m_TSimSize = 5 * 32 * 3;
 
@@ -72,8 +70,6 @@ class Input {
   double m_D_0 = 2.48255e28 * CGS::cm2 / CGS::sec;
   double m_X_s = -1.;
   double m_modulationPotential = 4.87754e-01 * CGS::GeV;
-  double m_a_C = 1.0;
-  double m_a_D = 1.0;
   size_t m_id = 0;
   FluxSolver m_fluxSolver = FluxSolver::CrankNicolson;
   std::string m_simname = "test";

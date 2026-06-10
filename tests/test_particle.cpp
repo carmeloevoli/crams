@@ -6,6 +6,7 @@
 #include <type_traits>
 
 #include "crams/core/input.h"
+#include "crams/inelastic.h"
 #include "crams/particle.h"
 #include "crams/particlelist.h"
 
@@ -80,13 +81,14 @@ void test_crank_nicolson_solver_computes_primary_flux() {
 
   const CRAMS::NucleusParameters protonParams{1., 4.2, 1., -1., true, true};
   CRAMS::Particle particle(CRAMS::H1, protonParams);
+  CRAMS::InXsecTripathi99 inelasticXsecs;
   const CRAMS::Particles noParents;
 
   particle.buildVectors(input);
   particle.buildGrammage(input);
   particle.buildLosses(input);
   particle.buildPrimarySource(input);
-  particle.buildInelasticXsecs(input);
+  particle.buildInelasticXsecs(inelasticXsecs);
   particle.buildSecondarySource(input, noParents);
   particle.computeIntensity(input);
 

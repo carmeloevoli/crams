@@ -105,7 +105,7 @@ void Particle::reset() {
   m_Q_sec.reset();
   m_Q_ter.reset();
   m_Q_Xs.reset();
-  m_sigmaIn.reset();
+  m_sigmaIn = nullptr;
   m_dEdX.reset();
 }
 
@@ -127,9 +127,7 @@ void Particle::buildPrimarySource(const Input& input) {
 
 void Particle::buildLosses(const Input& input) { m_dEdX = std::make_unique<Losses>(m_pid, input); }
 
-void Particle::buildInelasticXsecs(const Input& input) {
-  m_sigmaIn = std::make_unique<InXsecTripathi99>(m_pid, input.id() != 0);
-}
+void Particle::buildInelasticXsecs(const InelasticXsec& sigmaIn) { m_sigmaIn = &sigmaIn; }
 
 double Particle::productionProfileFromUnstable(const Input& input, double T, double decayTimeAtRest) const {
   const double v = Utilities::T2beta(T) * CGS::cLight;
@@ -298,7 +296,7 @@ void Particle::dump() const {
     const double X = (m_X) ? m_X->get(T) / (CGS::gram / CGS::cm2) : kUnavailable;
     const double tauDiff = (m_X) ? m_X->diffusionTimescale(T) / CGS::Myr : kUnavailable;
     const double tauAdv = (m_X) ? m_X->advectionTimescale() / CGS::Myr : kUnavailable;
-    const double sigmaISM = (m_sigmaIn) ? m_sigmaIn->getXsecOnISM(T) : kUnavailable;
+    const double sigmaISM = (m_sigmaIn) ? m_sigmaIn->getXsecOnISM(m_pid, T) : kUnavailable;
     const double Xcr =
         (std::isfinite(sigmaISM) && sigmaISM > 0.) ? CGS::meanISMmass / sigmaISM / (CGS::gram / CGS::cm2) : kUnavailable;
     const double dEdX = (m_dEdX) ? m_dEdX->get(T) : kUnavailable;

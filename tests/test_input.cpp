@@ -11,27 +11,28 @@
 static int g_pass = 0;
 static int g_fail = 0;
 
-#define CHECK(cond)                                                                      \
-  do {                                                                                   \
-    if (cond) {                                                                          \
-      ++g_pass;                                                                          \
-    } else {                                                                             \
-      ++g_fail;                                                                          \
+#define CHECK(cond)                                                                    \
+  do {                                                                                 \
+    if (cond) {                                                                        \
+      ++g_pass;                                                                        \
+    } else {                                                                           \
+      ++g_fail;                                                                        \
       std::cerr << "FAIL: " << #cond << " at " << __FILE__ << ":" << __LINE__ << "\n"; \
-    }                                                                                    \
+    }                                                                                  \
   } while (0)
 
-#define CHECK_THROW(expr, exc)     \
-  do {                             \
-    bool caught_ = false;          \
-    try { (void)(expr); }          \
-    catch (const exc&) { caught_ = true; } \
-    CHECK(caught_);                \
+#define CHECK_THROW(expr, exc) \
+  do {                         \
+    bool caught_ = false;      \
+    try {                      \
+      (void)(expr);            \
+    } catch (const exc&) {     \
+      caught_ = true;          \
+    }                          \
+    CHECK(caught_);            \
   } while (0)
 
-static bool approx(double a, double b, double tol = 1e-9) {
-  return std::abs(a - b) <= tol * std::abs(b) + tol;
-}
+static bool approx(double a, double b, double tol = 1e-9) { return std::abs(a - b) <= tol * std::abs(b) + tol; }
 
 static void write_file(const std::string& path, const std::string& content) {
   std::ofstream f(path);
@@ -41,7 +42,7 @@ static void write_file(const std::string& path, const std::string& content) {
 
 // --- default values ---
 
-void test_default_TSimMin() { CHECK(approx(CRAMS::Input{}.TSimMin(), 0.01 * CRAMS::CGS::GeV)); }
+void test_default_TSimMin() { CHECK(approx(CRAMS::Input{}.TSimMin(), 0.1 * CRAMS::CGS::GeV)); }
 void test_default_TSimMax() { CHECK(approx(CRAMS::Input{}.TSimMax(), 10. * CRAMS::CGS::TeV)); }
 void test_default_TSimSize() { CHECK(CRAMS::Input{}.TSimSize() == 5 * 32 * 3); }
 void test_default_ROutputMin() { CHECK(approx(CRAMS::Input{}.ROutputMin(), 0.1 * CRAMS::CGS::GeV)); }

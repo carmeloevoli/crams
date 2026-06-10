@@ -4,7 +4,9 @@
 #include "crams/core/cgs.h"
 #include "crams/core/input.h"
 #include "crams/core/output.h"
+#include "crams/inelastic.h"
 #include "crams/particle.h"
+#include "crams/particlelist.h"
 #include "crams/utils/logging.h"
 #include "crams/utils/utilities.h"
 
@@ -35,13 +37,14 @@ int main(int argc, char* argv[]) {
       particles.emplace_back(pid, nucleusParams);
     }
 
+    CRAMS::InXsecTripathi99 inelasticXsecs;
     for (auto& particle : particles) {
       LOGI << "running : " << particle.getPid();
       particle.buildVectors(input);
       particle.buildGrammage(input);
       particle.buildLosses(input);
       particle.buildPrimarySource(input);
-      // particle.buildInelasticXsecs(input);
+      particle.buildInelasticXsecs(inelasticXsecs);
       //  particle.buildSecondarySource(input, particles);
       //  if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(particles);
       //  if (input.X_s() > 0.) particle.buildGrammageAtSource(input, particles);

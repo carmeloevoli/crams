@@ -96,7 +96,7 @@ double Particle::Lambda_1(double T) const {
   if (!m_dEdX) throw std::runtime_error("Particle: buildLosses must be called before computeIntensity");
 
   const double escape = 1. / m_X->get(T);
-  const double inelastic = (m_sigmaIn) ? m_sigmaIn->getXsecOnISM(T) / CGS::meanISMmass : 0.;
+  const double inelastic = (m_sigmaIn) ? m_sigmaIn->getXsecOnISM(m_pid, T) / CGS::meanISMmass : 0.;
   const double lossesDerivative = m_dEdX->getDerivative(T);
   return escape + inelastic + lossesDerivative;
 }
