@@ -35,25 +35,25 @@ int main(int argc, char* argv[]) {
       particles.emplace_back(pid, nucleusParams);
     }
 
-    // for (auto& particle : particles) {
-    //   LOGI << "running : " << particle.getPid();
-    //   particle.buildVectors(input);
-    //   particle.buildGrammage(input);
-    //   particle.buildLosses(input);
-    //   particle.buildPrimarySource(input);
-    //   particle.buildInelasticXsecs(input);
-    //   particle.buildSecondarySource(input, particles);
-    //   if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(particles);
-    //   // if (input.X_s > 0.) particle.buildGrammageAtSource(input, particles);
-    //   particle.dump();
-    //   particle.computeIntensity(input);
-    //   particle.reset();
-    // }
+    for (auto& particle : particles) {
+      LOGI << "running : " << particle.getPid();
+      particle.buildVectors(input);
+      particle.buildGrammage(input);
+      particle.buildLosses(input);
+      particle.buildPrimarySource(input);
+      // particle.buildInelasticXsecs(input);
+      //  particle.buildSecondarySource(input, particles);
+      //  if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(particles);
+      //  if (input.X_s() > 0.) particle.buildGrammageAtSource(input, particles);
+      particle.dump();
+      particle.computeIntensity(input);
+      particle.reset();
+    }
 
-    // CRAMS::OutputManager outputManager(particles, input);
-    // outputManager.dumpSpectraRigidity();
-    // outputManager.dumpSpectraEkn();
-    // outputManager.dumpIsotopes();
+    CRAMS::OutputManager outputManager(particles, input);
+    outputManager.dumpSpectraRigidity();
+    outputManager.dumpSpectraEkn();
+    outputManager.dumpIsotopes();
   } catch (const std::exception& e) {
     LOGE << "exception caught with message: " << e.what();
   }

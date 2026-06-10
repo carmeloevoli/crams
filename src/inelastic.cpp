@@ -26,30 +26,6 @@ double sigma_pp(const double& T) {
   return value * CGS::mbarn;
 }
 
-double sigma_pbarp_ann(const double& T) {
-  const auto b_0 = -100.5;
-  const auto b_1 = 20.37;
-  const auto b_2 = -1.182;
-  const auto b_alpha = 162.0;
-  const auto R = std::sqrt(T * T + 2. * CGS::protonMassC2 * T);
-  const auto lnR = std::log(R);
-  const auto value = b_0 + b_1 * lnR + b_2 * pow2(lnR) + b_alpha * std::pow(R, -1. / 3.);
-  return value * CGS::mbarn;
-}
-
-double sigma_pbarp_total(const double& T) {
-  const auto a_0 = -107.9;
-  const auto a_1 = 29.43;
-  const auto a_2 = -1.655;
-  const auto a_alpha = 189.9;
-  const auto R = std::sqrt(T * T + 2. * CGS::protonMassC2 * T);
-  const auto lnR = std::log(R);
-  const auto value = a_0 + a_1 * lnR + a_2 * pow2(lnR) + a_alpha * std::pow(R, -1. / 3.);
-  return value * CGS::mbarn;
-}
-
-double sigma_pbarp(const double& T) { return sigma_pbarp_total(T) - sigma_pbarp_ann(T); }
-
 double sigma_ST(const double& T, const int& A) {
   const double T_MeV = T / CGS::MeV;
   double value = 45. * std::pow((double)A, 0.7);
@@ -81,8 +57,6 @@ double InXsecTripathi99::getXsecOnHtarget(const double& T) const {
   double sigma = 0;
   if (m_proj == H1)
     sigma = sigma_pp(T);
-  else if (m_proj == pbar)
-    sigma = sigma_pbarp(T);
   else
     sigma = Tripathi99::inelastic_sigma(1, 1, m_proj.getA(), m_proj.getZ(), T);
   return std::max(sigma, CGS::mbarn);

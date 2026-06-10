@@ -8,6 +8,12 @@
 
 namespace CRAMS {
 
+enum class FluxSolver {
+  Analytical,
+  CrankNicolson,
+  Exponential,
+};
+
 class Input {
  public:
   Input() = default;
@@ -40,9 +46,9 @@ class Input {
   double modulationPotential() const { return m_modulationPotential; }
   double a_C() const { return m_a_C; }
   double a_D() const { return m_a_D; }
-  double xsecsFudge() const { return m_xsecsFudge; }
   size_t id() const { return m_id; }
-  bool num() const { return m_num; }
+  FluxSolver fluxSolver() const { return m_fluxSolver; }
+  std::string fluxSolverName() const;
   const std::string& simname() const { return m_simname; }
 
  private:
@@ -68,9 +74,8 @@ class Input {
   double m_modulationPotential = 4.87754e-01 * CGS::GeV;
   double m_a_C = 1.0;
   double m_a_D = 1.0;
-  double m_xsecsFudge = 1.;
   size_t m_id = 0;
-  bool m_num = false;
+  FluxSolver m_fluxSolver = FluxSolver::CrankNicolson;
   std::string m_simname = "test";
 };
 

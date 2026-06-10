@@ -2,15 +2,85 @@
 
 #include <plog/Log.h>
 
+#include <algorithm>
+#include <array>
 #include <fstream>
 #include <iomanip>
+#include <ostream>
 #include <stdexcept>
+#include <string>
+#include <vector>
 
 #include "crams/utils/utilities.h"
 
 namespace CRAMS {
 
 using Utilities::pow2;
+
+namespace {
+
+const std::array<const char*, 29> kElementSymbols = {{
+    "",
+    "H",
+    "He",
+    "Li",
+    "Be",
+    "B",
+    "C",
+    "N",
+    "O",
+    "F",
+    "Ne",
+    "Na",
+    "Mg",
+    "Al",
+    "Si",
+    "P",
+    "S",
+    "Cl",
+    "Ar",
+    "K",
+    "Ca",
+    "Sc",
+    "Ti",
+    "V",
+    "Cr",
+    "Mn",
+    "Fe",
+    "Co",
+    "Ni",
+}};
+
+std::string elementSymbol(int Z) {
+  if (Z > 0 && static_cast<size_t>(Z) < kElementSymbols.size()) return kElementSymbols[Z];
+  return "Z" + std::to_string(Z);
+}
+
+void writeFluxUnit(std::ostream& out) {
+  out << "# Flux unit -> 1 / (GeV m2 s sr)\n";
+}
+
+void writeChargeGroupColumns(std::ostream& out, const std::string& axisLabel) {
+  out << "# Columns\n";
+  out << "# " << axisLabel << " -> 1\n";
+  out << "# Flux columns are charge groups summed over isotopes.\n";
+
+  int column = 2;
+  for (int Z = 1; Z <= 28; ++Z, ++column) {
+    out << "# " << elementSymbol(Z) << " -> " << column << "\n";
+  }
+  writeFluxUnit(out);
+}
+
+void writeIsotopeColumns(std::ostream& out) {
+  out << "# Columns\n";
+  out << "# R [GV] -> 1\n";
+  out << "# Be9 -> 2\n";
+  out << "# Be10 -> 3\n";
+  writeFluxUnit(out);
+}
+
+}  // namespace
 
 OutputManager::OutputManager(const Particles& particles, const Input& input)
     : m_particles(particles),
@@ -57,10 +127,10 @@ void OutputManager::dumpSpectraRigidity() const {
 
   const double units = 1. / (CGS::GeV * pow2(CGS::meter) * CGS::sec);
   out << std::scientific;
+  writeChargeGroupColumns(out, "R [GV]");
   for (const auto& R : m_R) {
     out << R / CGS::GeV << "\t";
     for (int Z = 1; Z <= 28; ++Z) out << getFluxChargeGroup(Z, R) / units << "\t";
-    out << getFluxChargeGroup(-1, R) / units << "\t";
     out << "\n";
   }
 }
@@ -74,6 +144,7 @@ void OutputManager::dumpIsotopes() const {
 
   const double units = 1. / (CGS::GeV * pow2(CGS::meter) * CGS::sec);
   out << std::scientific;
+  writeIsotopeColumns(out);
   for (const auto& R : m_R) {
     out << R / CGS::GeV << "\t";
     out << getFluxChargeIsotope(4, 9, R) / units << "\t";
@@ -92,10 +163,10 @@ void OutputManager::dumpSpectraEkn() const {
   const auto T = Utilities::LogAxis(0.3 * CGS::GeV, 1. * CGS::TeV, 4 * 32);
   const double units = 1. / (CGS::GeV * pow2(CGS::meter) * CGS::sec);
   out << std::scientific;
+  writeChargeGroupColumns(out, "T [GeV/n]");
   for (const auto& T_i : T) {
     out << T_i / CGS::GeV << "\t";
     for (int Z = 1; Z <= 28; ++Z) out << getFluxChargeGroupEkn(Z, T_i) / units << "\t";
-    out << getFluxChargeGroupEkn(-1, T_i) / units << "\t";
     out << "\n";
   }
 }

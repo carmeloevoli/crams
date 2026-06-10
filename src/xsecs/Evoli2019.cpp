@@ -8,8 +8,8 @@
 
 namespace CRAMS {
 
-SpallationXsecs::SpallationXsecs(const PID& fragment, const double& fudgeFactor, bool doRandom)
-    : m_fragment(fragment), m_fudgeFactor(fudgeFactor), m_doRandom(doRandom) {
+SpallationXsecs::SpallationXsecs(const PID& fragment, bool doRandom)
+    : m_fragment(fragment), m_doRandom(doRandom) {
   buildEnergyArray();
   if (Utilities::fileExists(m_tableFilename))
     loadXsecTable(m_tableFilename);
@@ -29,8 +29,7 @@ void SpallationXsecs::buildEnergyArray() {
 }
 
 double SpallationXsecs::getXsecOnISM(const PID& projectile, const double& T) const {
-  double sigma_H = getXsecOnHtarget(projectile, T);
-  if (m_fragment.getZ() == 4) sigma_H *= m_fudgeFactor;
+  const double sigma_H = getXsecOnHtarget(projectile, T);
   return sigma_H * (1. + CGS::K_He * CGS::f_He) / (1. + CGS::f_He);
 }
 

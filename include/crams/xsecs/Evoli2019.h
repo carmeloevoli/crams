@@ -12,7 +12,7 @@ namespace CRAMS {
 
 class SpallationXsecs {
  public:
-  SpallationXsecs(const PID& fragment, const double& fudgeFactor, bool doRandom = false);
+  SpallationXsecs(const PID& fragment, bool doRandom = false);
   virtual ~SpallationXsecs();
   double getXsecOnISM(const PID& projectile, const double& T) const;
 
@@ -29,7 +29,6 @@ class SpallationXsecs {
   std::map<PID, double> m_randomFactors;
   std::map<PID, std::vector<double> > m_table;
   std::vector<double> m_T;
-  double m_fudgeFactor = 1;
 
 #ifdef EVOLI2019
   std::string m_tableFilename = "data/crxsecs_fragmentation_Evoli2019_cumulative.csv";

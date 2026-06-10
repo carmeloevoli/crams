@@ -19,9 +19,36 @@ void eraseExtension(std::string& s, const std::string& ext) {
     throw std::runtime_error("Input filename must end with '" + ext + "'");
 }
 
+CRAMS::FluxSolver parseFluxSolver(const std::string& value) {
+  const auto solver = CRAMS::Utilities::simplifyKey(value);
+  if (solver == "analytical")
+    return CRAMS::FluxSolver::Analytical;
+  if (solver == "cranknicolson")
+    return CRAMS::FluxSolver::CrankNicolson;
+  if (solver == "exponential")
+    return CRAMS::FluxSolver::Exponential;
+
+  throw std::runtime_error("Input: unknown flux solver '" + value + "'");
+}
+
+std::string fluxSolverName(CRAMS::FluxSolver solver) {
+  switch (solver) {
+    case CRAMS::FluxSolver::Analytical:
+      return "analytical";
+    case CRAMS::FluxSolver::CrankNicolson:
+      return "crank_nicolson";
+    case CRAMS::FluxSolver::Exponential:
+      return "exponential";
+  }
+
+  return "unknown";
+}
+
 }  // namespace
 
 namespace CRAMS {
+
+std::string Input::fluxSolverName() const { return ::fluxSolverName(m_fluxSolver); }
 
 void Input::setParam(const std::string& KEY, double value) {
   const auto key = Utilities::simplifyKey(KEY);
@@ -49,12 +76,6 @@ void Input::setParam(const std::string& KEY, double value) {
   } else if (key == "phi") {
     m_modulationPotential = value * CGS::GeV;
     LOGD << "changed phi to " << m_modulationPotential / CGS::GeV << " GV";
-  } else if (key == "xsecsfudge") {
-    m_xsecsFudge = value;
-    LOGD << "changed xsecsFudge to " << m_xsecsFudge;
-  } else if (key == "num") {
-    m_num = static_cast<bool>(value);
-    LOGD << "changed num to " << m_num;
   } else if (key == "id") {
     m_id = static_cast<size_t>(value);
   }
@@ -68,8 +89,21 @@ void Input::readParamsFromFile(const std::string& filename) {
   while (std::getline(infile, line)) {
     std::istringstream iss(line);
     std::string key;
-    double value;
-    if (!(iss >> key >> value)) continue;
+    std::string valueToken;
+    if (!(iss >> key >> valueToken)) continue;
+
+    if (Utilities::simplifyKey(key) == "solver") {
+      m_fluxSolver = parseFluxSolver(valueToken);
+      LOGD << "changed flux solver to " << fluxSolverName();
+      continue;
+    }
+
+    double value = 0.;
+    try {
+      value = std::stod(valueToken);
+    } catch (const std::exception&) {
+      continue;
+    }
     setParam(key, value);
   }
 }
@@ -93,12 +127,11 @@ void Input::print() const {
   LOGD << "R_b    [GV]         : " << m_R_b / CGS::GeV;
   LOGD << "s      []           : " << m_smoothness;
   LOGD << "phi    [GeV]        : " << m_modulationPotential / CGS::GeV;
-  LOGD << "xsecs_f[]           : " << m_xsecsFudge;
   LOGD << "E_min  [GeV]        : " << m_TSimMin / CGS::GeV;
   LOGD << "E_max  [GeV]        : " << m_TSimMax / CGS::GeV;
   LOGD << "E_size []           : " << m_TSimSize;
   LOGD << "doSecondary         : " << std::boolalpha << m_doSecondary;
-  LOGD << "numerical method    : " << std::boolalpha << m_num;
+  LOGD << "flux solver         : " << fluxSolverName();
 }
 
 }  // namespace CRAMS

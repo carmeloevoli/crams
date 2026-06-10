@@ -56,10 +56,6 @@ void test_ZoverA() {
   check(approx(C12.getZoverA(), 6.0 / 12.0), "C12 Z/A = 0.5");
   check(approx(C12.getAoverZ(), 12.0 / 6.0), "C12 A/Z = 2.0");
 
-  // Antiproton: Z=-1, A=1 => |Z|/A = 1, A/|Z| = 1
-  check(approx(pbar.getZoverA(), 1.0), "pbar Z/A = 1");
-  check(approx(pbar.getAoverZ(), 1.0), "pbar A/Z = 1");
-
   // Proton: Z=1, A=1
   check(approx(H1.getZoverA(), 1.0), "H1 Z/A = 1");
   check(approx(H1.getAoverZ(), 1.0), "H1 A/Z = 1");
@@ -178,7 +174,6 @@ void test_string_output() {
 // ---------------------------------------------------------------------------
 
 void test_constants() {
-  check(pbar.getZ() == -1 && pbar.getA() == 1, "pbar: Z=-1 A=1");
   check(H1.getZ() == 1 && H1.getA() == 1, "H1: Z=1 A=1");
   check(He4.getZ() == 2 && He4.getA() == 4, "He4: Z=2 A=4");
   check(C12.getZ() == 6 && C12.getA() == 12, "C12: Z=6 A=12");
@@ -188,7 +183,6 @@ void test_constants() {
 
   // id encoding: A*1000 + Z
   check(Fe56.getId() == 56 * 1000 + 26, "Fe56 id encoding");
-  check(pbar.getId() == 1 * 1000 + (-1), "pbar id encoding");
 }
 
 }  // namespace

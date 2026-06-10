@@ -56,7 +56,10 @@ void test_default_phi() { CHECK(approx(CRAMS::Input{}.modulationPotential(), 4.8
 void test_default_X_s_negative() { CHECK(CRAMS::Input{}.X_s() < 0.); }
 void test_default_simname() { CHECK(CRAMS::Input{}.simname() == "test"); }
 void test_default_id() { CHECK(CRAMS::Input{}.id() == 0); }
-void test_default_num() { CHECK(CRAMS::Input{}.num() == false); }
+void test_default_flux_solver() {
+  CHECK(CRAMS::Input{}.fluxSolver() == CRAMS::FluxSolver::CrankNicolson);
+  CHECK(CRAMS::Input{}.fluxSolverName() == "crank_nicolson");
+}
 
 // --- setParam ---
 
@@ -102,12 +105,6 @@ void test_setParam_phi() {
   CHECK(approx(in.modulationPotential(), 0.6 * CRAMS::CGS::GeV));
 }
 
-void test_setParam_xsecsFudge() {
-  CRAMS::Input in;
-  in.setParam("xsecsFudge", 1.2);
-  CHECK(approx(in.xsecsFudge(), 1.2));
-}
-
 void test_setParam_xs() {
   CRAMS::Input in;
   in.setParam("xs", 0.5);
@@ -118,12 +115,6 @@ void test_setParam_id() {
   CRAMS::Input in;
   in.setParam("id", 7.0);
   CHECK(in.id() == 7);
-}
-
-void test_setParam_num() {
-  CRAMS::Input in;
-  in.setParam("num", 1.0);
-  CHECK(in.num() == true);
 }
 
 void test_setParam_key_case_insensitive() {
@@ -188,6 +179,29 @@ void test_readParamsFromFile_missing_file_throws() {
   CHECK_THROW(in.readParamsFromFile("/tmp/no_such_file_xyzzy.ini"), std::runtime_error);
 }
 
+void test_readParamsFromFile_solver_string() {
+  const std::string path = "/tmp/test_input_solver.ini";
+  write_file(path, "solver exponential\n");
+  CRAMS::Input in;
+  in.readParamsFromFile(path);
+  CHECK(in.fluxSolver() == CRAMS::FluxSolver::Exponential);
+}
+
+void test_readParamsFromFile_solver_string_with_underscore() {
+  const std::string path = "/tmp/test_input_solver_underscore.ini";
+  write_file(path, "solver crank_nicolson\n");
+  CRAMS::Input in;
+  in.readParamsFromFile(path);
+  CHECK(in.fluxSolver() == CRAMS::FluxSolver::CrankNicolson);
+}
+
+void test_readParamsFromFile_solver_invalid_throws() {
+  const std::string path = "/tmp/test_input_solver_invalid.ini";
+  write_file(path, "solver mystery\n");
+  CRAMS::Input in;
+  CHECK_THROW(in.readParamsFromFile(path), std::runtime_error);
+}
+
 // --- copyability ---
 
 void test_input_is_copyable() {
@@ -217,7 +231,7 @@ int main() {
   test_default_X_s_negative();
   test_default_simname();
   test_default_id();
-  test_default_num();
+  test_default_flux_solver();
 
   test_setParam_D0();
   test_setParam_H();
@@ -226,10 +240,8 @@ int main() {
   test_setParam_Rb();
   test_setParam_vA();
   test_setParam_phi();
-  test_setParam_xsecsFudge();
   test_setParam_xs();
   test_setParam_id();
-  test_setParam_num();
   test_setParam_key_case_insensitive();
   test_setParam_unknown_key_ignored();
 
@@ -241,6 +253,9 @@ int main() {
   test_readParamsFromFile_basic();
   test_readParamsFromFile_ignores_bad_lines();
   test_readParamsFromFile_missing_file_throws();
+  test_readParamsFromFile_solver_string();
+  test_readParamsFromFile_solver_string_with_underscore();
+  test_readParamsFromFile_solver_invalid_throws();
 
   test_input_is_copyable();
 

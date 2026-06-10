@@ -5,7 +5,9 @@
 #include <cmath>
 #include <fstream>
 #include <iomanip>
+#include <limits>
 #include <memory>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 
@@ -27,6 +29,7 @@ namespace {
 using Utilities::pow2;
 
 constexpr size_t kSourceGridSize = 400;
+constexpr double kUnavailable = std::numeric_limits<double>::quiet_NaN();
 
 struct DecayContribution {
   PID child;
@@ -45,6 +48,25 @@ double coth(double x) { return 1. / std::tanh(x); }
 
 std::vector<double> makeSourceEnergyGrid() {
   return Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, kSourceGridSize);
+}
+
+double safeReciprocal(double value) {
+  return (value != 0.) ? 1. / value : kUnavailable;
+}
+
+void writeParticleDumpColumns(std::ostream& out) {
+  out << "# Columns\n";
+  out << "# T [GeV] -> 1\n";
+  out << "# R [GV] -> 2\n";
+  out << "# Q_pri -> 3\n";
+  out << "# Q_sec -> 4\n";
+  out << "# X [g/cm2] -> 5\n";
+  out << "# tau_esc [Myr] -> 6\n";
+  out << "# tau_adv [Myr] -> 7\n";
+  out << "# X_cr [g/cm2] -> 8\n";
+  out << "# dEdX -> 9\n";
+  out << "# tau_ion [Myr] -> 10\n";
+  out << "# tau_inelastic [Myr] -> 11\n";
 }
 
 const Particle* findParticle(const Particles& particles, const PID& pid) {
@@ -123,8 +145,7 @@ double Particle::productionProfileFromUnstable(const Input& input, double T, dou
 
 void Particle::buildSecondarySource(const Input& input, const std::vector<Particle>& particles) {
   m_doSecondary = input.doSecondary();
-  const auto xsecs = (input.id() == 0) ? SpallationXsecs(m_pid, input.xsecsFudge())
-                                      : SpallationXsecs(m_pid, input.xsecsFudge(), true);
+  const auto xsecs = SpallationXsecs(m_pid, input.id() != 0);
   const auto T_s = makeSourceEnergyGrid();
   std::vector<double> Q_s;
   Q_s.reserve(T_s.size());
@@ -177,8 +198,7 @@ void Particle::buildTertiarySource(const std::vector<Particle>& particles) {
 
 void Particle::buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles) {
   m_doGrammageAtSource = true;
-  const auto xsecs = (input.id() == 0) ? SpallationXsecs(m_pid, input.xsecsFudge())
-                                      : SpallationXsecs(m_pid, input.xsecsFudge(), true);
+  const auto xsecs = SpallationXsecs(m_pid, input.id() != 0);
   const auto T_X = makeSourceEnergyGrid();
   std::vector<double> Q_X;
   Q_X.reserve(T_X.size());
@@ -228,21 +248,26 @@ double Particle::I_R_TOA(double R, double modulationPotential) const {
 }
 
 double Particle::Q_total(double T) const {
-  const double Q_ter = (m_pid == H1_ter) ? m_Q_ter->get(T) : 0.;
-  const double Q_sec = (m_doSecondary) ? m_Q_sec->get(T) : 0.;
-  const double Q_sec_source = (m_doGrammageAtSource) ? m_Q_Xs->get(T) : 0.;
-  const double Q_p = (m_abundance > 0.) ? m_Q_p->get(T) : 0.;
+  const double Q_ter = (m_pid == H1_ter && m_Q_ter) ? m_Q_ter->get(T) : 0.;
+  const double Q_sec = (m_doSecondary && m_Q_sec) ? m_Q_sec->get(T) : 0.;
+  const double Q_sec_source = (m_doGrammageAtSource && m_Q_Xs) ? m_Q_Xs->get(T) : 0.;
+  const double Q_p = (m_abundance > 0. && m_Q_p) ? m_Q_p->get(T) : 0.;
   return Q_p + Q_sec + Q_sec_source + Q_ter;
 }
 
 void Particle::computeIntensity(const Input& input) {
-  if (input.num()) {
-    computeFluxAtEnergy_num();
-  } else {
-#pragma omp parallel for schedule(dynamic) num_threads(THREADS)
-    for (size_t i = 0; i < m_T.size(); ++i) {
-      m_I_T[i] = computeFluxAtEnergy(m_T[i]);
-    }
+  switch (input.fluxSolver()) {
+    case FluxSolver::Analytical:
+      for (size_t i = 0; i < m_T.size(); ++i) {
+        m_I_T[i] = computeFluxAtEnergy(m_T[i]);
+      }
+      break;
+    case FluxSolver::CrankNicolson:
+      computeFluxAtEnergyCrankNicolson();
+      break;
+    case FluxSolver::Exponential:
+      computeFluxAtEnergyExponential();
+      break;
   }
 
   if (Utilities::isGoodAndPositive(m_I_T))
@@ -264,50 +289,41 @@ void Particle::dump() const {
   std::ofstream outfile(makeParticleFilename(m_pid));
   if (!outfile.is_open()) throw std::runtime_error("cannot open for writing: " + makeParticleFilename(m_pid));
 
-  outfile << "# T [GeV] - R [GV] - Q_pri - Q_sec - X [gr/cm2] - tau_esc [yr] - tau_adv [yr] - X_cr [gr/cm2] - dEdX\n";
+  writeParticleDumpColumns(outfile);
   outfile << std::scientific;
   for (const auto T : m_T) {
     const double R = Utilities::T2pc(T, m_pid) / std::fabs((double)m_pid.getZ());
+    const double Q_p = (m_Q_p) ? m_Q_p->get(T) : 0.;
+    const double Q_sec = (m_Q_sec) ? m_Q_sec->get(T) : 0.;
+    const double X = (m_X) ? m_X->get(T) / (CGS::gram / CGS::cm2) : kUnavailable;
+    const double tauDiff = (m_X) ? m_X->diffusionTimescale(T) / CGS::Myr : kUnavailable;
+    const double tauAdv = (m_X) ? m_X->advectionTimescale() / CGS::Myr : kUnavailable;
+    const double sigmaISM = (m_sigmaIn) ? m_sigmaIn->getXsecOnISM(T) : kUnavailable;
+    const double Xcr =
+        (std::isfinite(sigmaISM) && sigmaISM > 0.) ? CGS::meanISMmass / sigmaISM / (CGS::gram / CGS::cm2) : kUnavailable;
+    const double dEdX = (m_dEdX) ? m_dEdX->get(T) : kUnavailable;
+    const double tauIon =
+        (m_dEdX) ? T / m_dEdX->dTdt_ionization(T, 1. / CGS::cm3) / CGS::Myr : kUnavailable;
+    const double tauInelastic =
+        (std::isfinite(sigmaISM) && sigmaISM > 0.)
+            ? safeReciprocal(Utilities::T2beta(T) * sigmaISM * CGS::cLight / CGS::cm3) / CGS::Myr
+            : kUnavailable;
+
     outfile << T / CGS::GeV << "\t";
     outfile << R / CGS::GeV << "\t";
-    outfile << m_Q_p->get(T) << "\t";
-    outfile << m_Q_sec->get(T) << "\t";
-    outfile << m_X->get(T) / (CGS::gram / CGS::cm2) << "\t";
-    outfile << m_X->diffusionTimescale(T) / CGS::Myr << "\t";
-    outfile << m_X->advectionTimescale() / CGS::Myr << "\t";
-    outfile << CGS::meanISMmass / m_sigmaIn->getXsecOnISM(T) / (CGS::gram / CGS::cm2) << "\t";
-    outfile << m_dEdX->get(T) << "\t";
-    outfile << T / m_dEdX->dTdt_ionization(T, 1. / CGS::cm3) / CGS::Myr << "\t";
-    outfile << 1. / (Utilities::T2beta(T) * m_sigmaIn->getXsecOnISM(T) * CGS::cLight / CGS::cm3) / CGS::Myr << "\t";
+    outfile << Q_p << "\t";
+    outfile << Q_sec << "\t";
+    outfile << X << "\t";
+    outfile << tauDiff << "\t";
+    outfile << tauAdv << "\t";
+    outfile << Xcr << "\t";
+    outfile << dEdX << "\t";
+    outfile << tauIon << "\t";
+    outfile << tauInelastic << "\t";
     outfile << "\n";
   }
   outfile.close();
   LOGD << "dumped " << m_pid << " to file " << makeParticleFilename(m_pid);
-}
-
-void Particle::computeFluxAtEnergy_num() {
-  if (m_T.size() < 2) return;
-
-  const size_t last = m_T.size() - 1;
-  double lam1_ip = Lambda_1(m_T[last]);
-  double lam2_ip = Lambda_2(m_T[last]);
-  double Q_ip = Q_total(m_T[last]);
-
-  for (size_t i = last; i-- > 0;) {
-    const double h_i = m_T[i + 1] - m_T[i];
-    const double lam1_i = Lambda_1(m_T[i]);
-    const double lam2_i = -Lambda_2(m_T[i]);
-    const double Q_i = Q_total(m_T[i]);
-
-    const double numerator =
-        0.5 * (-2. / h_i * m_I_T[i + 1] + Q_i / lam2_i + (Q_ip - lam1_ip * m_I_T[i + 1]) / lam2_ip);
-    const double denominator = 0.5 * lam1_i / lam2_i - 1. / h_i;
-
-    m_I_T[i] = numerator / denominator;
-    lam1_ip = lam1_i;
-    lam2_ip = lam2_i;
-    Q_ip = Q_i;
-  }
 }
 
 }  // namespace CRAMS

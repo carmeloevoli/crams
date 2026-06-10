@@ -42,11 +42,23 @@ static void write_file(const std::string& path, const std::string& content) {
   f << content;
 }
 
+static size_t count_nucleilist_rows() {
+  std::ifstream f("data/nucleilist.csv");
+  assert(f.is_open());
+
+  size_t count = 0;
+  std::string line;
+  while (std::getline(f, line)) {
+    if (!line.empty() && line[0] != '#') ++count;
+  }
+  return count;
+}
+
 void test_default_list_and_injection_parameters() {
   CRAMS::ParticleList particles;
   const auto& list = particles.getList();
 
-  CHECK(list.size() == 90);
+  CHECK(list.size() == count_nucleilist_rows());
   CHECK(list.find(CRAMS::H1) != list.end());
   CHECK(list.find(CRAMS::He4) != list.end());
   CHECK(list.find(CRAMS::C12) != list.end());

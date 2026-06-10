@@ -10,7 +10,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -fopenmp -DTHREADS=16 -DEVOLI2019 -DDEBUG")
+set(CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -DEVOLI2019 -DDEBUG")
 set(CRAMS_EXTRA_INCLUDES)
 set(CRAMS_EXTRA_LIBRARIES)
 
@@ -28,7 +28,6 @@ configure_file("src/utils/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
 
 set( CRAMS_SRCS
      src/xsecs/Evoli2019.cpp
-     src/xsecs/Korsmeier2018.cpp
      src/xsecs/Tripathi99.cpp
      src/utils/csvreader.cpp
      src/utils/utilities.cpp
@@ -123,6 +122,10 @@ add_test(NAME test_secondary COMMAND test_secondary)
 add_executable(test_losses tests/test_losses.cpp)
 target_link_libraries(test_losses crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_losses COMMAND test_losses)
+
+add_executable(test_output tests/test_output.cpp)
+target_link_libraries(test_output crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_output COMMAND test_output)
 
 # Show summary.
 message (STATUS "CMAKE_SYSTEM .......... =   ${CMAKE_SYSTEM}")

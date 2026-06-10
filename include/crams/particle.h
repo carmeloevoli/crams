@@ -51,7 +51,8 @@ class Particle {
   void reset();
   void computeIntensity(const Input& input);
   void dump() const;
-  void computeFluxAtEnergy_num();
+  void computeFluxAtEnergyCrankNicolson();
+  void computeFluxAtEnergyExponential();
   double I_T_interpol(double T) const;
   double I_T_TOA(double T, double modulationPotential) const;
   double I_R_TOA(double R, double modulationPotential) const;
