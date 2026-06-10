@@ -6,7 +6,7 @@
 #include "crams/core/cgs.h"
 #include "crams/core/input.h"
 #include "crams/core/pid.h"
-#include "crams/primary.h"
+#include "crams/physics/primary.h"
 #include "crams/utils/utilities.h"
 
 static int g_pass = 0;

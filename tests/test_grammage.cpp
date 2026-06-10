@@ -5,7 +5,7 @@
 #include "crams/core/cgs.h"
 #include "crams/core/input.h"
 #include "crams/core/pid.h"
-#include "crams/grammage.h"
+#include "crams/physics/grammage.h"
 
 static int g_pass = 0;
 static int g_fail = 0;
