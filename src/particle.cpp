@@ -198,20 +198,18 @@ void Particle::buildGrammageAtSource(const Input& input, const std::vector<Parti
   m_doGrammageAtSource = true;
   const auto xsecs = SpallationXsecs(m_pid, input.id() != 0);
   const auto T_X = makeSourceEnergyGrid();
-  std::vector<double> Q_X;
-  Q_X.reserve(T_X.size());
+  std::vector<double> Q_X(T_X.size(), 0.);
 
-  for (const auto& T : T_X) {
-    double value = 0.;
-    for (const auto& particle : particles) {
-      const auto& parentPid = particle.getPid();
-      if (parentPid.getA() <= m_pid.getA() || !particle.isDone()) continue;
+  for (const auto& particle : particles) {
+    const auto& parentPid = particle.getPid();
+    if (parentPid.getA() <= m_pid.getA() || !particle.isDone()) continue;
 
+    const auto Q_p = PrimarySource(parentPid, particle.getAbundance(), particle.getSlope(), input.mu());
+    for (size_t i = 0; i < T_X.size(); ++i) {
+      const double T = T_X[i];
       const double r = input.X_s() / CGS::meanISMmass * xsecs.getXsecOnISM(parentPid, T);
-      const auto Q_p = PrimarySource(parentPid, particle.getAbundance(), particle.getSlope(), input.mu());
-      value += r * Q_p.get(T);
+      Q_X[i] += r * Q_p.get(T);
     }
-    Q_X.push_back(value);
   }
   m_Q_Xs = std::make_unique<SecondarySource>(m_pid, T_X, Q_X);
 }

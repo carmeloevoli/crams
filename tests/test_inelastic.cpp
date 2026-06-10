@@ -46,6 +46,28 @@ void test_sigma_pp_rises_above_threshold() {
   CHECK(s_high > s_low);
 }
 
+// --- InelasticXsecST98 ---
+
+void test_st98_H1_matches_sigma_pp() {
+  CRAMS::InelasticXsecST98 xsec;
+  const double T = 10. * CRAMS::CGS::GeV;
+  CHECK(approx(xsec.getXsecOnHtarget(CRAMS::H1, T), CRAMS::sigma_pp(T), 1e-9));
+}
+
+void test_st98_nuclei_match_sigma_ST() {
+  CRAMS::InelasticXsecST98 xsec;
+  const double T = 10. * CRAMS::CGS::GeV;
+  CHECK(approx(xsec.getXsecOnHtarget(CRAMS::C12, T), CRAMS::sigma_ST(T, CRAMS::C12.getA()), 1e-9));
+  CHECK(approx(xsec.getXsecOnHtarget(CRAMS::Fe56, T), CRAMS::sigma_ST(T, CRAMS::Fe56.getA()), 1e-9));
+}
+
+void test_st98_ISM_xsec_exact_factor() {
+  CRAMS::InelasticXsecST98 xsec;
+  const double T = 10. * CRAMS::CGS::GeV;
+  const double expected = (1. + CRAMS::CGS::K_He * CRAMS::CGS::f_He) / (1. + CRAMS::CGS::f_He);
+  CHECK(approx(xsec.getXsecOnISM(CRAMS::C12, T) / xsec.getXsecOnHtarget(CRAMS::C12, T), expected, 1e-9));
+}
+
 // --- InXsecTripathi99: proton (H1) ---
 
 void test_tripathi_H1_matches_sigma_pp() {
@@ -136,6 +158,10 @@ int main() {
   test_sigma_pp_is_positive_above_threshold();
   test_sigma_pp_physically_reasonable_at_10GeV();
   test_sigma_pp_rises_above_threshold();
+
+  test_st98_H1_matches_sigma_pp();
+  test_st98_nuclei_match_sigma_ST();
+  test_st98_ISM_xsec_exact_factor();
 
   test_tripathi_H1_matches_sigma_pp();
   test_tripathi_H1_below_threshold_is_clamped();

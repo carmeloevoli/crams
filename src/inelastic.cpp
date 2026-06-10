@@ -4,8 +4,8 @@
 
 #include <algorithm>
 #include <fstream>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 
 #include "crams/utils/numeric.h"
 #include "crams/utils/utilities.h"
@@ -16,6 +16,8 @@ using Utilities::pow2;
 using Utilities::pow3;
 
 double sigma_pp(const double& T) {
+  // Kafexhiu et al., Phys.Rev.D 90 (2014) 12, 123014
+  // https://inspirehep.net/literature/1303850
   constexpr double E_threshold = 0.2797 * CGS::GeV;
   const double x = T / E_threshold;
   double value = 0;
@@ -27,6 +29,8 @@ double sigma_pp(const double& T) {
 }
 
 double sigma_ST(const double& T, const int& A) {
+  // R. Silberberg et al 1998 ApJ 501 911
+  // https://iopscience.iop.org/article/10.1086/305862
   const double T_MeV = T / CGS::MeV;
   double value = 45. * std::pow((double)A, 0.7);
   value *= 1. + 0.016 * std::sin(5.3 - 2.63 * std::log(A));
@@ -88,6 +92,11 @@ void InXsecTripathi99::loadXsecTable(const std::string& filename) {
     m_table[PID(Z_proj, A_proj)] = x;
   }
   inf.close();
+}
+
+double InelasticXsecST98::getXsecOnHtarget(const PID& projectile, const double& T) const {
+  if (projectile.getZ() == 1 && projectile.getA() == 1) return sigma_pp(T);
+  return sigma_ST(T, projectile.getA());
 }
 
 }  // namespace CRAMS

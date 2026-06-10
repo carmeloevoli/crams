@@ -12,7 +12,7 @@
 namespace CRAMS {
 
 double sigma_pp(const double& T);
-double sigma_ST(const double& T);
+double sigma_ST(const double& T, const int& A);
 
 class InelasticXsec {
  public:
@@ -37,6 +37,12 @@ class InXsecTripathi99 : public InelasticXsec {
   const double m_T_max = 1e5 * CGS::GeV;
   const size_t m_T_size = 192;
   const std::string m_tableFilename = "data/crams_inelastic_tripathi1999.txt";
+};
+
+class InelasticXsecST98 : public InelasticXsec {
+ public:
+  InelasticXsecST98() = default;
+  double getXsecOnHtarget(const PID& projectile, const double& T) const override;
 };
 
 }  // namespace CRAMS
