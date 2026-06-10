@@ -1,20 +1,23 @@
-#include "particle.h"
+#include "crams/particle.h"
 
 #include <plog/Log.h>
 
 #include <cmath>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <memory>
 #include <string>
 
-#include "cgs.h"
-#include "gsl.h"
-#include "utilities.h"
-#include "xsecs/Evoli2019.h"
-#include "xsecs/Korsmeier2018.h"
+#include "crams/core/cgs.h"
+#include "crams/utils/numeric.h"
+#include "crams/utils/utilities.h"
+#include "crams/xsecs/Evoli2019.h"
+#include "crams/xsecs/Korsmeier2018.h"
 
 namespace CRAMS {
+
+using Utilities::pow2;
 
 #define ARRAYSIZE 400
 
@@ -40,8 +43,8 @@ void Particle::reset() {
 }
 
 void Particle::buildVectors(const Input& input) {
-  m_T = Utilities::LogAxis(input.TSimMin, input.TSimMax, input.TSimSize);
-  m_I_T.resize(input.TSimSize);
+  m_T = Utilities::LogAxis(input.TSimMin(), input.TSimMax(), input.TSimSize());
+  m_I_T.resize(input.TSimSize());
 }
 
 void Particle::buildGrammage(const Input& input) {
@@ -52,13 +55,13 @@ void Particle::buildGrammage(const Input& input) {
 }
 
 void Particle::buildPrimarySource(const Input& input) {
-  m_Q_p = std::make_shared<PrimarySource>(m_pid, m_abundance, m_slope, input.mu);
+  m_Q_p = std::make_shared<PrimarySource>(m_pid, m_abundance, m_slope, input.mu());
 }
 
 void Particle::buildLosses(const Input& input) { m_dEdX = std::make_shared<Losses>(m_pid, input); }
 
 void Particle::buildInelasticXsecs(const Input& input) {
-  m_sigmaIn = (input.id == 0) ? std::make_shared<InXsecTripathi99>(m_pid, false)
+  m_sigmaIn = (input.id() == 0) ? std::make_shared<InXsecTripathi99>(m_pid, false)
                               : std::make_shared<InXsecTripathi99>(m_pid, true);
 }
 
@@ -66,10 +69,10 @@ void Particle::buildInelasticXsecs(const Input& input) {
 
 double Particle::productionProfileFromUnstable(const Input& input, const double& T, const double& decayTimeAtRest) {
   const double v = Utilities::T2beta(T) * CGS::cLight;
-  const double u = input.v_A;
-  const double H = input.H;
+  const double u = input.v_A();
+  const double H = input.H();
   const double D = m_X->D(T);
-  const double value = u / input.mu / v;
+  const double value = u / input.mu() / v;
   const double decayTimeAtT = Utilities::T2gamma(T) * decayTimeAtRest;
   const double Delta = std::sqrt(1. + 4. * D / (pow2(u) * decayTimeAtT));
   const double profile = Delta * COTH(u * H * Delta / 2. / D) - COTH(u * H / 2. / D);
@@ -77,9 +80,9 @@ double Particle::productionProfileFromUnstable(const Input& input, const double&
 }
 
 void Particle::buildSecondarySource(const Input& input, const std::vector<Particle>& particles) {
-  m_doSecondary = input.doSecondary;
-  const auto id = input.id;
-  const auto fudge = input.xsecsFudge;
+  m_doSecondary = input.doSecondary();
+  const auto id = input.id();
+  const auto fudge = input.xsecsFudge();
   const auto xsecs = (id == 0) ? SpallationXsecs(m_pid, fudge) : SpallationXsecs(m_pid, fudge, true);
   const auto T_s = Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, ARRAYSIZE);
   std::vector<double> Q_s;
@@ -218,8 +221,8 @@ void Particle::buildAntiprotonSource(const std::vector<Particle>& particles) {
 
 void Particle::buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles) {
   m_doGrammageAtSource = true;
-  const auto id = input.id;
-  const auto fudge = input.xsecsFudge;
+  const auto id = input.id();
+  const auto fudge = input.xsecsFudge();
   const auto xsecs = (id == 0) ? SpallationXsecs(m_pid, fudge) : SpallationXsecs(m_pid, fudge, true);
   const auto T_X = Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, ARRAYSIZE);
   std::vector<double> Q_X;
@@ -227,8 +230,8 @@ void Particle::buildGrammageAtSource(const Input& input, const std::vector<Parti
     double value = 0;
     for (const auto& particle : particles) {
       if (particle.getPid().getA() > m_pid.getA() && particle.isDone()) {
-        const double r = input.X_s / CGS::meanISMmass * xsecs.getXsecOnISM(particle.getPid(), T);
-        const auto Q_p = PrimarySource(particle.getPid(), particle.getAbundance(), particle.getSlope(), input.mu);
+        const double r = input.X_s() / CGS::meanISMmass * xsecs.getXsecOnISM(particle.getPid(), T);
+        const auto Q_p = PrimarySource(particle.getPid(), particle.getAbundance(), particle.getSlope(), input.mu());
         value += r * Q_p.get(T);
       }
     }
@@ -240,7 +243,7 @@ void Particle::buildGrammageAtSource(const Input& input, const std::vector<Parti
 double Particle::I_T_interpol(const double& T) const {
   double value = 0;
   if (T > m_T.front() && T < m_T.back()) {
-    value = GSL::LinearInterpolatorLog<double>(m_T, m_I_T, T);
+    value = Numeric::LinearInterpolatorLog<double>(m_T, m_I_T, T);
   }
   return value;
 }
@@ -287,7 +290,7 @@ double Particle::Q_total(const double& T) const {
 }
 
 void Particle::computeIntensity(const Input& input) {
-    if (input.num){//if num=True use numerical method
+    if (input.num()){//if num=True use numerical method
         computeFluxAtEnergy_num();
     } else{//if not numerical then use analytical method
 #pragma omp parallel for schedule(dynamic) num_threads(THREADS)

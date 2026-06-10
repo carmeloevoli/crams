@@ -1,8 +1,8 @@
-#include "xsecs/Korsmeier2018.h"
+#include "crams/xsecs/Korsmeier2018.h"
 
-#include "cgs.h"
-#include "gsl.h"
-#include "utilities.h"
+#include "crams/core/cgs.h"
+#include "crams/utils/numeric.h"
+#include "crams/utils/utilities.h"
 
 #define NHEADERLINES 44
 
@@ -114,40 +114,40 @@ double Korsmeier2018SecAp::get(PbarChannel ch, const double& T_proj, const doubl
   if (Utilities::inRange(lgTproj, lgTprojRange) && Utilities::inRange(lgTap, lgTapRange)) {
     if (ch == PbarChannel::pp) {
       auto z = m_sigma_pp.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::pHe) {
       auto z = m_sigma_pHe.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::dp) {
       auto z = m_sigma_dp.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::dHe) {
       auto z = m_sigma_dHe.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::He3p) {
       auto z = m_sigma_He3p.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::He3He) {
       auto z = m_sigma_He3He.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::He4p) {
       auto z = m_sigma_He4p.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::He4He) {
       auto z = m_sigma_He4He.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::C12p) {
       auto z = m_sigma_C12p.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::C12He) {
       auto z = m_sigma_C12He.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::O16p) {
       auto z = m_sigma_O16p.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else if (ch == PbarChannel::O16He) {
       auto z = m_sigma_O16He.get();
-      value = GSL::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
+      value = Numeric::interpolate2d<double>(m_lgTprojAxis, m_lgTapAxis, z, lgTproj, lgTap);
     } else {
       throw std::runtime_error("channel not implemented in Korsmeier2018 model");
     }

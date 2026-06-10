@@ -1,55 +1,59 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.14)
 
 file(STRINGS ${CMAKE_SOURCE_DIR}/VERSION VERSION)
 set(LANGS CXX)
 project(CRAMS VERSION ${VERSION} LANGUAGES ${LANGS})
 
 set(CMAKE_VERBOSE_MAKEFILE off)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
-set(CMAKE_CXX_COMPILER "/usr/local/Cellar/gcc/12.2.0/bin/g++-12")
-set(CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -std=c++14 -fopenmp -DTHREADS=16 -DEVOLI2019 -DDEBUG")
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -fopenmp -DTHREADS=16 -DEVOLI2019 -DDEBUG")
 set(CRAMS_EXTRA_INCLUDES)
 set(CRAMS_EXTRA_LIBRARIES)
 
-include_directories( "${CMAKE_SOURCE_DIR}" )
 include_directories( include/ )
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/external/plog/include/plog/Log.h")
+  message(FATAL_ERROR "plog not found. Run: cd external && sh get_plog.sh")
+endif()
 include_directories( external/plog/include/ )
 
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 git_local_changes(GIT_HAS_LOCAL_CHANGES)
 set(git_revision_cpp "${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp")
-configure_file("src/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
+configure_file("src/utils/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
 
-set( CRAMS_SRCS 
-     src/xsecs/Evoli2019.cpp 
+set( CRAMS_SRCS
+     src/xsecs/Evoli2019.cpp
      src/xsecs/Korsmeier2018.cpp
      src/xsecs/Tripathi99.cpp
-     src/chi2.cpp
-     src/csvreader.cpp
+     src/utils/csvreader.cpp
+     src/utils/utilities.cpp
      src/grammage.cpp
      src/inelastic.cpp
-     src/input.cpp
+     src/core/input.cpp
      src/losses.cpp
-     src/output.cpp
+     src/core/output.cpp
      src/particle.cpp
      src/particlelist.cpp
      src/particlesolver.cpp
      src/primary.cpp
      src/secondary.cpp
-     src/utilities.cpp
      "${git_revision_cpp}"
 )
 
 # GSL (external)
-find_package(GSL)
+find_package(GSL REQUIRED)
 if(GSL_FOUND)
      set(HAVE_LIBGSL 1)
-     list(APPEND CRAMS_EXTRA_INCLUDES ${GSL_INCLUDE_DIR})
+     list(APPEND CRAMS_EXTRA_INCLUDES ${GSL_INCLUDE_DIRS})
      list(APPEND CRAMS_EXTRA_LIBRARIES ${GSL_LIBRARIES})
-else(GSL_FOUND)
+else()
      message(FATAL_ERROR "Require GSL. Set GSL_HOME")
-endif(GSL_FOUND)
+endif()
 
 # copy data files in build
 file(GLOB GRYPHON_DATA "data/*")
@@ -59,21 +63,50 @@ file(COPY ${GRYPHON_DATA} DESTINATION ${PROJECT_BINARY_DIR}/data)
 file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/output)
 
 # make library
-include_directories (include ${CRAMS_EXTRA_INCLUDES})
-add_library( CRAMS_LIB ${CRAMS_SRCS} ${CRAMS_EXTRA_INCLUDES} )
+include_directories(include ${CRAMS_EXTRA_INCLUDES})
+add_library(crams_core ${CRAMS_SRCS})
 
 # make executables
-add_executable(crams src/main.cpp)
-target_link_libraries (crams CRAMS_LIB ${CRAMS_EXTRA_LIBRARIES})
+add_executable(crams apps/main.cpp)
+target_link_libraries (crams crams_core ${CRAMS_EXTRA_LIBRARIES})
 
-add_executable(sandbox tests/sandbox.cpp)
-target_link_libraries (sandbox CRAMS_LIB ${CRAMS_EXTRA_LIBRARIES})
+enable_testing()
 
-add_executable(inelastic tests/inelasticPlot.cpp)
-target_link_libraries (inelastic CRAMS_LIB ${CRAMS_EXTRA_LIBRARIES})
+add_executable(test_cgs tests/test_cgs.cpp)
+target_link_libraries(test_cgs ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_cgs COMMAND test_cgs)
 
-add_executable(apXsecs tests/apXsecsPlot.cpp)
-target_link_libraries (apXsecs CRAMS_LIB ${CRAMS_EXTRA_LIBRARIES})
+add_executable(test_utilities tests/test_utilities.cpp)
+target_link_libraries(test_utilities crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_utilities COMMAND test_utilities)
+
+add_executable(test_pid tests/test_pid.cpp)
+target_link_libraries(test_pid ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_pid COMMAND test_pid)
+
+add_executable(test_numeric tests/test_numeric.cpp)
+target_link_libraries(test_numeric ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_numeric COMMAND test_numeric)
+
+add_executable(test_csvreader tests/test_csvreader.cpp)
+target_link_libraries(test_csvreader crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_csvreader COMMAND test_csvreader)
+
+add_executable(test_grid tests/test_grid.cpp)
+target_link_libraries(test_grid ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_grid COMMAND test_grid)
+
+add_executable(test_input tests/test_input.cpp)
+target_link_libraries(test_input crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_input COMMAND test_input)
+
+add_executable(test_grammage tests/test_grammage.cpp)
+target_link_libraries(test_grammage crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_grammage COMMAND test_grammage)
+
+add_executable(test_primary tests/test_primary.cpp)
+target_link_libraries(test_primary crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_primary COMMAND test_primary)
 
 # Show summary.
 message (STATUS "CMAKE_SYSTEM .......... =   ${CMAKE_SYSTEM}")

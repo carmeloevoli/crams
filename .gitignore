@@ -3,3 +3,4 @@ build*/
 .vscode/
 kiss_tables/
 crams.code-workspace
+external/plog/

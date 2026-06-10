@@ -1,8 +1,8 @@
-#include "secondary.h"
+#include "crams/secondary.h"
 
 #include <plog/Log.h>
 
-#include "gsl.h"
+#include "crams/utils/numeric.h"
 
 namespace CRAMS {
 
@@ -18,7 +18,7 @@ SecondarySource::~SecondarySource() { LOGD << "deleted SecondarySource for parti
 double SecondarySource::get(const double& T) const {
   double value = 0;
   if (T > m_T.front() && T < m_T.back()) {
-    value = GSL::LinearInterpolatorLog<double>(m_T, m_Q, T);
+    value = Numeric::LinearInterpolatorLog<double>(m_T, m_Q, T);
   }
   return value;
 }

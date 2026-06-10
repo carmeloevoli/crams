@@ -1,14 +1,19 @@
-#include "inelastic.h"
+#include "crams/inelastic.h"
 
 #include <plog/Log.h>
 
 #include <random>
 
-#include "gsl.h"
-#include "utilities.h"
-#include "xsecs/Tripathi99.h"
+#include <fstream>
+
+#include "crams/utils/numeric.h"
+#include "crams/utils/utilities.h"
+#include "crams/xsecs/Tripathi99.h"
 
 namespace CRAMS {
+
+using Utilities::pow2;
+using Utilities::pow3;
 
 double sigma_pp(const double& T) {
   constexpr double E_threshold = 0.2797 * CGS::GeV;
@@ -106,7 +111,7 @@ double InXsecCROSEC::getXsecOnHtarget(const double& T) const {
   if (m_proj == H1)
     sigma = sigma_pp(T);
   else
-    sigma = (T >= m_T.back()) ? m_table.back() : GSL::LinearInterpolator<double>(m_T, m_table, T);
+    sigma = (T >= m_T.back()) ? m_table.back() : Numeric::LinearInterpolator<double>(m_T, m_table, T);
   return std::max(sigma, 1e-10 * CGS::mbarn);
 }
 

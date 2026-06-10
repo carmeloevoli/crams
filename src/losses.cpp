@@ -1,4 +1,4 @@
-#include "losses.h"
+#include "crams/losses.h"
 
 #include <gsl/gsl_deriv.h>
 #include <plog/Log.h>
@@ -6,15 +6,17 @@
 #include <cmath>
 #include <string>
 
-#include "cgs.h"
-#include "utilities.h"
+#include "crams/core/cgs.h"
+#include "crams/utils/utilities.h"
 
 namespace CRAMS {
 
+using Utilities::pow2;
+
 Losses::Losses() {}
 
-Losses::Losses(const PID& pid, const Input& input) : m_pid(pid), m_mu(input.mu) {
-  m_factorAdv = 2. * input.v_A / 3. / input.mu / CGS::cLight;
+Losses::Losses(const PID& pid, const Input& input) : m_pid(pid), m_mu(input.mu()) {
+  m_factorAdv = 2. * input.v_A() / 3. / input.mu() / CGS::cLight;
 }
 
 Losses::~Losses() { LOGD << "deleted Losses for particle " << m_pid; }

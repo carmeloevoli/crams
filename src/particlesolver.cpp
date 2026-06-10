@@ -2,7 +2,7 @@
 #include <gsl/gsl_integration.h>
 #include <gsl/gsl_math.h>
 
-#include "particle.h"
+#include "crams/particle.h"
 
 namespace CRAMS {
 

@@ -1,12 +1,13 @@
-#include "particlelist.h"
+#include "crams/particlelist.h"
 
 #include <plog/Log.h>
 
+#include <fstream>
 #include <sstream>
 
-#include "cgs.h"
-#include "csvreader.h"
-#include "utilities.h"
+#include "crams/core/cgs.h"
+#include "crams/utils/csvreader.h"
+#include "crams/utils/utilities.h"
 
 namespace CRAMS {
 

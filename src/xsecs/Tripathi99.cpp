@@ -1,9 +1,9 @@
-#include "xsecs/Tripathi99.h"
+#include "crams/xsecs/Tripathi99.h"
 
 #include <cassert>
 #include <vector>
 
-#include "cgs.h"
+#include "crams/core/cgs.h"
 
 namespace Tripathi99 {
 

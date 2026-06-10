@@ -1,10 +1,10 @@
-#include "xsecs/Evoli2019.h"
+#include "crams/xsecs/Evoli2019.h"
 
 #include <plog/Log.h>
 
-#include "csvreader.h"
-#include "gsl.h"
-#include "utilities.h"
+#include "crams/utils/csvreader.h"
+#include "crams/utils/numeric.h"
+#include "crams/utils/utilities.h"
 
 namespace CRAMS {
 
@@ -39,7 +39,7 @@ double SpallationXsecs::getXsecOnHtarget(const PID& projectile, const double& T)
   auto it = m_table.find(projectile);
   if (it != m_table.end()) {
     double T_now = std::min(T, m_T.back());
-    value = GSL::LinearInterpolatorLog<double>(m_T, it->second, T_now);
+    value = Numeric::LinearInterpolatorLog<double>(m_T, it->second, T_now);
     auto it_error = m_randomFactors.find(projectile);
     value *= (m_doRandom) ? it_error->second : 1.;
   }
