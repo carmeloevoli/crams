@@ -14,6 +14,11 @@ enum class FluxSolver {
   Exponential,
 };
 
+enum class InelasticModel {
+  Tripathi99,
+  Glauber,
+};
+
 class Input {
  public:
   Input() = default;
@@ -47,6 +52,8 @@ class Input {
   size_t id() const { return m_id; }
   FluxSolver fluxSolver() const { return m_fluxSolver; }
   std::string fluxSolverName() const;
+  InelasticModel inelasticModel() const { return m_inelasticModel; }
+  std::string inelasticModelName() const;
   const std::string& simname() const { return m_simname; }
 
  private:
@@ -72,6 +79,7 @@ class Input {
   double m_modulationPotential = 4.87754e-01 * CGS::GeV;
   size_t m_id = 0;
   FluxSolver m_fluxSolver = FluxSolver::CrankNicolson;
+  InelasticModel m_inelasticModel = InelasticModel::Tripathi99;
   std::string m_simname = "test";
 };
 

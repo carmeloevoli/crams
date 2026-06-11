@@ -41,11 +41,32 @@ std::string fluxSolverName(CRAMS::FluxSolver solver) {
   return "unknown";
 }
 
+CRAMS::InelasticModel parseInelasticModel(const std::string& value) {
+  const auto model = CRAMS::Utilities::simplifyKey(value);
+  if (model == "tripathi99" || model == "tripathi1999") return CRAMS::InelasticModel::Tripathi99;
+  if (model == "glauber") return CRAMS::InelasticModel::Glauber;
+
+  throw std::runtime_error("Input: unknown inelastic model '" + value + "'");
+}
+
+std::string inelasticModelName(CRAMS::InelasticModel model) {
+  switch (model) {
+    case CRAMS::InelasticModel::Tripathi99:
+      return "tripathi99";
+    case CRAMS::InelasticModel::Glauber:
+      return "glauber";
+  }
+
+  return "unknown";
+}
+
 }  // namespace
 
 namespace CRAMS {
 
 std::string Input::fluxSolverName() const { return ::fluxSolverName(m_fluxSolver); }
+
+std::string Input::inelasticModelName() const { return ::inelasticModelName(m_inelasticModel); }
 
 void Input::setParam(const std::string& KEY, double value) {
   const auto key = Utilities::simplifyKey(KEY);
@@ -94,6 +115,12 @@ void Input::readParamsFromFile(const std::string& filename) {
       continue;
     }
 
+    if (Utilities::simplifyKey(key) == "inelasticmodel") {
+      m_inelasticModel = parseInelasticModel(valueToken);
+      LOGD << "changed inelastic model to " << inelasticModelName();
+      continue;
+    }
+
     double value = 0.;
     try {
       value = std::stod(valueToken);
@@ -128,6 +155,7 @@ void Input::print() const {
   LOGD << "E_size []           : " << m_TSimSize;
   LOGD << "doSecondary         : " << std::boolalpha << m_doSecondary;
   LOGD << "flux solver         : " << fluxSolverName();
+  LOGD << "inelastic model     : " << inelasticModelName();
 }
 
 }  // namespace CRAMS

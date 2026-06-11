@@ -137,16 +137,39 @@ void test_tripathi_high_energy_throws_out_of_range() {
 }
 
 void test_tripathi_low_energy_throws_out_of_range() {
-  // T below the table minimum (0.1 GeV) is out of range and must throw
+  // T below the table minimum (0.01 GeV) is out of range and must throw
   CRAMS::InXsecTripathi99 xsec;
-  CHECK(throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 0.01 * CRAMS::CGS::GeV); }));
+  CHECK(throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e-3 * CRAMS::CGS::GeV); }));
 }
 
 void test_tripathi_at_table_bounds_does_not_throw() {
-  // Exactly at m_T_min and m_T_max is in range and must succeed
+  // Exactly at m_T_min (0.01 GeV) and m_T_max (1e5 GeV) is in range and must succeed
   CRAMS::InXsecTripathi99 xsec;
-  CHECK(!throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 0.1 * CRAMS::CGS::GeV); }));
+  CHECK(!throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 0.01 * CRAMS::CGS::GeV); }));
   CHECK(!throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e5 * CRAMS::CGS::GeV); }));
+}
+
+// --- InXsecGlauber ---
+
+void test_glauber_loads_and_returns_positive() {
+  // Glauber shares the table machinery; constructing it must load the file and
+  // return positive cross-sections for nuclei in the GCR range.
+  CRAMS::InXsecGlauber xsec;
+  CHECK(xsec.getXsecOnHtarget(CRAMS::C12, 10. * CRAMS::CGS::GeV) > 0.);
+  CHECK(xsec.getXsecOnHtarget(CRAMS::Fe56, 10. * CRAMS::CGS::GeV) > 0.);
+}
+
+void test_glauber_sigma_monotonic_in_A() {
+  // Heavier projectiles have larger inelastic cross-sections
+  CRAMS::InXsecGlauber xsec;
+  const double T = 10. * CRAMS::CGS::GeV;
+  CHECK(xsec.getXsecOnHtarget(CRAMS::Fe56, T) > xsec.getXsecOnHtarget(CRAMS::C12, T));
+}
+
+void test_glauber_out_of_range_throws() {
+  CRAMS::InXsecGlauber xsec;
+  CHECK(throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e6 * CRAMS::CGS::GeV); }));
+  CHECK(throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e-3 * CRAMS::CGS::GeV); }));
 }
 
 // --- InelasticXsec::getXsecOnISM ---
@@ -186,6 +209,11 @@ int main() {
   test_tripathi_high_energy_throws_out_of_range();
   test_tripathi_low_energy_throws_out_of_range();
   test_tripathi_at_table_bounds_does_not_throw();
+
+  test_glauber_loads_and_returns_positive();
+  test_glauber_sigma_monotonic_in_A();
+  test_glauber_out_of_range_throws();
+
   test_tripathi_ISM_xsec_exact_factor();
   test_tripathi_ISM_greater_than_H_target();
 

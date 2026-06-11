@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 #include "crams/utils/numeric.h"
 #include "crams/utils/utilities.h"
@@ -45,40 +46,52 @@ double InelasticXsec::getXsecOnISM(const PID& projectile, const double& T) const
   return sigma_H * (1. + CGS::K_He * CGS::f_He) / (1. + CGS::f_He);
 }
 
-InXsecTripathi99::InXsecTripathi99() {
+InXsecFromTable::InXsecFromTable(std::string modelName, std::string tableFilename, double T_min, double T_max,
+                                 size_t T_size)
+    : m_modelName(std::move(modelName)),
+      m_tableFilename(std::move(tableFilename)),
+      m_T_min(T_min),
+      m_T_max(T_max),
+      m_T_size(T_size) {
   buildEnergyArray();
   if (Utilities::fileExists(m_tableFilename))
-    loadXsecTable(m_tableFilename);
+    loadXsecTable();
   else
-    throw std::runtime_error("Tripathi1999 inelastic xsecs file not found: " + m_tableFilename);
-  if (m_table.empty()) throw std::runtime_error("Tripathi1999 inelastic xsecs table is empty: " + m_tableFilename);
-  LOGD << "Tripathi1999 inelastic table read with " << m_table.size() << " projectiles";
+    throw std::runtime_error(m_modelName + " inelastic xsecs file not found: " + m_tableFilename);
+  if (m_table.empty()) throw std::runtime_error(m_modelName + " inelastic xsecs table is empty: " + m_tableFilename);
+  LOGD << m_modelName << " inelastic table read with " << m_table.size() << " projectiles";
 }
 
-void InXsecTripathi99::buildEnergyArray() {
+void InXsecFromTable::buildEnergyArray() {
   const double logRatio = std::log(m_T_max / m_T_min) / (m_T_size - 1);
   for (size_t i = 0; i < m_T_size; ++i) m_T.push_back(m_T_min * std::exp(i * logRatio));
 }
 
-double InXsecTripathi99::getXsecOnHtarget(const PID& projectile, const double& T) const {
+double InXsecFromTable::getXsecOnHtarget(const PID& projectile, const double& T) const {
   double sigma = 0;
   if (projectile.getZ() == 1 && projectile.getA() == 1) {
     sigma = sigma_pp(T);
   } else {
     const auto it = m_table.find(projectile);
     if (it == m_table.end())
-      throw std::runtime_error("Tripathi1999 inelastic xsec not found for projectile " + projectile.toString());
-    if (T < m_T_min || T > m_T_max)
-      throw std::runtime_error("Tripathi1999 inelastic xsec requested at T = " + std::to_string(T / CGS::GeV) +
+      throw std::runtime_error(m_modelName + " inelastic xsec not found for projectile " + projectile.toString());
+    // Small relative tolerance at the edges: the simulation energy grid can land
+    // a hair outside [m_T_min, m_T_max] due to floating-point rounding in the
+    // log-spaced grids, which is not a genuine out-of-range request.
+    constexpr double edgeTol = 1e-6;
+    if (T < m_T_min * (1. - edgeTol) || T > m_T_max * (1. + edgeTol))
+      throw std::runtime_error(m_modelName + " inelastic xsec requested at T = " + std::to_string(T / CGS::GeV) +
                                " GeV, outside the tabulated range [" + std::to_string(m_T_min / CGS::GeV) + ", " +
                                std::to_string(m_T_max / CGS::GeV) + "] GeV");
-    sigma = Numeric::LinearInterpolator<double>(m_T, it->second, T);
+    // Clamp into the tabulated grid so a boundary point does not trip the interpolator.
+    const double T_clamped = std::min(std::max(T, m_T.front()), m_T.back());
+    sigma = Numeric::LinearInterpolator<double>(m_T, it->second, T_clamped);
   }
   return std::max(sigma, 1e-10 * CGS::mbarn);
 }
 
-void InXsecTripathi99::loadXsecTable(const std::string& filename) {
-  std::ifstream inf(filename.c_str());
+void InXsecFromTable::loadXsecTable() {
+  std::ifstream inf(m_tableFilename.c_str());
   std::string line;
   int Z_proj, A_proj;
   double x_temp;
@@ -89,13 +102,19 @@ void InXsecTripathi99::loadXsecTable(const std::string& filename) {
     std::vector<double> x;
     x.reserve(m_T_size);
     for (size_t i = 0; i < m_T_size; ++i) {
-      if (!(iss >> x_temp)) throw std::runtime_error("malformed Tripathi1999 inelastic xsecs row: " + line);
+      if (!(iss >> x_temp)) throw std::runtime_error("malformed " + m_modelName + " inelastic xsecs row: " + line);
       x.emplace_back(x_temp * CGS::mbarn);
     }
     m_table[PID(Z_proj, A_proj)] = x;
   }
   inf.close();
 }
+
+InXsecTripathi99::InXsecTripathi99()
+    : InXsecFromTable("Tripathi1999", "data/crams_inelastic_tripathi99.txt", 0.01 * CGS::GeV, 1e5 * CGS::GeV, 224) {}
+
+InXsecGlauber::InXsecGlauber()
+    : InXsecFromTable("Glauber", "data/crams_inelastic_glauber.txt", 0.01 * CGS::GeV, 1e5 * CGS::GeV, 224) {}
 
 double InelasticXsecST98::getXsecOnHtarget(const PID& projectile, const double& T) const {
   if (projectile.getZ() == 1 && projectile.getA() == 1) return sigma_pp(T);
