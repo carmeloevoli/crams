@@ -68,7 +68,7 @@ class Particle {
   double computeFluxAtEnergy(double T) const;
 
  protected:
-  double productionProfileFromUnstable(const Input& input, double T, double decayTimeAtRest) const;
+  double productionProfileFromUnstable(const Input& input, double T, double decayHalfLifeAtRest) const;
 
  protected:
   PID m_pid;

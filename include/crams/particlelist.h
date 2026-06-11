@@ -15,7 +15,7 @@ struct NucleusParameters {
   double abundance = 0.;
   double slope = 0.;
   double isotopicFractionISM = 0.;
-  double decayTime = -1.;
+  double decayTime = -1.;  // beta half-life at rest; negative sentinel means stable
   bool isStable = true;
   bool doPropagate = false;
 

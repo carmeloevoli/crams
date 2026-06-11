@@ -9,7 +9,7 @@ namespace CRAMS {
 class Grammage {
  public:
   Grammage(const PID& pid, const Input& input);
-  Grammage(const PID& pid, const Input& input, double tauDecayAtRest);
+  Grammage(const PID& pid, const Input& input, double decayHalfLifeAtRest);
   ~Grammage();
 
   // Diffusion coefficient at kinetic energy T [cm²/s]
@@ -33,7 +33,7 @@ class Grammage {
   double m_delta = 0;
   double m_ddelta = 0;
   double m_smoothness = 0;
-  double m_tauDecayAtRest = -1;  // negative sentinel → stable particle
+  double m_decayHalfLifeAtRest = -1;  // negative sentinel → stable particle
 };
 
 }  // namespace CRAMS

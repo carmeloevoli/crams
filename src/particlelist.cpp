@@ -236,14 +236,14 @@ void ParticleList::loadNucleilist(const std::string& filename) {
     const int Z = parseCsvValue<int>(row, 0, rowIndex);
     const int A = parseCsvValue<int>(row, 1, rowIndex);
     const bool isTertiary = parseCsvValue<int>(row, 2, rowIndex) != 0;
-    const double decayTime = parseCsvValue<double>(row, 3, rowIndex) * CGS::Myr;
+    const double decayHalfLife = parseCsvValue<double>(row, 3, rowIndex) * CGS::Myr;
     const double isotopicFractionISM = 0.01 * parseCsvValue<double>(row, 4, rowIndex);
     const double injectionAb = parseCsvValue<double>(row, 5, rowIndex);
     const double injectionSlope = parseCsvValue<double>(row, 6, rowIndex);
 
     const auto pid = PID{Z, A, isTertiary};
     const auto params =
-        NucleusParameters{injectionAb, injectionSlope, isotopicFractionISM, decayTime, decayTime < 0., false};
+        NucleusParameters{injectionAb, injectionSlope, isotopicFractionISM, decayHalfLife, decayHalfLife < 0., false};
     insert(pid, params);
   }
 }

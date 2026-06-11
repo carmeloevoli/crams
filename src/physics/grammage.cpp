@@ -11,10 +11,18 @@ namespace CRAMS {
 
 using Utilities::pow2;
 
+namespace {
+
+const double kLn2 = std::log(2.);
+
+double halfLifeToMeanLifetime(double halfLife) { return halfLife / kLn2; }
+
+}  // namespace
+
 Grammage::Grammage(const PID& pid, const Input& input) : m_pid(pid) { setParameters(input); }
 
-Grammage::Grammage(const PID& pid, const Input& input, double tauDecayAtRest)
-    : m_pid(pid), m_tauDecayAtRest(tauDecayAtRest) {
+Grammage::Grammage(const PID& pid, const Input& input, double decayHalfLifeAtRest)
+    : m_pid(pid), m_decayHalfLifeAtRest(decayHalfLifeAtRest) {
   setParameters(input);
 }
 
@@ -43,12 +51,13 @@ double Grammage::get(double T) const {
   const double d = D(T);
   const double escape_depth = m_v_A * m_H / d;
 
-  if (m_tauDecayAtRest < 0.) {
+  if (m_decayHalfLifeAtRest < 0.) {
     // Stable particle: standard slab grammage
     return beta * m_norm * (1. - std::exp(-escape_depth));
   } else {
     // Unstable particle: decay modifies escape probability
-    const double tau_d = Utilities::T2gamma(T) * m_tauDecayAtRest;
+    const double meanLifetimeAtRest = halfLifeToMeanLifetime(m_decayHalfLifeAtRest);
+    const double tau_d = Utilities::T2gamma(T) * meanLifetimeAtRest;
     const double Delta = std::sqrt(1. + 4. * d / (pow2(m_v_A) * tau_d));
     const double exp_term = std::exp(-escape_depth * Delta);
     return beta * m_norm * 2. * (1. - exp_term) / ((1. + Delta) - (1. - Delta) * exp_term);

@@ -30,6 +30,7 @@ using Utilities::pow2;
 
 constexpr size_t kSourceGridSize = 400;
 constexpr double kUnavailable = std::numeric_limits<double>::quiet_NaN();
+const double kLn2 = std::log(2.);
 
 struct DecayContribution {
   PID child;
@@ -48,6 +49,8 @@ std::vector<double> makeSourceEnergyGrid() {
 }
 
 double safeReciprocal(double value) { return (value != 0.) ? 1. / value : kUnavailable; }
+
+double halfLifeToMeanLifetime(double halfLife) { return halfLife / kLn2; }
 
 void writeParticleDumpColumns(std::ostream& out) {
   out << "# Columns\n";
@@ -123,13 +126,14 @@ void Particle::buildLosses(const Input& input) { m_dEdX = std::make_unique<Losse
 
 void Particle::buildInelasticXsecs(const InelasticXsec& sigmaIn) { m_sigmaIn = &sigmaIn; }
 
-double Particle::productionProfileFromUnstable(const Input& input, double T, double decayTimeAtRest) const {
+double Particle::productionProfileFromUnstable(const Input& input, double T, double decayHalfLifeAtRest) const {
   const double v = Utilities::T2beta(T) * CGS::cLight;
   const double u = input.v_A();
   const double H = input.H();
   const double D = m_X->D(T);
   const double value = u / input.mu() / v;
-  const double decayTimeAtT = Utilities::T2gamma(T) * decayTimeAtRest;
+  const double meanLifetimeAtRest = halfLifeToMeanLifetime(decayHalfLifeAtRest);
+  const double decayTimeAtT = Utilities::T2gamma(T) * meanLifetimeAtRest;
   const double Delta = std::sqrt(1. + 4. * D / (pow2(u) * decayTimeAtT));
   const double profile = Delta * coth(u * H * Delta / 2. / D) - coth(u * H / 2. / D);
   return value * profile;
