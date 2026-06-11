@@ -10,8 +10,15 @@
 
 #include "crams/utils/git_revision.h"
 
-inline void log_startup_information() {
+inline void log_startup_information(bool quiet = false) {
   if (plog::get() != nullptr) return;  // already initialized
+
+  if (quiet) {
+    // Severity none: all LOG* macros are no-ops; no file is opened.
+    static plog::ConsoleAppender<plog::TxtFormatter> nullAppender;
+    plog::init(plog::none, &nullAppender);
+    return;
+  }
 
   // Unlimited rolling: no rotation for scientific runs where full history matters.
   // Log is written to output/cramslog.csv relative to the working directory.

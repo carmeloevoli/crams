@@ -11,21 +11,34 @@
 #include "crams/utils/utilities.h"
 
 int main(int argc, char* argv[]) {
-  log_startup_information();
+  bool quiet = false;
+  std::string inifile;
+
+  for (int i = 1; i < argc; ++i) {
+    const std::string arg(argv[i]);
+    if (arg == "-q" || arg == "--quiet") {
+      quiet = true;
+    } else if (inifile.empty()) {
+      inifile = arg;
+    } else {
+      throw std::runtime_error("unexpected argument: '" + arg + "'");
+    }
+  }
+
+  log_startup_information(quiet);
+
   try {
     CRAMS::Input input;
     CRAMS::ParticleList particleList;
 
-    if (argc == 2) {
-      input.setSimname(argv[1]);
-      input.readParamsFromFile(argv[1]);
-      input.print();
-      particleList.readParamsFromFile(argv[1]);
-      particleList.print();
-    } else if (argc == 1) {
-      LOGI << "no input file provided, using default parameters";
+    if (!inifile.empty()) {
+      input.setSimname(inifile);
+      input.readParamsFromFile(inifile);
+      if (!quiet) input.print();
+      particleList.readParamsFromFile(inifile);
+      if (!quiet) particleList.print();
     } else {
-      throw std::runtime_error("too many arguments provided, expected './crams params.ini'");
+      LOGI << "no input file provided, using default parameters";
     }
 
     CRAMS::Particles particles;
@@ -55,8 +68,10 @@ int main(int argc, char* argv[]) {
 
     CRAMS::OutputManager outputManager(particles, input);
     outputManager.dumpSpectraRigidity();
-    outputManager.dumpSpectraEkn();
-    outputManager.dumpIsotopes();
+    if (!quiet) {
+      outputManager.dumpSpectraEkn();
+      outputManager.dumpIsotopes();
+    }
   } catch (const std::exception& e) {
     LOGE << "exception caught with message: " << e.what();
   }
