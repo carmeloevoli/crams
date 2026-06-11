@@ -98,6 +98,11 @@ add_executable(test_input tests/test_input.cpp)
 target_link_libraries(test_input crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_input COMMAND test_input)
 
+add_executable(test_example_ini tests/test_example_ini.cpp)
+target_compile_definitions(test_example_ini PRIVATE EXAMPLE_INI="${CMAKE_SOURCE_DIR}/examples/crams.ini")
+target_link_libraries(test_example_ini crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_example_ini COMMAND test_example_ini)
+
 add_executable(test_particlelist tests/test_particlelist.cpp)
 target_link_libraries(test_particlelist crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_particlelist COMMAND test_particlelist)
