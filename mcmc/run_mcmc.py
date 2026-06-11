@@ -75,9 +75,10 @@ PARAMETERS: list[Parameter] = [
     Parameter("slope",   4.33,       4.0,   4.8,   active=True),   # nuclei common spectral index
     Parameter("phi",     0.488,      0.1,   1.0,   active=True),   # solar modulation [GV]
     Parameter("rb",      290.0,      100.,  600.,  active=True),   # diffusion break rigidity [GV]
+    # --- diffusion parameters (constrained by B/C) ---
+    Parameter("d0",      2.48,    0.5,   6.0,   active=True),    # diffusion coefficient [1e28 cm²/s]
+    Parameter("delta",   0.565,   0.3,   0.8,   active=True),    # diffusion spectral index
     # --- fixed propagation parameters ---
-    Parameter("d0",      2.48,    0.5,   6.0,   active=False),
-    Parameter("delta",   0.565,   0.3,   0.8,   active=False),
     Parameter("va",      4.41,    1.0,   15.0,  active=False),
     Parameter("h",       7.0,     1.0,   15.0,  active=False),
     Parameter("ddelta",  0.22,    0.0,   0.5,   active=False),
@@ -95,6 +96,7 @@ DATASETS: list[Dataset] = [
     Dataset("AMS-02_C_rigidity.txt",  "C",  "", R_min=10.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_O_rigidity.txt",  "O",  "", R_min=10.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_Fe_rigidity.txt", "Fe", "", R_min=10.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_B_C_rigidity.txt", "B", "C", R_min=10.0, R_max=2500.0, weight=1.0),
 ]
 
 # ── MCMC defaults ──────────────────────────────────────────────────────────────
