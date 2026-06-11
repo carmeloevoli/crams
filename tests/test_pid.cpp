@@ -22,9 +22,7 @@ void check(bool ok, const char* msg) {
   }
 }
 
-bool approx(double a, double b, double tol = 1e-10) {
-  return std::abs(a - b) < tol;
-}
+bool approx(double a, double b, double tol = 1e-10) { return std::abs(a - b) < tol; }
 
 // ---------------------------------------------------------------------------
 // Construction and getters
@@ -140,7 +138,9 @@ void test_ordering() {
 
   // Verify PID works correctly as a std::map key
   std::map<PID, int> m;
-  m[H1] = 1; m[He4] = 4; m[C12] = 12;
+  m[H1] = 1;
+  m[He4] = 4;
+  m[C12] = 12;
   check(m.size() == 3, "PID usable as map key");
   check(m[C12] == 12, "map lookup by PID");
 }

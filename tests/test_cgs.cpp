@@ -59,22 +59,17 @@ void check(bool ok, const char* msg) {
   }
 }
 
-bool approx(double a, double b, double tol = 1e-4) {
-  return std::abs(a / b - 1.0) < tol;
-}
+bool approx(double a, double b, double tol = 1e-4) { return std::abs(a / b - 1.0) < tol; }
 
 void test_particle_masses() {
   check(approx(protonMassC2 / MeV, 938.272), "proton rest mass = 938.272 MeV");
   check(approx(neutronMassC2 / MeV, 939.565), "neutron rest mass = 939.565 MeV");
   check(approx(electronMassC2 / MeV, 0.510999), "electron rest mass = 0.511 MeV");
   // neutron-proton mass difference ~ 1.293 MeV
-  check(approx((neutronMassC2 - protonMassC2) / MeV, 1.293, 1e-3),
-        "n-p mass difference = 1.293 MeV");
+  check(approx((neutronMassC2 - protonMassC2) / MeV, 1.293, 1e-3), "n-p mass difference = 1.293 MeV");
 }
 
-void test_speed_of_light() {
-  check(approx(cLight, 2.99792458e10 * cm / sec), "c = 2.998e10 cm/s");
-}
+void test_speed_of_light() { check(approx(cLight, 2.99792458e10 * cm / sec), "c = 2.998e10 cm/s"); }
 
 void test_unit_chains() {
   check(approx(GeV / MeV, 1e3), "GeV / MeV = 1000");

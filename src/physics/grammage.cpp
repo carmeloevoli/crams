@@ -11,9 +11,7 @@ namespace CRAMS {
 
 using Utilities::pow2;
 
-Grammage::Grammage(const PID& pid, const Input& input) : m_pid(pid) {
-  setParameters(input);
-}
+Grammage::Grammage(const PID& pid, const Input& input) : m_pid(pid) { setParameters(input); }
 
 Grammage::Grammage(const PID& pid, const Input& input, double tauDecayAtRest)
     : m_pid(pid), m_tauDecayAtRest(tauDecayAtRest) {
@@ -37,8 +35,7 @@ double Grammage::D(double T) const {
   const double R = Utilities::T2pc(T, m_pid) / std::abs(m_pid.getZ());
   const double x = R / m_R_b;
   const double smooth = std::pow(1. + std::pow(x, m_ddelta / m_smoothness), m_smoothness);
-  return m_D_0 * Utilities::T2beta(T) * std::pow(R / CGS::GeV, m_delta) / smooth
-         + 2. * m_v_A * m_H;
+  return m_D_0 * Utilities::T2beta(T) * std::pow(R / CGS::GeV, m_delta) / smooth + 2. * m_v_A * m_H;
 }
 
 double Grammage::get(double T) const {
@@ -54,8 +51,7 @@ double Grammage::get(double T) const {
     const double tau_d = Utilities::T2gamma(T) * m_tauDecayAtRest;
     const double Delta = std::sqrt(1. + 4. * d / (pow2(m_v_A) * tau_d));
     const double exp_term = std::exp(-escape_depth * Delta);
-    return beta * m_norm * 2. * (1. - exp_term)
-           / ((1. + Delta) - (1. - Delta) * exp_term);
+    return beta * m_norm * 2. * (1. - exp_term) / ((1. + Delta) - (1. - Delta) * exp_term);
   }
 }
 

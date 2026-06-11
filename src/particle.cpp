@@ -37,11 +37,7 @@ struct DecayContribution {
 };
 
 const DecayContribution kDecayContributions[] = {
-    {B10, Be10},
-    {N14, C14},
-    {Mg26, Al26},
-    {Ar36, Cl36},
-    {Fe54, Mn54},
+    {B10, Be10}, {N14, C14}, {Mg26, Al26}, {Ar36, Cl36}, {Fe54, Mn54},
 };
 
 double coth(double x) { return 1. / std::tanh(x); }
@@ -50,9 +46,7 @@ std::vector<double> makeSourceEnergyGrid() {
   return Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, kSourceGridSize);
 }
 
-double safeReciprocal(double value) {
-  return (value != 0.) ? 1. / value : kUnavailable;
-}
+double safeReciprocal(double value) { return (value != 0.) ? 1. / value : kUnavailable; }
 
 void writeParticleDumpColumns(std::ostream& out) {
   out << "# Columns\n";
@@ -78,8 +72,7 @@ const Particle* findParticle(const Particles& particles, const PID& pid) {
 
 const Particle& findParticleOrThrow(const Particles& particles, const PID& pid) {
   const auto particle = findParticle(particles, pid);
-  if (particle == nullptr)
-    throw std::runtime_error("Particle: required particle " + pid.toString() + " not found");
+  if (particle == nullptr) throw std::runtime_error("Particle: required particle " + pid.toString() + " not found");
   return *particle;
 }
 
@@ -295,11 +288,10 @@ void Particle::dump() const {
     const double tauDiff = (m_X) ? m_X->diffusionTimescale(T) / CGS::Myr : kUnavailable;
     const double tauAdv = (m_X) ? m_X->advectionTimescale() / CGS::Myr : kUnavailable;
     const double sigmaISM = (m_sigmaIn) ? m_sigmaIn->getXsecOnISM(m_pid, T) : kUnavailable;
-    const double Xcr =
-        (std::isfinite(sigmaISM) && sigmaISM > 0.) ? CGS::meanISMmass / sigmaISM / (CGS::gram / CGS::cm2) : kUnavailable;
+    const double Xcr = (std::isfinite(sigmaISM) && sigmaISM > 0.) ? CGS::meanISMmass / sigmaISM / (CGS::gram / CGS::cm2)
+                                                                  : kUnavailable;
     const double dEdX = (m_dEdX) ? m_dEdX->get(T) : kUnavailable;
-    const double tauIon =
-        (m_dEdX) ? T / m_dEdX->dTdt_ionization(T, 1. / CGS::cm3) / CGS::Myr : kUnavailable;
+    const double tauIon = (m_dEdX) ? T / m_dEdX->dTdt_ionization(T, 1. / CGS::cm3) / CGS::Myr : kUnavailable;
     const double tauInelastic =
         (std::isfinite(sigmaISM) && sigmaISM > 0.)
             ? safeReciprocal(Utilities::T2beta(T) * sigmaISM * CGS::cLight / CGS::cm3) / CGS::Myr

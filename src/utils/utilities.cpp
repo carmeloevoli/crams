@@ -69,9 +69,7 @@ std::vector<double> LogAxis(double min, double max, size_t size) {
 }
 
 bool isGoodAndPositive(const std::vector<double>& v) {
-  return std::none_of(v.begin(), v.end(), [](double d) {
-    return std::isnan(d) || std::isinf(d) || d < 0.;
-  });
+  return std::none_of(v.begin(), v.end(), [](double d) { return std::isnan(d) || std::isinf(d) || d < 0.; });
 }
 
 bool fileExists(const std::string& filename) {
@@ -112,9 +110,7 @@ std::vector<double> loadColumn(const std::string& filename, size_t useCol, size_
   return v;
 }
 
-bool inRange(double x, std::pair<double, double> range) {
-  return x >= range.first && x <= range.second;
-}
+bool inRange(double x, std::pair<double, double> range) { return x >= range.first && x <= range.second; }
 
 }  // namespace Utilities
 }  // namespace CRAMS

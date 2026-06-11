@@ -10,8 +10,8 @@
 
 // Simulation components
 #include "crams/core/input.h"
-#include "crams/particle.h"
 #include "crams/core/output.h"
+#include "crams/particle.h"
 
 // Infrastructure
 #include "crams/utils/logging.h"

@@ -8,8 +8,7 @@
 
 namespace CRAMS {
 
-SpallationXsecs::SpallationXsecs(const PID& fragment, bool doRandom)
-    : m_fragment(fragment), m_doRandom(doRandom) {
+SpallationXsecs::SpallationXsecs(const PID& fragment, bool doRandom) : m_fragment(fragment), m_doRandom(doRandom) {
   buildEnergyArray();
   if (Utilities::fileExists(m_tableFilename))
     loadXsecTable(m_tableFilename);

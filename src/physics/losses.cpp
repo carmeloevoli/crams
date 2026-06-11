@@ -28,30 +28,26 @@ Losses::Losses(const PID& pid, const Input& input) : m_pid(pid) {
 Losses::~Losses() { LOGD << "deleted Losses for particle " << m_pid; }
 
 double Losses::betheBlochLog(double T) const {
-  const double beta  = Utilities::T2beta(T);
+  const double beta = Utilities::T2beta(T);
   const double gamma = Utilities::T2gamma(T);
-  const double mA    = static_cast<double>(m_pid.getA()) * CGS::protonMass;
+  const double mA = static_cast<double>(m_pid.getA()) * CGS::protonMass;
   const double beta2 = pow2(beta);
   const double gamma2 = pow2(gamma);
-  const double Q_max = 2. * CGS::electronMassC2 * beta2 * gamma2
-                       / (1. + 2. * gamma * CGS::electronMass / mA);
+  const double Q_max = 2. * CGS::electronMassC2 * beta2 * gamma2 / (1. + 2. * gamma * CGS::electronMass / mA);
   const double arg = 2. * CGS::electronMassC2 * (gamma2 - 1.) * Q_max;
-  const double B_H  = std::log(arg / pow2(CGS::IsH))  - 2. * beta2;
+  const double B_H = std::log(arg / pow2(CGS::IsH)) - 2. * beta2;
   const double B_He = std::log(arg / pow2(CGS::IsHe)) - 2. * beta2;
   return B_H + CGS::f_He * B_He;
 }
 
-double Losses::dEdX_adiabatic(double T) const {
-  return -m_factorAdv * std::sqrt(T * (T + 2. * CGS::protonMassC2));
-}
+double Losses::dEdX_adiabatic(double T) const { return -m_factorAdv * std::sqrt(T * (T + 2. * CGS::protonMassC2)); }
 
 double Losses::dEdX_ionization(double T) const {
   constexpr double k = 2. * M_PI * pow2(CGS::electronRadius) * CGS::electronMassC2;
   const double Z = static_cast<double>(m_pid.getZ());
   const double A = static_cast<double>(m_pid.getA());
   const double beta2 = pow2(Utilities::T2beta(T));
-  return -k * Z * Z * betheBlochLog(T)
-         / (CGS::protonMass * (1. + 4. * CGS::f_He) * A * beta2);
+  return -k * Z * Z * betheBlochLog(T) / (CGS::protonMass * (1. + 4. * CGS::f_He) * A * beta2);
 }
 
 double Losses::dTdt_ionization(double T, double n_H) const {

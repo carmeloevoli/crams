@@ -109,8 +109,7 @@ void test_LinearInterpolatorLog() {
         "LinearInterpLog: x=sqrt(10) → y=10 (exact power law)");
 
   // Another midpoint: x=sqrt(1000) ≈ 31.62, y=1000
-  check(approx(LinearInterpolatorLog(x, y, std::sqrt(1000.0)), 1000.0, 1e-5),
-        "LinearInterpLog: x=sqrt(1000) → y=1000");
+  check(approx(LinearInterpolatorLog(x, y, std::sqrt(1000.0)), 1000.0, 1e-5), "LinearInterpLog: x=sqrt(1000) → y=1000");
 
   // First interval (was also potentially buggy with old getLowerIndex)
   const double x_first = std::sqrt(1.0 * 10.0);  // geometric mean of first two points
@@ -133,18 +132,15 @@ void test_LinearInterpolatorLog() {
 void test_QAGIntegration() {
   // int_0^1 x^2 dx = 1/3
   auto poly = [](double x) { return x * x; };
-  check(approx(QAGIntegration<double>(poly, 0.0, 1.0), 1.0 / 3.0),
-        "QAG: integral of x^2 on [0,1] = 1/3");
+  check(approx(QAGIntegration<double>(poly, 0.0, 1.0), 1.0 / 3.0), "QAG: integral of x^2 on [0,1] = 1/3");
 
   // int_0^pi sin(x) dx = 2
   auto sinf = [](double x) { return std::sin(x); };
-  check(approx(QAGIntegration<double>(sinf, 0.0, M_PI), 2.0),
-        "QAG: integral of sin on [0,pi] = 2");
+  check(approx(QAGIntegration<double>(sinf, 0.0, M_PI), 2.0), "QAG: integral of sin on [0,pi] = 2");
 
   // int_1^e 1/x dx = 1 (ln(e) - ln(1) = 1)
   auto invx = [](double x) { return 1.0 / x; };
-  check(approx(QAGIntegration<double>(invx, 1.0, M_E), 1.0),
-        "QAG: integral of 1/x on [1,e] = 1");
+  check(approx(QAGIntegration<double>(invx, 1.0, M_E), 1.0), "QAG: integral of 1/x on [1,e] = 1");
 }
 
 // ---------------------------------------------------------------------------
@@ -153,13 +149,11 @@ void test_QAGIntegration() {
 
 void test_QAGSIntegration() {
   auto poly = [](double x) { return x * x; };
-  check(approx(QAGSIntegration<double>(poly, 0.0, 1.0), 1.0 / 3.0),
-        "QAGS: integral of x^2 on [0,1] = 1/3");
+  check(approx(QAGSIntegration<double>(poly, 0.0, 1.0), 1.0 / 3.0), "QAGS: integral of x^2 on [0,1] = 1/3");
 
   // QAGS handles integrable singularities: int_0^1 1/sqrt(x) dx = 2
   auto sqrtInv = [](double x) { return 1.0 / std::sqrt(x + 1e-10); };
-  check(approx(QAGSIntegration<double>(sqrtInv, 0.0, 1.0), 2.0, 1e-3),
-        "QAGS: integral of 1/sqrt(x) on [0,1] ≈ 2");
+  check(approx(QAGSIntegration<double>(sqrtInv, 0.0, 1.0), 2.0, 1e-3), "QAGS: integral of 1/sqrt(x) on [0,1] ≈ 2");
 }
 
 // ---------------------------------------------------------------------------
@@ -169,22 +163,18 @@ void test_QAGSIntegration() {
 void test_simpsonIntegration() {
   // int_0^1 x^2 dx = 1/3 (Simpson's is exact for polynomials deg <= 3)
   auto poly = [](double x) { return x * x; };
-  check(approx(simpsonIntegration<double>(poly, 0.0, 1.0, 100), 1.0 / 3.0),
-        "Simpson: x^2 on [0,1]");
+  check(approx(simpsonIntegration<double>(poly, 0.0, 1.0, 100), 1.0 / 3.0), "Simpson: x^2 on [0,1]");
 
   // int_0^1 x^3 dx = 1/4 (exact for Simpson with even N)
   auto cubic = [](double x) { return x * x * x; };
-  check(approx(simpsonIntegration<double>(cubic, 0.0, 1.0, 100), 1.0 / 4.0),
-        "Simpson: x^3 on [0,1]");
+  check(approx(simpsonIntegration<double>(cubic, 0.0, 1.0, 100), 1.0 / 4.0), "Simpson: x^3 on [0,1]");
 
   // int_0^pi sin(x) dx = 2 (converges with enough points)
   auto sinf = [](double x) { return std::sin(x); };
-  check(approx(simpsonIntegration<double>(sinf, 0.0, M_PI, 1000), 2.0, 1e-5),
-        "Simpson: sin on [0,pi]");
+  check(approx(simpsonIntegration<double>(sinf, 0.0, M_PI, 1000), 2.0, 1e-5), "Simpson: sin on [0,pi]");
 
   // Odd N is auto-corrected to even
-  check(approx(simpsonIntegration<double>(poly, 0.0, 1.0, 99), 1.0 / 3.0),
-        "Simpson: odd N auto-corrected");
+  check(approx(simpsonIntegration<double>(poly, 0.0, 1.0, 99), 1.0 / 3.0), "Simpson: odd N auto-corrected");
 }
 
 // ---------------------------------------------------------------------------
@@ -198,8 +188,7 @@ void test_interpolate2d() {
   // z[j + ny*i] = f(x[i], y[j]) = x[i] + y[j]
   std::vector<double> z(9);
   for (size_t i = 0; i < 3; ++i)
-    for (size_t j = 0; j < 3; ++j)
-      z[j + 3 * i] = x[i] + y[j];
+    for (size_t j = 0; j < 3; ++j) z[j + 3 * i] = x[i] + y[j];
 
   check(approx(interpolate2d(x, y, z, 0.5, 0.5), 1.0), "interpolate2d: f=x+y at (0.5,0.5)=1");
   check(approx(interpolate2d(x, y, z, 1.0, 1.0), 2.0), "interpolate2d: f=x+y at (1,1)=2");

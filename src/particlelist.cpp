@@ -23,20 +23,20 @@ struct AbundanceSetting {
 };
 
 const AbundanceSetting kDefaultAbundances[] = {
-    {"qh", 1, 5.06605e-02, "H"},   {"qhe", 2, 2.54369e-02, "He"},
-    {"qli", 3, 0., "Li"},          {"qbe", 4, 0., "Be"},
-    {"qb", 5, 0., "B"},            {"qc", 6, 3.98879e-03, "C"},
-    {"qn", 7, 3.36117e-04, "N"},   {"qo", 8, 7.15129e-03, "O"},
-    {"qf", 9, 0., "F"},            {"qne", 10, 1.34031e-03, "Ne"},
-    {"qna", 11, 0.5e-4, "Na"},     {"qmg", 12, 2.38948e-03, "Mg"},
-    {"qal", 13, 2.7e-4, "Al"},     {"qsi", 14, 2.77911e-03, "Si"},
-    {"qp", 15, 1e-4, "P"},         {"qs", 16, 4.87000e-04, "S"},
-    {"qcl", 17, 0., "Cl"},         {"qar", 18, 3e-4, "Ar"},
-    {"qk", 19, 0., "K"},           {"qca", 20, 4e-4, "Ca"},
-    {"qsc", 21, 0., "Sc"},         {"qti", 22, 0., "Ti"},
-    {"qv", 23, 0., "V"},           {"qcr", 24, 2.5e-4, "Cr"},
-    {"qmn", 25, 0., "Mn"},         {"qfe", 26, 6.80000e-03, "Fe"},
-    {"qco", 27, 0., "Co"},         {"qni", 28, 4e-4, "Ni"},
+    {"qh", 1, 5.06605e-02, "H"}, {"qhe", 2, 2.54369e-02, "He"},
+    {"qli", 3, 0., "Li"},        {"qbe", 4, 0., "Be"},
+    {"qb", 5, 0., "B"},          {"qc", 6, 3.98879e-03, "C"},
+    {"qn", 7, 3.36117e-04, "N"}, {"qo", 8, 7.15129e-03, "O"},
+    {"qf", 9, 0., "F"},          {"qne", 10, 1.34031e-03, "Ne"},
+    {"qna", 11, 0.5e-4, "Na"},   {"qmg", 12, 2.38948e-03, "Mg"},
+    {"qal", 13, 2.7e-4, "Al"},   {"qsi", 14, 2.77911e-03, "Si"},
+    {"qp", 15, 1e-4, "P"},       {"qs", 16, 4.87000e-04, "S"},
+    {"qcl", 17, 0., "Cl"},       {"qar", 18, 3e-4, "Ar"},
+    {"qk", 19, 0., "K"},         {"qca", 20, 4e-4, "Ca"},
+    {"qsc", 21, 0., "Sc"},       {"qti", 22, 0., "Ti"},
+    {"qv", 23, 0., "V"},         {"qcr", 24, 2.5e-4, "Cr"},
+    {"qmn", 25, 0., "Mn"},       {"qfe", 26, 6.80000e-03, "Fe"},
+    {"qco", 27, 0., "Co"},       {"qni", 28, 4e-4, "Ni"},
 };
 
 struct SlopeSetting {
@@ -63,8 +63,8 @@ int parseCsvValue<int>(const std::vector<std::string>& row, size_t column, size_
   try {
     return std::stoi(row.at(column));
   } catch (const std::exception& e) {
-    throw std::runtime_error("ParticleList: invalid integer in data row " + std::to_string(rowIndex) +
-                             ", column " + std::to_string(column + 1) + ": " + e.what());
+    throw std::runtime_error("ParticleList: invalid integer in data row " + std::to_string(rowIndex) + ", column " +
+                             std::to_string(column + 1) + ": " + e.what());
   }
 }
 
@@ -205,8 +205,7 @@ void ParticleList::setParam(const std::string& key, double value) {
 
 void ParticleList::readParamsFromFile(const std::string& filename) {
   std::ifstream infile(filename);
-  if (!infile.is_open())
-    throw std::runtime_error("ParticleList: cannot open parameter file '" + filename + "'");
+  if (!infile.is_open()) throw std::runtime_error("ParticleList: cannot open parameter file '" + filename + "'");
 
   std::string line;
   while (std::getline(infile, line)) {
@@ -274,8 +273,7 @@ void ParticleList::rebuildChargeIndex() {
 
 void ParticleList::print() const {
   LOGI << "Particle list contains " << m_list.size() << " nuclei.";
-  for (const auto& particle : m_list)
-    LOGD << "found nucleus " << particle.first << " with params " << particle.second;
+  for (const auto& particle : m_list) LOGD << "found nucleus " << particle.first << " with params " << particle.second;
 }
 
 }  // namespace CRAMS

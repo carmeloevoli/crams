@@ -13,19 +13,17 @@
 static int g_pass = 0;
 static int g_fail = 0;
 
-#define CHECK(cond)                                                                      \
-  do {                                                                                   \
-    if (cond) {                                                                          \
-      ++g_pass;                                                                          \
-    } else {                                                                             \
-      ++g_fail;                                                                          \
+#define CHECK(cond)                                                                    \
+  do {                                                                                 \
+    if (cond) {                                                                        \
+      ++g_pass;                                                                        \
+    } else {                                                                           \
+      ++g_fail;                                                                        \
       std::cerr << "FAIL: " << #cond << " at " << __FILE__ << ":" << __LINE__ << "\n"; \
-    }                                                                                    \
+    }                                                                                  \
   } while (0)
 
-static bool approx(double a, double b, double tol = 1e-12) {
-  return std::abs(a - b) <= tol * std::abs(b) + tol;
-}
+static bool approx(double a, double b, double tol = 1e-12) { return std::abs(a - b) <= tol * std::abs(b) + tol; }
 
 void write_file(const std::string& path, const std::string& contents) {
   std::ofstream out(path);
@@ -97,9 +95,8 @@ void test_crank_nicolson_solver_computes_primary_flux() {
   CHECK(intensity.size() == input.TSimSize());
   CHECK(intensity.front() > 0.);
   CHECK(intensity.back() == 0.);
-  CHECK(std::all_of(intensity.begin(), intensity.end(), [](double value) {
-    return std::isfinite(value) && value >= 0.;
-  }));
+  CHECK(std::all_of(intensity.begin(), intensity.end(),
+                    [](double value) { return std::isfinite(value) && value >= 0.; }));
 }
 
 void test_compute_intensity_without_secondary_or_inelastic_sources() {
@@ -131,9 +128,8 @@ void test_compute_intensity_without_secondary_or_inelastic_sources() {
   CHECK(intensity.size() == input.TSimSize());
   CHECK(intensity.front() > 0.);
   CHECK(intensity.back() == 0.);
-  CHECK(std::all_of(intensity.begin(), intensity.end(), [](double value) {
-    return std::isfinite(value) && value >= 0.;
-  }));
+  CHECK(std::all_of(intensity.begin(), intensity.end(),
+                    [](double value) { return std::isfinite(value) && value >= 0.; }));
 }
 
 void test_dump_without_secondary_or_inelastic_sources() {

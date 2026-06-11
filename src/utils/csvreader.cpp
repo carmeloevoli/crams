@@ -8,8 +8,7 @@
 namespace {
 
 std::vector<std::string> split(const std::string& str, const std::string& delim) {
-  if (str.empty() || delim.empty())
-    throw std::invalid_argument("CSVReader: str and delim must be non-empty");
+  if (str.empty() || delim.empty()) throw std::invalid_argument("CSVReader: str and delim must be non-empty");
   std::vector<std::string> tokens;
   size_t prev = 0, pos = 0;
   do {
@@ -31,8 +30,7 @@ CSVReader::CSVReader(std::string filename, std::string delimiter)
 
 std::vector<std::vector<std::string>> CSVReader::getData() const {
   std::ifstream file(m_filename);
-  if (!file.is_open())
-    throw std::runtime_error("CSVReader: cannot open file '" + m_filename + "'");
+  if (!file.is_open()) throw std::runtime_error("CSVReader: cannot open file '" + m_filename + "'");
 
   std::vector<std::vector<std::string>> dataList;
   std::string line;

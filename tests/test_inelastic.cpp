@@ -8,19 +8,17 @@
 static int g_pass = 0;
 static int g_fail = 0;
 
-#define CHECK(cond)                                                                      \
-  do {                                                                                   \
-    if (cond) {                                                                          \
-      ++g_pass;                                                                          \
-    } else {                                                                             \
-      ++g_fail;                                                                          \
+#define CHECK(cond)                                                                    \
+  do {                                                                                 \
+    if (cond) {                                                                        \
+      ++g_pass;                                                                        \
+    } else {                                                                           \
+      ++g_fail;                                                                        \
       std::cerr << "FAIL: " << #cond << " at " << __FILE__ << ":" << __LINE__ << "\n"; \
-    }                                                                                    \
+    }                                                                                  \
   } while (0)
 
-static bool approx(double a, double b, double tol = 1e-6) {
-  return std::abs(a - b) <= tol * std::abs(b) + tol;
-}
+static bool approx(double a, double b, double tol = 1e-6) { return std::abs(a - b) <= tol * std::abs(b) + tol; }
 
 // --- sigma_pp ---
 

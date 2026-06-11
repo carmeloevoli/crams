@@ -21,12 +21,9 @@ void eraseExtension(std::string& s, const std::string& ext) {
 
 CRAMS::FluxSolver parseFluxSolver(const std::string& value) {
   const auto solver = CRAMS::Utilities::simplifyKey(value);
-  if (solver == "analytical")
-    return CRAMS::FluxSolver::Analytical;
-  if (solver == "cranknicolson")
-    return CRAMS::FluxSolver::CrankNicolson;
-  if (solver == "exponential")
-    return CRAMS::FluxSolver::Exponential;
+  if (solver == "analytical") return CRAMS::FluxSolver::Analytical;
+  if (solver == "cranknicolson") return CRAMS::FluxSolver::CrankNicolson;
+  if (solver == "exponential") return CRAMS::FluxSolver::Exponential;
 
   throw std::runtime_error("Input: unknown flux solver '" + value + "'");
 }
@@ -83,8 +80,7 @@ void Input::setParam(const std::string& KEY, double value) {
 
 void Input::readParamsFromFile(const std::string& filename) {
   std::ifstream infile(filename);
-  if (!infile.is_open())
-    throw std::runtime_error("Input: cannot open file '" + filename + "'");
+  if (!infile.is_open()) throw std::runtime_error("Input: cannot open file '" + filename + "'");
   std::string line;
   while (std::getline(infile, line)) {
     std::istringstream iss(line);

@@ -25,7 +25,7 @@ class Grammage {
   void setParameters(const Input& input);
 
   PID m_pid;
-  double m_norm = 0;       // mu * c / (2 * v_A) [g/cm²]
+  double m_norm = 0;  // mu * c / (2 * v_A) [g/cm²]
   double m_v_A = 0;
   double m_H = 0;
   double m_D_0 = 0;

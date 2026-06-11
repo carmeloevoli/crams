@@ -9,11 +9,9 @@
 
 namespace CRAMS {
 
-SecondarySource::SecondarySource(const PID& pid, const std::vector<double>& T,
-                                 const std::vector<double>& Q)
+SecondarySource::SecondarySource(const PID& pid, const std::vector<double>& T, const std::vector<double>& Q)
     : m_pid(pid), m_T(T), m_Q(Q) {
-  if (!Utilities::isGoodAndPositive(Q))
-    throw std::runtime_error("secondary source vector is not valid");
+  if (!Utilities::isGoodAndPositive(Q)) throw std::runtime_error("secondary source vector is not valid");
 }
 
 SecondarySource::~SecondarySource() { LOGD << "deleted SecondarySource for particle " << m_pid; }

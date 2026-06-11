@@ -10,13 +10,19 @@ namespace CRAMS {
 namespace Utilities {
 
 template <typename T>
-constexpr T pow2(T x) { return x * x; }
+constexpr T pow2(T x) {
+  return x * x;
+}
 
 template <typename T>
-constexpr T pow3(T x) { return x * x * x; }
+constexpr T pow3(T x) {
+  return x * x * x;
+}
 
 template <typename T>
-constexpr T pow4(T x) { return x * x * x * x; }
+constexpr T pow4(T x) {
+  return x * x * x * x;
+}
 
 double T2gamma(double T);
 double T2beta(double T);

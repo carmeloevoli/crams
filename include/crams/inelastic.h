@@ -31,7 +31,7 @@ class InXsecTripathi99 : public InelasticXsec {
   void buildEnergyArray();
 
  protected:
-  std::map<PID, std::vector<double> > m_table;
+  std::map<PID, std::vector<double>> m_table;
   std::vector<double> m_T;
   const double m_T_min = 0.1 * CGS::GeV;
   const double m_T_max = 1e5 * CGS::GeV;

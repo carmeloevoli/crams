@@ -32,8 +32,7 @@ size_t getLowerIndex(const std::vector<T>& v, T x) {
 // Linear interpolation in linear-linear space.
 template <typename T>
 T LinearInterpolator(const std::vector<T>& x, const std::vector<T>& y, T x_new) {
-  if (x_new < x.front() || x_new > x.back())
-    throw std::invalid_argument("x_new out of range in LinearInterpolator");
+  if (x_new < x.front() || x_new > x.back()) throw std::invalid_argument("x_new out of range in LinearInterpolator");
   const size_t i = getLowerIndex(x, x_new);
   const T t = (x_new - x[i]) / (x[i + 1] - x[i]);
   return y[i] * (1. - t) + y[i + 1] * t;
@@ -42,8 +41,7 @@ T LinearInterpolator(const std::vector<T>& x, const std::vector<T>& y, T x_new) 
 // Linear interpolation in log-log space. Exact for power laws.
 template <typename T>
 T LinearInterpolatorLog(const std::vector<T>& x, const std::vector<T>& y, T x_new) {
-  if (x_new < x.front() || x_new > x.back())
-    throw std::invalid_argument("x_new out of range in LinearInterpolatorLog");
+  if (x_new < x.front() || x_new > x.back()) throw std::invalid_argument("x_new out of range in LinearInterpolatorLog");
   const size_t i = getLowerIndex(x, x_new);
   const double t = (std::log(x_new) - std::log(x[i])) / (std::log(x[i + 1]) - std::log(x[i]));
   return std::exp(std::log(y[i]) * (1. - t) + std::log(y[i + 1]) * t);
@@ -51,29 +49,22 @@ T LinearInterpolatorLog(const std::vector<T>& x, const std::vector<T>& y, T x_ne
 
 // GSL adaptive integration (QAG) over a finite interval.
 template <typename T>
-T QAGIntegration(std::function<T(T)> f, T start, T stop, size_t limit = 1000,
-                 double rel_error = 1e-4) {
+T QAGIntegration(std::function<T(T)> f, T start, T stop, size_t limit = 1000, double rel_error = 1e-4) {
   gsl_function F;
-  F.function = [](double x, void* vf) -> double {
-    return (*static_cast<std::function<double(double)>*>(vf))(x);
-  };
+  F.function = [](double x, void* vf) -> double { return (*static_cast<std::function<double(double)>*>(vf))(x); };
   F.params = &f;
   double result, error;
   gsl_integration_workspace* ws = gsl_integration_workspace_alloc(limit);
-  gsl_integration_qag(&F, start, stop, 0., rel_error, limit, GSL_INTEG_GAUSS31, ws, &result,
-                      &error);
+  gsl_integration_qag(&F, start, stop, 0., rel_error, limit, GSL_INTEG_GAUSS31, ws, &result, &error);
   gsl_integration_workspace_free(ws);
   return T(result);
 }
 
 // GSL adaptive integration (QAGS) with singularity handling.
 template <typename T>
-T QAGSIntegration(std::function<T(T)> f, T start, T stop, size_t limit = 1000,
-                  double rel_error = 1e-4) {
+T QAGSIntegration(std::function<T(T)> f, T start, T stop, size_t limit = 1000, double rel_error = 1e-4) {
   gsl_function F;
-  F.function = [](double x, void* vf) -> double {
-    return (*static_cast<std::function<double(double)>*>(vf))(x);
-  };
+  F.function = [](double x, void* vf) -> double { return (*static_cast<std::function<double(double)>*>(vf))(x); };
   F.params = &f;
   double result, error;
   gsl_integration_workspace* ws = gsl_integration_workspace_alloc(limit);
@@ -84,12 +75,9 @@ T QAGSIntegration(std::function<T(T)> f, T start, T stop, size_t limit = 1000,
 
 // GSL adaptive integration (QAGIU) over [start, +∞).
 template <typename T>
-T QAGIUIntegration(std::function<T(T)> f, T start, size_t limit = 1000,
-                   double rel_error = 1e-4) {
+T QAGIUIntegration(std::function<T(T)> f, T start, size_t limit = 1000, double rel_error = 1e-4) {
   gsl_function F;
-  F.function = [](double x, void* vf) -> double {
-    return (*static_cast<std::function<double(double)>*>(vf))(x);
-  };
+  F.function = [](double x, void* vf) -> double { return (*static_cast<std::function<double(double)>*>(vf))(x); };
   F.params = &f;
   double result, error;
   gsl_integration_workspace* ws = gsl_integration_workspace_alloc(limit);
@@ -101,8 +89,7 @@ T QAGIUIntegration(std::function<T(T)> f, T start, size_t limit = 1000,
 // Dimensionless spectral integral ∫ (pc/mpc²)^(2-slope) d(pc/mpc²), slope ∈ (4, 5).
 // Used to normalise the primary CR source to the SNR energy budget.
 inline double gammaIntegral(double slope) {
-  if (!(slope > 4.0 && slope < 5.0))
-    throw std::invalid_argument("slope must be in (4, 5)");
+  if (!(slope > 4.0 && slope < 5.0)) throw std::invalid_argument("slope must be in (4, 5)");
 
   double result;
   if (slope < 4.1) {
@@ -137,8 +124,7 @@ T simpsonIntegration(std::function<T(T)> f, T start, T stop, size_t N = 100) {
 // Bilinear interpolation on a 2D grid.
 // z is stored in row-major order: z[j + ny*i] = f(x[i], y[j]).
 template <typename T>
-T interpolate2d(const std::vector<T>& x, const std::vector<T>& y, const std::vector<T>& z, T xi,
-                T yj) {
+T interpolate2d(const std::vector<T>& x, const std::vector<T>& y, const std::vector<T>& z, T xi, T yj) {
   const size_t nx = x.size();
   const size_t ny = y.size();
   std::vector<double> za(nx * ny);
@@ -148,8 +134,7 @@ T interpolate2d(const std::vector<T>& x, const std::vector<T>& y, const std::vec
   gsl_interp_accel* yacc = gsl_interp_accel_alloc();
 
   for (size_t i = 0; i < nx; ++i)
-    for (size_t j = 0; j < ny; ++j)
-      gsl_spline2d_set(spline, za.data(), i, j, static_cast<double>(z.at(j + ny * i)));
+    for (size_t j = 0; j < ny; ++j) gsl_spline2d_set(spline, za.data(), i, j, static_cast<double>(z.at(j + ny * i)));
 
   gsl_spline2d_init(spline, x.data(), y.data(), za.data(), nx, ny);
   const T result = static_cast<T>(gsl_spline2d_eval(spline, xi, yj, xacc, yacc));

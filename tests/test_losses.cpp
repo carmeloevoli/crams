@@ -10,19 +10,17 @@
 static int g_pass = 0;
 static int g_fail = 0;
 
-#define CHECK(cond)                                                                      \
-  do {                                                                                   \
-    if (cond) {                                                                          \
-      ++g_pass;                                                                          \
-    } else {                                                                             \
-      ++g_fail;                                                                          \
+#define CHECK(cond)                                                                    \
+  do {                                                                                 \
+    if (cond) {                                                                        \
+      ++g_pass;                                                                        \
+    } else {                                                                           \
+      ++g_fail;                                                                        \
       std::cerr << "FAIL: " << #cond << " at " << __FILE__ << ":" << __LINE__ << "\n"; \
-    }                                                                                    \
+    }                                                                                  \
   } while (0)
 
-static bool approx(double a, double b, double tol = 1e-6) {
-  return std::abs(a - b) <= tol * std::abs(b) + tol;
-}
+static bool approx(double a, double b, double tol = 1e-6) { return std::abs(a - b) <= tol * std::abs(b) + tol; }
 
 static CRAMS::Input makeInput() { return CRAMS::Input{}; }
 
@@ -100,7 +98,7 @@ void test_ionization_Z2_over_A_scaling() {
   // For same β (same T/nucleon), the ratio between two particles is (Z1²/A1)/(Z2²/A2)
   // Use proton (Z=1,A=1) and carbon (Z=6,A=12): ratio = (1/1)/(36/12) = 1/3
   CRAMS::Input in = makeInput();
-  CRAMS::Losses L_p(CRAMS::H1,  in);
+  CRAMS::Losses L_p(CRAMS::H1, in);
   CRAMS::Losses L_C(CRAMS::C12, in);
   const double T = 10. * CRAMS::CGS::GeV;
   const double ratio = L_p.dEdX_ionization(T) / L_C.dEdX_ionization(T);
@@ -113,7 +111,7 @@ void test_ionization_Z2_over_A_scaling() {
 void test_ionization_increases_with_Z() {
   // Higher Z → more ionization loss at same speed
   CRAMS::Input in = makeInput();
-  CRAMS::Losses L_H(CRAMS::H1,  in);
+  CRAMS::Losses L_H(CRAMS::H1, in);
   CRAMS::Losses L_C(CRAMS::C12, in);
   const double T = 1. * CRAMS::CGS::GeV;
   CHECK(std::abs(L_C.dEdX_ionization(T)) > std::abs(L_H.dEdX_ionization(T)));
@@ -122,8 +120,7 @@ void test_ionization_increases_with_Z() {
 void test_ionization_shows_relativistic_rise() {
   // At very high energies: ionization losses increase (relativistic rise ∝ ln γ)
   CRAMS::Losses L(CRAMS::H1, makeInput());
-  CHECK(std::abs(L.dEdX_ionization(1. * CRAMS::CGS::TeV))
-        > std::abs(L.dEdX_ionization(10. * CRAMS::CGS::GeV)));
+  CHECK(std::abs(L.dEdX_ionization(1. * CRAMS::CGS::TeV)) > std::abs(L.dEdX_ionization(10. * CRAMS::CGS::GeV)));
 }
 
 // --- dTdt_ionization ---
@@ -138,7 +135,7 @@ void test_dTdt_ionization_linear_in_nH() {
 
 void test_dTdt_ionization_Z2_over_A_scaling() {
   CRAMS::Input in = makeInput();
-  CRAMS::Losses L_p(CRAMS::H1,  in);
+  CRAMS::Losses L_p(CRAMS::H1, in);
   CRAMS::Losses L_C(CRAMS::C12, in);
   const double T = 5. * CRAMS::CGS::GeV;
   const double n_H = 1. / CRAMS::CGS::cm3;

@@ -12,8 +12,7 @@ class PID {
  public:
   PID() : m_Z(0), m_A(0), m_id(0), m_isTertiary(false) {}
 
-  PID(int Z, int A, bool isTertiary = false)
-      : m_Z(Z), m_A(A), m_id(A * 1000 + Z), m_isTertiary(isTertiary) {
+  PID(int Z, int A, bool isTertiary = false) : m_Z(Z), m_A(A), m_id(A * 1000 + Z), m_isTertiary(isTertiary) {
     assert(A > 0);
     assert(Z <= A);
   }
@@ -24,16 +23,10 @@ class PID {
   constexpr int getA() const { return m_A; }
   constexpr int getId() const { return m_id; }
 
-  constexpr double getZoverA() const {
-    return (m_A > 0) ? std::abs((double)m_Z) / m_A : 0.0;
-  }
-  constexpr double getAoverZ() const {
-    return (m_Z != 0) ? (double)m_A / std::abs((double)m_Z) : 0.0;
-  }
+  constexpr double getZoverA() const { return (m_A > 0) ? std::abs((double)m_Z) / m_A : 0.0; }
+  constexpr double getAoverZ() const { return (m_Z != 0) ? (double)m_A / std::abs((double)m_Z) : 0.0; }
 
-  constexpr bool operator==(const PID& other) const {
-    return m_id == other.m_id && m_isTertiary == other.m_isTertiary;
-  }
+  constexpr bool operator==(const PID& other) const { return m_id == other.m_id && m_isTertiary == other.m_isTertiary; }
   constexpr bool operator!=(const PID& other) const { return !(*this == other); }
 
   // Special ordering: unstable isotopes (Be10, C14, Cl36, Mn54) come after
@@ -55,9 +48,7 @@ class PID {
   constexpr bool isHe() const { return m_Z == 2; }
   constexpr bool isTertiary() const { return m_isTertiary; }
 
-  std::string toString() const {
-    return "(" + std::to_string(m_A) + "," + std::to_string(m_Z) + ")";
-  }
+  std::string toString() const { return "(" + std::to_string(m_A) + "," + std::to_string(m_Z) + ")"; }
 
   friend std::ostream& operator<<(std::ostream& stream, const PID& pid) {
     if (pid.isTertiary())

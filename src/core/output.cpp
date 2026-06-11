@@ -20,35 +20,8 @@ using Utilities::pow2;
 namespace {
 
 const std::array<const char*, 29> kElementSymbols = {{
-    "",
-    "H",
-    "He",
-    "Li",
-    "Be",
-    "B",
-    "C",
-    "N",
-    "O",
-    "F",
-    "Ne",
-    "Na",
-    "Mg",
-    "Al",
-    "Si",
-    "P",
-    "S",
-    "Cl",
-    "Ar",
-    "K",
-    "Ca",
-    "Sc",
-    "Ti",
-    "V",
-    "Cr",
-    "Mn",
-    "Fe",
-    "Co",
-    "Ni",
+    "",  "H", "He", "Li", "Be", "B",  "C",  "N",  "O", "F",  "Ne", "Na", "Mg", "Al", "Si",
+    "P", "S", "Cl", "Ar", "K",  "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni",
 }};
 
 std::string elementSymbol(int Z) {
@@ -56,9 +29,7 @@ std::string elementSymbol(int Z) {
   return "Z" + std::to_string(Z);
 }
 
-void writeFluxUnit(std::ostream& out) {
-  out << "# Flux unit -> 1 / (GeV m2 s sr)\n";
-}
+void writeFluxUnit(std::ostream& out) { out << "# Flux unit -> 1 / (GeV m2 s sr)\n"; }
 
 void writeChargeGroupColumns(std::ostream& out, const std::string& axisLabel) {
   out << "# Columns\n";
@@ -83,10 +54,7 @@ void writeIsotopeColumns(std::ostream& out) {
 }  // namespace
 
 OutputManager::OutputManager(const Particles& particles, const Input& input)
-    : m_particles(particles),
-      m_phi(input.modulationPotential()),
-      m_id(input.id()),
-      m_simname(input.simname()) {
+    : m_particles(particles), m_phi(input.modulationPotential()), m_id(input.id()), m_simname(input.simname()) {
   m_R = Utilities::LogAxis(input.ROutputMin(), input.ROutputMax(), input.ROutputSize());
 }
 
@@ -100,8 +68,7 @@ double OutputManager::getFluxChargeGroup(int Z, double R) const {
 double OutputManager::getFluxChargeIsotope(int Z, int A, double R) const {
   double value = 0.;
   for (const auto& particle : m_particles)
-    if (particle.isChargeZ(Z) && particle.getPid().getA() == A)
-      value += particle.I_R_TOA(R, m_phi);
+    if (particle.isChargeZ(Z) && particle.getPid().getA() == A) value += particle.I_R_TOA(R, m_phi);
   return value;
 }
 
@@ -119,8 +86,7 @@ double OutputManager::getFluxChargeGroupEkn(int Z, double T) const {
 }
 
 void OutputManager::dumpSpectraRigidity() const {
-  const std::string filename =
-      "output/" + m_simname + "_spectra_R_" + std::to_string(m_id) + ".txt";
+  const std::string filename = "output/" + m_simname + "_spectra_R_" + std::to_string(m_id) + ".txt";
   std::ofstream out(filename);
   if (!out.is_open()) throw std::runtime_error("cannot open for writing: " + filename);
   LOGW << "writing rigidity spectra to " << filename;
@@ -136,8 +102,7 @@ void OutputManager::dumpSpectraRigidity() const {
 }
 
 void OutputManager::dumpIsotopes() const {
-  const std::string filename =
-      "output/" + m_simname + "_isotopes_R_" + std::to_string(m_id) + ".txt";
+  const std::string filename = "output/" + m_simname + "_isotopes_R_" + std::to_string(m_id) + ".txt";
   std::ofstream out(filename);
   if (!out.is_open()) throw std::runtime_error("cannot open for writing: " + filename);
   LOGW << "writing isotope spectra to " << filename;
@@ -154,8 +119,7 @@ void OutputManager::dumpIsotopes() const {
 }
 
 void OutputManager::dumpSpectraEkn() const {
-  const std::string filename =
-      "output/" + m_simname + "_spectra_Ekn_" + std::to_string(m_id) + ".txt";
+  const std::string filename = "output/" + m_simname + "_spectra_Ekn_" + std::to_string(m_id) + ".txt";
   std::ofstream out(filename);
   if (!out.is_open()) throw std::runtime_error("cannot open for writing: " + filename);
   LOGW << "writing spectra to " << filename;

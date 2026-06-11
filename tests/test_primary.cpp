@@ -12,27 +12,28 @@
 static int g_pass = 0;
 static int g_fail = 0;
 
-#define CHECK(cond)                                                                      \
-  do {                                                                                   \
-    if (cond) {                                                                          \
-      ++g_pass;                                                                          \
-    } else {                                                                             \
-      ++g_fail;                                                                          \
+#define CHECK(cond)                                                                    \
+  do {                                                                                 \
+    if (cond) {                                                                        \
+      ++g_pass;                                                                        \
+    } else {                                                                           \
+      ++g_fail;                                                                        \
       std::cerr << "FAIL: " << #cond << " at " << __FILE__ << ":" << __LINE__ << "\n"; \
-    }                                                                                    \
+    }                                                                                  \
   } while (0)
 
-#define CHECK_THROW(expr, exc)                  \
-  do {                                          \
-    bool caught_ = false;                       \
-    try { (void)(expr); }                       \
-    catch (const exc&) { caught_ = true; }      \
-    CHECK(caught_);                             \
+#define CHECK_THROW(expr, exc) \
+  do {                         \
+    bool caught_ = false;      \
+    try {                      \
+      (void)(expr);            \
+    } catch (const exc&) {     \
+      caught_ = true;          \
+    }                          \
+    CHECK(caught_);            \
   } while (0)
 
-static bool approx(double a, double b, double tol = 1e-6) {
-  return std::abs(a - b) <= tol * std::abs(b) + tol;
-}
+static bool approx(double a, double b, double tol = 1e-6) { return std::abs(a - b) <= tol * std::abs(b) + tol; }
 
 // Typical benchmark parameters
 static const double slope = 4.5;

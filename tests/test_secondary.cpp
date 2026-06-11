@@ -11,27 +11,28 @@
 static int g_pass = 0;
 static int g_fail = 0;
 
-#define CHECK(cond)                                                                      \
-  do {                                                                                   \
-    if (cond) {                                                                          \
-      ++g_pass;                                                                          \
-    } else {                                                                             \
-      ++g_fail;                                                                          \
+#define CHECK(cond)                                                                    \
+  do {                                                                                 \
+    if (cond) {                                                                        \
+      ++g_pass;                                                                        \
+    } else {                                                                           \
+      ++g_fail;                                                                        \
       std::cerr << "FAIL: " << #cond << " at " << __FILE__ << ":" << __LINE__ << "\n"; \
-    }                                                                                    \
+    }                                                                                  \
   } while (0)
 
-#define CHECK_THROW(expr, exc)             \
-  do {                                     \
-    bool caught_ = false;                  \
-    try { (void)(expr); }                  \
-    catch (const exc&) { caught_ = true; } \
-    CHECK(caught_);                        \
+#define CHECK_THROW(expr, exc) \
+  do {                         \
+    bool caught_ = false;      \
+    try {                      \
+      (void)(expr);            \
+    } catch (const exc&) {     \
+      caught_ = true;          \
+    }                          \
+    CHECK(caught_);            \
   } while (0)
 
-static bool approx(double a, double b, double tol = 1e-9) {
-  return std::abs(a - b) <= tol * std::abs(b) + tol;
-}
+static bool approx(double a, double b, double tol = 1e-9) { return std::abs(a - b) <= tol * std::abs(b) + tol; }
 
 // Power-law grid: Q_i = C * T_i^(-alpha)
 static std::vector<double> powerLawQ(const std::vector<double>& T, double C, double alpha) {
@@ -45,14 +46,12 @@ static std::vector<double> logGrid(double Tmin, double Tmax, size_t N) {
   std::vector<double> v(N);
   const double logMin = std::log(Tmin);
   const double logMax = std::log(Tmax);
-  for (size_t i = 0; i < N; ++i)
-    v[i] = std::exp(logMin + static_cast<double>(i) * (logMax - logMin) / (N - 1));
+  for (size_t i = 0; i < N; ++i) v[i] = std::exp(logMin + static_cast<double>(i) * (logMax - logMin) / (N - 1));
   return v;
 }
 
 // Shared test grid
-static const std::vector<double> T3 = {1. * CRAMS::CGS::GeV, 10. * CRAMS::CGS::GeV,
-                                       100. * CRAMS::CGS::GeV};
+static const std::vector<double> T3 = {1. * CRAMS::CGS::GeV, 10. * CRAMS::CGS::GeV, 100. * CRAMS::CGS::GeV};
 static const double alpha = 2.7;
 static const double C = 1.5e-3;
 static const std::vector<double> Q3 = powerLawQ(T3, C, alpha);

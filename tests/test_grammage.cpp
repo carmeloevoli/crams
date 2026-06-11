@@ -10,19 +10,17 @@
 static int g_pass = 0;
 static int g_fail = 0;
 
-#define CHECK(cond)                                                                      \
-  do {                                                                                   \
-    if (cond) {                                                                          \
-      ++g_pass;                                                                          \
-    } else {                                                                             \
-      ++g_fail;                                                                          \
+#define CHECK(cond)                                                                    \
+  do {                                                                                 \
+    if (cond) {                                                                        \
+      ++g_pass;                                                                        \
+    } else {                                                                           \
+      ++g_fail;                                                                        \
       std::cerr << "FAIL: " << #cond << " at " << __FILE__ << ":" << __LINE__ << "\n"; \
-    }                                                                                    \
+    }                                                                                  \
   } while (0)
 
-static bool approx(double a, double b, double tol = 1e-6) {
-  return std::abs(a - b) <= tol * std::abs(b) + tol;
-}
+static bool approx(double a, double b, double tol = 1e-6) { return std::abs(a - b) <= tol * std::abs(b) + tol; }
 
 // Default-constructed Input with standard CR benchmark parameters
 static CRAMS::Input makeInput() { return CRAMS::Input{}; }
@@ -83,8 +81,7 @@ void test_diffusion_timescale_formula() {
 void test_diffusion_timescale_decreases_with_energy() {
   // Higher energy → larger D → shorter diffusion timescale
   CRAMS::Grammage X(CRAMS::H1, makeInput());
-  CHECK(X.diffusionTimescale(100. * CRAMS::CGS::GeV)
-        < X.diffusionTimescale(1. * CRAMS::CGS::GeV));
+  CHECK(X.diffusionTimescale(100. * CRAMS::CGS::GeV) < X.diffusionTimescale(1. * CRAMS::CGS::GeV));
 }
 
 void test_advection_timescale_is_positive() {

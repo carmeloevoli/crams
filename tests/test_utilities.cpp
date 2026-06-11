@@ -39,9 +39,7 @@ void check(bool ok, const char* msg) {
   }
 }
 
-bool approx(double a, double b, double tol = 1e-5) {
-  return std::abs(a / b - 1.0) < tol;
-}
+bool approx(double a, double b, double tol = 1e-5) { return std::abs(a / b - 1.0) < tol; }
 
 // ---------------------------------------------------------------------------
 // T2beta
@@ -139,10 +137,18 @@ void test_LinAxis() {
     if (v[i] <= v[i - 1]) mono = false;
   check(mono, "LinAxis monotonically increasing");
   // Throws on bad args
-  try { LinAxis(5., 1., 10); check(false, "LinAxis min>max should throw"); }
-  catch (const std::invalid_argument&) { check(true, "LinAxis min>max throws"); }
-  try { LinAxis(0., 1., 1); check(false, "LinAxis size=1 should throw"); }
-  catch (const std::invalid_argument&) { check(true, "LinAxis size=1 throws"); }
+  try {
+    LinAxis(5., 1., 10);
+    check(false, "LinAxis min>max should throw");
+  } catch (const std::invalid_argument&) {
+    check(true, "LinAxis min>max throws");
+  }
+  try {
+    LinAxis(0., 1., 1);
+    check(false, "LinAxis size=1 should throw");
+  } catch (const std::invalid_argument&) {
+    check(true, "LinAxis size=1 throws");
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -168,8 +174,12 @@ void test_LogAxis() {
   // All values positive
   check(isGoodAndPositive(v), "LogAxis all positive");
   // Throws on bad args
-  try { LogAxis(5., 1., 10); check(false, "LogAxis min>max should throw"); }
-  catch (const std::invalid_argument&) { check(true, "LogAxis min>max throws"); }
+  try {
+    LogAxis(5., 1., 10);
+    check(false, "LogAxis min>max should throw");
+  } catch (const std::invalid_argument&) {
+    check(true, "LogAxis min>max throws");
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -180,12 +190,9 @@ void test_isGoodAndPositive() {
   check(isGoodAndPositive({1.0, 2.0, 3.0}), "isGoodAndPositive: all positive");
   check(isGoodAndPositive({0.0, 1.0}), "isGoodAndPositive: zero is ok");
   check(!isGoodAndPositive({1.0, -1.0}), "isGoodAndPositive: negative fails");
-  check(!isGoodAndPositive({1.0, std::numeric_limits<double>::quiet_NaN()}),
-        "isGoodAndPositive: NaN fails");
-  check(!isGoodAndPositive({1.0, std::numeric_limits<double>::infinity()}),
-        "isGoodAndPositive: +inf fails");
-  check(!isGoodAndPositive({1.0, -std::numeric_limits<double>::infinity()}),
-        "isGoodAndPositive: -inf fails");
+  check(!isGoodAndPositive({1.0, std::numeric_limits<double>::quiet_NaN()}), "isGoodAndPositive: NaN fails");
+  check(!isGoodAndPositive({1.0, std::numeric_limits<double>::infinity()}), "isGoodAndPositive: +inf fails");
+  check(!isGoodAndPositive({1.0, -std::numeric_limits<double>::infinity()}), "isGoodAndPositive: -inf fails");
   check(isGoodAndPositive({}), "isGoodAndPositive: empty vector is ok");
 }
 
@@ -209,7 +216,10 @@ void test_fileExists() {
   check(!fileExists("/nonexistent/path/to/file.txt"), "fileExists: missing file = false");
   // Write a temp file and check it exists
   const std::string tmp = "/tmp/test_crams_fileexists.txt";
-  { std::ofstream f(tmp); f << "test"; }
+  {
+    std::ofstream f(tmp);
+    f << "test";
+  }
   check(fileExists(tmp), "fileExists: existing file = true");
   std::remove(tmp.c_str());
 }
@@ -241,11 +251,9 @@ void test_loadColumn() {
   }
   const auto col0 = loadColumn(tmp, 0, 1);
   check(col0.size() == 3, "loadColumn: correct row count");
-  check(approx(col0[0], 1.0) && approx(col0[1], 4.0) && approx(col0[2], 7.0),
-        "loadColumn: col 0 values");
+  check(approx(col0[0], 1.0) && approx(col0[1], 4.0) && approx(col0[2], 7.0), "loadColumn: col 0 values");
   const auto col1 = loadColumn(tmp, 1, 1);
-  check(approx(col1[0], 2.0) && approx(col1[1], 5.0) && approx(col1[2], 8.0),
-        "loadColumn: col 1 values");
+  check(approx(col1[0], 2.0) && approx(col1[1], 5.0) && approx(col1[2], 8.0), "loadColumn: col 1 values");
   std::remove(tmp.c_str());
   // Throws on missing file
   try {

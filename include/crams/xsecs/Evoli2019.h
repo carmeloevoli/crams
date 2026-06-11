@@ -29,7 +29,7 @@ class SpallationXsecs {
   double m_randomFactorVariance = 0.3;
   PID m_fragment;
   std::map<PID, double> m_randomFactors;
-  std::map<PID, std::vector<double> > m_table;
+  std::map<PID, std::vector<double>> m_table;
   std::vector<double> m_T;
 
 #ifdef EVOLI2019
