@@ -68,7 +68,11 @@ PARAMETERS: list[Parameter] = [
     Parameter("qh",      5.07e-2,    1e-2,  2e-1,  active=True),   # H injection abundance
     Parameter("qhe",     2.54e-2,    5e-3,  1e-1,  active=True),   # He injection abundance
     Parameter("qc",      3.98879e-3, 1e-3,  2e-2,  active=True),   # C injection abundance
+    Parameter("qn",      3.98879e-3, 1e-3,  2e-2,  active=True),   # N injection abundance
     Parameter("qo",      7.15129e-3, 1e-3,  3e-2,  active=True),   # O injection abundance
+    Parameter("qne",     1.34031e-3, 3e-4,  5e-3,  active=True),   # Ne injection abundance
+    Parameter("qmg",     2.38948e-3, 5e-4,  8e-3,  active=True),   # Mg injection abundance
+    Parameter("qsi",     2.77911e-3, 5e-4,  8e-3,  active=True),   # Si injection abundance
     Parameter("qfe",     7.15129e-3, 1e-3,  3e-2,  active=True),   # Fe injection abundance
     Parameter("hslope",  4.37,       4.0,   4.8,   active=True),   # H spectral index
     Parameter("heslope", 4.31,       4.0,   4.8,   active=True),   # He spectral index
@@ -78,10 +82,10 @@ PARAMETERS: list[Parameter] = [
     # --- diffusion parameters (constrained by B/C) ---
     Parameter("d0",      2.48,    0.5,   6.0,   active=True),    # diffusion coefficient [1e28 cm²/s]
     Parameter("delta",   0.565,   0.3,   0.8,   active=True),    # diffusion spectral index
+    Parameter("ddelta",  0.22,    0.0,   0.5,   active=True),    # low-rigidity diffusion break amplitude
     # --- fixed propagation parameters ---
     Parameter("va",      4.41,    1.0,   15.0,  active=False),
     Parameter("h",       7.0,     1.0,   15.0,  active=False),
-    Parameter("ddelta",  0.22,    0.0,   0.5,   active=False),
 ]
 
 # ── Datasets ───────────────────────────────────────────────────────────────────
@@ -93,16 +97,25 @@ PARAMETERS: list[Parameter] = [
 DATASETS: list[Dataset] = [
     Dataset("AMS-02_H_rigidity.txt",  "H",  "", R_min=10.0, R_max=1500.0, weight=1.0),
     Dataset("AMS-02_He_rigidity.txt", "He", "", R_min=10.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_H_He_rigidity.txt", "H", "He", R_min=10.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_C_rigidity.txt",  "C",  "", R_min=10.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_O_rigidity.txt",  "O",  "", R_min=10.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_Fe_rigidity.txt", "Fe", "", R_min=10.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_B_C_rigidity.txt", "B", "C", R_min=10.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_B_O_rigidity.txt", "B", "O", R_min=10.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_C_O_rigidity.txt", "C", "O", R_min=10.0, R_max=2500.0, weight=1.0),
+    # N and the heavier primaries: only above 50 GV and down-weighted — slightly
+    # less relevant, and their small error bars would otherwise dominate the fit.
+    Dataset("AMS-02_N_rigidity.txt", "N", "", R_min=50.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_Ne_rigidity.txt", "Ne", "", R_min=50.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_Mg_rigidity.txt", "Mg", "", R_min=50.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_Si_rigidity.txt", "Si", "", R_min=50.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_Fe_rigidity.txt", "Fe", "", R_min=50.0, R_max=2500.0, weight=0.2),
 ]
 
 # ── MCMC defaults ──────────────────────────────────────────────────────────────
-N_WALKERS = 32
+N_WALKERS = 64
 N_BURN    = 200
-N_STEPS   = 500
+N_STEPS   = 1000
 
 
 def _parse_args(argv=None):

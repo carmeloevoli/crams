@@ -36,6 +36,7 @@ class CramsRunner:
         binary: str = "crams",
         timeout: int = 120,
         quiet: bool = True,
+        inelastic_model: str = "tripathi99",
     ) -> None:
         if build_dir is None:
             build_dir = Path(__file__).parent.parent / "build"
@@ -43,6 +44,7 @@ class CramsRunner:
         self.binary_path = self.build_dir / binary
         self.timeout = timeout
         self.quiet = quiet
+        self.inelastic_model = inelastic_model
         self._counter = 0
 
         if not self.binary_path.exists():
@@ -75,6 +77,7 @@ class CramsRunner:
             with open(ini_path, "w") as f:
                 for key, value in params.items():
                     f.write(f"{key} {value:.6e}\n")
+                f.write(f"inelastic_model {self.inelastic_model}\n")
                 f.write("id 0\n")
 
             cmd = [str(self.binary_path), ini_name]
