@@ -71,8 +71,8 @@ int main(int argc, char* argv[]) {
       particle.buildLosses(input);
       particle.buildPrimarySource(input);
       particle.buildInelasticXsecs(*inelasticXsecs);
-      particle.buildSecondarySource(input, particles, *nucfragXsecs);
-      //  if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(particles);
+      if (!particle.getPid().isTertiary()) particle.buildSecondarySource(input, particles, *nucfragXsecs);
+      if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(particles);
       //  if (input.X_s() > 0.) particle.buildGrammageAtSource(input, particles, *nucfragXsecs);
       particle.dump();
       particle.computeIntensity(input);
