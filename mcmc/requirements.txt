@@ -2,3 +2,5 @@ numpy
 emcee>=3.0
 tqdm        # optional: emcee progress bar
 corner      # optional: posterior triangle plots
+iminuit     # optional: find_bestfit.py --method iminuit (MIGRAD + parameter errors)
+scipy       # optional: find_bestfit.py --method scipy
