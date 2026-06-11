@@ -51,10 +51,10 @@ class Input {
 
  private:
   double m_TSimMin = 0.1 * CGS::GeV;
-  double m_TSimMax = 10. * CGS::TeV;
-  size_t m_TSimSize = 5 * 32 * 3;
+  double m_TSimMax = 100. * CGS::TeV;
+  size_t m_TSimSize = 300;
 
-  double m_ROutputMin = 0.1 * CGS::GeV;
+  double m_ROutputMin = 1. * CGS::GeV;
   double m_ROutputMax = 10. * CGS::TeV;
   size_t m_ROutputSize = 100;
 

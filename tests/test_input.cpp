@@ -43,9 +43,9 @@ static void write_file(const std::string& path, const std::string& content) {
 // --- default values ---
 
 void test_default_TSimMin() { CHECK(approx(CRAMS::Input{}.TSimMin(), 0.1 * CRAMS::CGS::GeV)); }
-void test_default_TSimMax() { CHECK(approx(CRAMS::Input{}.TSimMax(), 10. * CRAMS::CGS::TeV)); }
-void test_default_TSimSize() { CHECK(CRAMS::Input{}.TSimSize() == 5 * 32 * 3); }
-void test_default_ROutputMin() { CHECK(approx(CRAMS::Input{}.ROutputMin(), 0.1 * CRAMS::CGS::GeV)); }
+void test_default_TSimMax() { CHECK(approx(CRAMS::Input{}.TSimMax(), 100. * CRAMS::CGS::TeV)); }
+void test_default_TSimSize() { CHECK(CRAMS::Input{}.TSimSize() == 300); }
+void test_default_ROutputMin() { CHECK(approx(CRAMS::Input{}.ROutputMin(), 1. * CRAMS::CGS::GeV)); }
 void test_default_ROutputMax() { CHECK(approx(CRAMS::Input{}.ROutputMax(), 10. * CRAMS::CGS::TeV)); }
 void test_default_ROutputSize() { CHECK(CRAMS::Input{}.ROutputSize() == 100); }
 void test_default_doSecondary() { CHECK(CRAMS::Input{}.doSecondary() == true); }

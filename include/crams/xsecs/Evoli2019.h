@@ -8,6 +8,8 @@
 #include "crams/core/cgs.h"
 #include "crams/core/pid.h"
 
+#define EVOLI2019
+
 namespace CRAMS {
 
 class SpallationXsecs {
