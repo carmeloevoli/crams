@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
-"""Plot the MCMC best-fit model and posterior band against AMS-02 H and He data.
+"""Plot the MCMC best-fit model and posterior band against AMS-02 data.
+
+Produces one figure per observable: absolute fluxes (H, He, C, O, Fe, …) and
+ratios (B/C, C/O, …). Each panel shows the AMS-02 data, the posterior 68% band,
+and the median best-fit model.
 
 Usage
 -----
     python plot_bestfit.py h_he_chain.npz
-    python plot_bestfit.py h_he_chain.npz --nsamples 200 --output bestfit.pdf
+    python plot_bestfit.py chain.npz --nsamples 200 --output figs/bestfit
 """
 from __future__ import annotations
 
 import argparse
 import shutil
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -22,14 +27,52 @@ from runner import CramsRunner
 
 STYLE = Path(__file__).parent.parent.parent / "crams-plots" / "crams.mplstyle"
 
-SPECIES = [
-    dict(symbol="H",  filename="AMS-02_H_rigidity.txt",
-         color="#0072B2", label=r"H",  R_min=10.0, R_max=1500.0),
-    dict(symbol="He", filename="AMS-02_He_rigidity.txt",
-         color="#D55E00", label=r"He", R_min=10.0, R_max=2500.0),
-]
+POWER = 2.7   # multiply flux by R^POWER for display (fluxes only; ratios use 0)
 
-POWER = 2.7   # multiply flux by R^POWER for display
+COLORS = {
+    "H":  "#0072B2",
+    "He": "#D55E00",
+    "C":  "#8D5524",
+    "N":  "#E76F9A",
+    "O":  "#D62728",
+    "B":  "#7E57C2",
+    "Fe": "#5F6A6A",
+}
+
+
+@dataclass(frozen=True)
+class Panel:
+    """One observable to plot: a flux (denominator='') or a ratio."""
+
+    numerator: str
+    filename: str
+    denominator: str = ""
+    R_min: float = 10.0
+    R_max: float = 2500.0
+    color: str = "tab:blue"
+
+    @property
+    def is_ratio(self) -> bool:
+        return bool(self.denominator)
+
+    @property
+    def label(self) -> str:
+        return f"{self.numerator}/{self.denominator}" if self.is_ratio else self.numerator
+
+    @property
+    def tag(self) -> str:
+        return f"{self.numerator}_{self.denominator}" if self.is_ratio else self.numerator
+
+
+PANELS = [
+    Panel("H",  "AMS-02_H_rigidity.txt",  R_max=1500.0, color=COLORS["H"]),
+    Panel("He", "AMS-02_He_rigidity.txt",               color=COLORS["He"]),
+    Panel("C",  "AMS-02_C_rigidity.txt",                color=COLORS["C"]),
+    Panel("O",  "AMS-02_O_rigidity.txt",                color=COLORS["O"]),
+    Panel("Fe", "AMS-02_Fe_rigidity.txt",               color=COLORS["Fe"]),
+    Panel("B",  "AMS-02_B_C_rigidity.txt", denominator="C", color=COLORS["B"]),
+    Panel("C",  "AMS-02_C_O_rigidity.txt", denominator="O", color=COLORS["C"]),
+]
 
 
 def _load_chain(path: Path, discard: int = 0, thin: int = 1):
@@ -68,75 +111,91 @@ def _run_sample(runner: CramsRunner, chain: np.ndarray,
     return spectra_list
 
 
-def _plot_species(ax, sp: dict, spectra_median, spectra_samples: list) -> None:
-    sym      = sp["symbol"]
-    color    = sp["color"]
-    R_min    = sp["R_min"]
-    R_max    = sp["R_max"]
+def _model_observable(spectra: dict, panel: Panel) -> tuple[np.ndarray, np.ndarray]:
+    """Return (R, y) for the model: flux, or numerator/denominator for a ratio."""
+    R = spectra["R"]
+    num = spectra[panel.numerator]
+    if panel.is_ratio:
+        den = spectra[panel.denominator]
+        y = np.full_like(num, np.nan)
+        np.divide(num, den, out=y, where=den > 0)
+    else:
+        y = num
+    return R, y
 
-    # ── data ──────────────────────────────────────────────────────────────────
-    x, y, err_lo, err_hi = _read_kiss_table(KISS_DIR / sp["filename"])
-    cut = (x >= R_min) & (x >= 1.0)   # show data from 1 GV for context
+
+def _plot_panel(panel: Panel, spectra_median: dict, spectra_samples: list) -> plt.Figure:
+    fig, ax = plt.subplots(figsize=(7.5, 6.4))
+    power = 0.0 if panel.is_ratio else POWER
+
+    # ── data (shown from 1 GV for context, up to R_max) ────────────────────────
+    x, y, err_lo, err_hi = _read_kiss_table(KISS_DIR / panel.filename)
+    cut = (x >= 1.0) & (x <= panel.R_max)
     x, y = x[cut], y[cut]
     err_lo, err_hi = err_lo[cut], err_hi[cut]
 
-    scale = x ** POWER
+    scale = x ** power
     ax.errorbar(
         x, scale * y,
         yerr=[scale * err_lo, scale * err_hi],
-        fmt="o", color=color, markersize=4,
+        fmt="o", color=panel.color, markersize=4,
         elinewidth=1.2, capsize=0,
-        label=r"AMS-02 " + sp["label"],
+        label=f"AMS-02 {panel.label}",
         zorder=3,
     )
 
-    # ── posterior band ────────────────────────────────────────────────────────
+    # ── posterior 68% band ─────────────────────────────────────────────────────
     if spectra_samples:
         R_model = spectra_samples[0]["R"]
-        band_mask = (R_model >= R_min) & (R_model <= R_max)
-        fluxes = np.array([s[sym][band_mask] for s in spectra_samples])
+        band_mask = (R_model >= panel.R_min) & (R_model <= panel.R_max)
         R_band = R_model[band_mask]
-        lo = np.percentile(fluxes, 16, axis=0)
-        hi = np.percentile(fluxes, 84, axis=0)
+        ys = np.array([_model_observable(s, panel)[1][band_mask] for s in spectra_samples])
+        lo = np.nanpercentile(ys, 16, axis=0)
+        hi = np.nanpercentile(ys, 84, axis=0)
         ax.fill_between(
-            R_band, R_band**POWER * lo, R_band**POWER * hi,
-            color=color, alpha=0.25, linewidth=0,
+            R_band, R_band**power * lo, R_band**power * hi,
+            color=panel.color, alpha=0.25, linewidth=0,
         )
 
-    # ── best-fit (median) ─────────────────────────────────────────────────────
-    R_model = spectra_median["R"]
-    fit_mask = (R_model >= R_min) & (R_model <= R_max)
+    # ── best-fit (median) ──────────────────────────────────────────────────────
+    R_model, y_med = _model_observable(spectra_median, panel)
+    fit_mask = (R_model >= panel.R_min) & (R_model <= panel.R_max)
     R_fit = R_model[fit_mask]
     ax.plot(
-        R_fit, R_fit**POWER * spectra_median[sym][fit_mask],
-        color=color, linewidth=2.2, zorder=4,
+        R_fit, R_fit**power * y_med[fit_mask],
+        color=panel.color, linewidth=2.2, zorder=4,
     )
 
-
-def _apply_style(ax, sp: dict) -> None:
+    # ── style ──────────────────────────────────────────────────────────────────
     ax.set_xscale("log")
-    ax.set_yscale("log")
     ax.set_xlabel(r"$R$ [GV]")
-    ax.set_ylabel(r"$R^{2.7} \times \Phi\ [\mathrm{GV^{1.7}\ m^{-2}\ s^{-1}\ sr^{-1}}]$")
+    ax.set_xlim(1.0, panel.R_max * 1.1)
+    if panel.is_ratio:
+        ax.set_ylabel(panel.label)
+    else:
+        ax.set_yscale("log")
+        ax.set_ylabel(r"$R^{2.7} \times \Phi\ [\mathrm{GV^{1.7}\ m^{-2}\ s^{-1}\ sr^{-1}}]$")
     ax.legend()
-    ax.set_xlim(8, sp["R_max"] * 1.1)
+    return fig
 
 
 def main(argv=None) -> None:
-    p = argparse.ArgumentParser(description="Plot MCMC best-fit vs AMS-02 H and He")
+    p = argparse.ArgumentParser(description="Plot MCMC best-fit vs AMS-02 fluxes and ratios")
     p.add_argument("chain_file",  help=".npz file from run_mcmc.py")
     p.add_argument("--nsamples",  type=int, default=100,
                    help="chain samples used for the posterior band (default: 100)")
     p.add_argument("--discard",   type=int, default=0,  help="discard first N samples")
     p.add_argument("--thin",      type=int, default=1,  help="thin chain by N")
     p.add_argument("--output",    default=None,
-                   help="output file (default: <chain_file>.pdf)")
+                   help="output prefix (default: <chain_file> stem); "
+                        "each panel is saved as <prefix>_<species>.pdf")
     p.add_argument("--build-dir", default=None, help="path to crams build/")
     p.add_argument("--seed",      type=int, default=0)
     args = p.parse_args(argv)
 
     chain_path = Path(args.chain_file)
-    output     = Path(args.output) if args.output else chain_path.with_suffix(".pdf")
+    prefix     = Path(args.output) if args.output else chain_path.with_suffix("")
+    prefix.parent.mkdir(parents=True, exist_ok=True)
     rng        = np.random.default_rng(args.seed)
 
     chain, param_names, acceptance = _load_chain(chain_path, args.discard, args.thin)
@@ -166,14 +225,12 @@ def main(argv=None) -> None:
         except Exception:
             pass
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 6.4))
-
-    for ax, sp in zip(axes, SPECIES):
-        _plot_species(ax, sp, spectra_median, spectra_samples)
-        _apply_style(ax, sp)
-
-    fig.savefig(output, bbox_inches="tight", dpi=150)
-    print(f"Saved: {output.resolve()}")
+    for panel in PANELS:
+        fig = _plot_panel(panel, spectra_median, spectra_samples)
+        out = prefix.parent / f"{prefix.name}_{panel.tag}.pdf"
+        fig.savefig(out, bbox_inches="tight", dpi=150)
+        plt.close(fig)
+        print(f"Saved: {out.resolve()}")
 
 
 if __name__ == "__main__":

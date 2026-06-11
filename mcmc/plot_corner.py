@@ -32,6 +32,7 @@ LABELS: dict[str, str] = {
     "xs":      r"$X_s$ [g/cm$^2$]",
 }
 
+FIG_DIR = Path("figs/")
 
 def load_chain(path: Path, thin: int = 1, discard: int = 0):
     d = np.load(path, allow_pickle=True)
@@ -69,8 +70,9 @@ def make_corner(chain, param_names, acceptance, output: Path) -> None:
         y=1.01,
     )
 
-    fig.savefig(output, bbox_inches="tight", dpi=150)
-    print(f"Saved: {output.resolve()}")
+    FIG_DIR.mkdir(exist_ok=True)
+    fig.savefig(FIG_DIR / output.name, bbox_inches="tight", dpi=150)
+    print(f"Saved: {(FIG_DIR / output.name).resolve()}")
 
     # Print medians and 1-sigma intervals
     print("\nPosterior summary (median ± 1σ):")
