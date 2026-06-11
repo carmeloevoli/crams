@@ -139,10 +139,10 @@ void test_setSimname_strips_ini() {
   CHECK(in.simname() == "params");
 }
 
-void test_setSimname_path_with_ini() {
+void test_setSimname_path_uses_basename() {
   CRAMS::Input in;
   in.setSimname("run/my_sim.ini");
-  CHECK(in.simname() == "run/my_sim");
+  CHECK(in.simname() == "my_sim");
 }
 
 void test_setSimname_wrong_extension_throws() {
@@ -247,7 +247,7 @@ int main() {
   test_setParam_unknown_key_ignored();
 
   test_setSimname_strips_ini();
-  test_setSimname_path_with_ini();
+  test_setSimname_path_uses_basename();
   test_setSimname_wrong_extension_throws();
   test_setSimname_no_extension_throws();
 

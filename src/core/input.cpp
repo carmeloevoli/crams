@@ -133,6 +133,10 @@ void Input::readParamsFromFile(const std::string& filename) {
 
 void Input::setSimname(const std::string& inifilename) {
   m_simname = inifilename;
+  // Drop any leading directory components so the output path
+  // (output/<simname>_...) stays valid no matter where the .ini lives.
+  const auto slash = m_simname.find_last_of("/\\");
+  if (slash != std::string::npos) m_simname.erase(0, slash + 1);
   eraseExtension(m_simname, ".ini");
 }
 
