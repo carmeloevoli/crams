@@ -68,8 +68,11 @@ double InXsecTripathi99::getXsecOnHtarget(const PID& projectile, const double& T
     const auto it = m_table.find(projectile);
     if (it == m_table.end())
       throw std::runtime_error("Tripathi1999 inelastic xsec not found for projectile " + projectile.toString());
-    const double T_now = std::min(std::max(T, m_T.front()), m_T.back());
-    sigma = Numeric::LinearInterpolator<double>(m_T, it->second, T_now);
+    if (T < m_T_min || T > m_T_max)
+      throw std::runtime_error("Tripathi1999 inelastic xsec requested at T = " + std::to_string(T / CGS::GeV) +
+                               " GeV, outside the tabulated range [" + std::to_string(m_T_min / CGS::GeV) + ", " +
+                               std::to_string(m_T_max / CGS::GeV) + "] GeV");
+    sigma = Numeric::LinearInterpolator<double>(m_T, it->second, T);
   }
   return std::max(sigma, 1e-10 * CGS::mbarn);
 }

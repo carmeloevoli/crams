@@ -1,4 +1,5 @@
 #include <cmath>
+#include <functional>
 #include <iostream>
 
 #include "crams/core/cgs.h"
@@ -118,20 +119,34 @@ void test_tripathi_Fe56_value_at_10GeV() {
   CHECK(sigma > 300. * CRAMS::CGS::mbarn && sigma < 1500. * CRAMS::CGS::mbarn);
 }
 
-void test_tripathi_high_energy_clamps_to_table_end() {
-  // T well above the table maximum (1e5 GeV/n) returns the last table value
-  CRAMS::InXsecTripathi99 xsec;
-  const double s_lo = xsec.getXsecOnHtarget(CRAMS::C12, 1e6 * CRAMS::CGS::GeV);
-  const double s_hi = xsec.getXsecOnHtarget(CRAMS::C12, 1e8 * CRAMS::CGS::GeV);
-  CHECK(approx(s_lo, s_hi, 1e-9));
+static bool throwsRuntimeError(const std::function<void()>& fn) {
+  try {
+    fn();
+  } catch (const std::runtime_error&) {
+    return true;
+  } catch (...) {
+    return false;
+  }
+  return false;
 }
 
-void test_tripathi_low_energy_clamps_to_table_start() {
-  // T below the table minimum (0.1 GeV/n) returns the first table value
+void test_tripathi_high_energy_throws_out_of_range() {
+  // T above the table maximum (1e5 GeV) is out of range and must throw
   CRAMS::InXsecTripathi99 xsec;
-  const double s_lo = xsec.getXsecOnHtarget(CRAMS::C12, 0.01 * CRAMS::CGS::GeV);
-  const double s_min = xsec.getXsecOnHtarget(CRAMS::C12, 0.1 * CRAMS::CGS::GeV);
-  CHECK(approx(s_lo, s_min, 1e-9));
+  CHECK(throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e6 * CRAMS::CGS::GeV); }));
+}
+
+void test_tripathi_low_energy_throws_out_of_range() {
+  // T below the table minimum (0.1 GeV) is out of range and must throw
+  CRAMS::InXsecTripathi99 xsec;
+  CHECK(throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 0.01 * CRAMS::CGS::GeV); }));
+}
+
+void test_tripathi_at_table_bounds_does_not_throw() {
+  // Exactly at m_T_min and m_T_max is in range and must succeed
+  CRAMS::InXsecTripathi99 xsec;
+  CHECK(!throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 0.1 * CRAMS::CGS::GeV); }));
+  CHECK(!throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e5 * CRAMS::CGS::GeV); }));
 }
 
 // --- InelasticXsec::getXsecOnISM ---
@@ -168,8 +183,9 @@ int main() {
   test_tripathi_He4_value_at_10GeV();
   test_tripathi_C12_value_at_10GeV();
   test_tripathi_Fe56_value_at_10GeV();
-  test_tripathi_high_energy_clamps_to_table_end();
-  test_tripathi_low_energy_clamps_to_table_start();
+  test_tripathi_high_energy_throws_out_of_range();
+  test_tripathi_low_energy_throws_out_of_range();
+  test_tripathi_at_table_bounds_does_not_throw();
   test_tripathi_ISM_xsec_exact_factor();
   test_tripathi_ISM_greater_than_H_target();
 
