@@ -6,6 +6,7 @@
 #include <type_traits>
 
 #include "crams/core/input.h"
+#include "crams/fragmentation.h"
 #include "crams/inelastic.h"
 #include "crams/particle.h"
 #include "crams/particlelist.h"
@@ -80,6 +81,7 @@ void test_crank_nicolson_solver_computes_primary_flux() {
   const CRAMS::NucleusParameters protonParams{1., 4.2, 1., -1., true, true};
   CRAMS::Particle particle(CRAMS::H1, protonParams);
   CRAMS::InXsecTripathi99 inelasticXsecs;
+  CRAMS::NucFragFluka4Dragon nucfragXsecs;
   const CRAMS::Particles noParents;
 
   particle.buildVectors(input);
@@ -87,7 +89,7 @@ void test_crank_nicolson_solver_computes_primary_flux() {
   particle.buildLosses(input);
   particle.buildPrimarySource(input);
   particle.buildInelasticXsecs(inelasticXsecs);
-  particle.buildSecondarySource(input, noParents);
+  particle.buildSecondarySource(input, noParents, nucfragXsecs);
   particle.computeIntensity(input);
 
   const auto& intensity = particle.getIntensityVector();
@@ -108,13 +110,14 @@ void test_compute_intensity_without_secondary_or_inelastic_sources() {
 
   const CRAMS::NucleusParameters protonParams{1., 4.2, 1., -1., true, true};
   CRAMS::Particle particle(CRAMS::H1, protonParams);
+  CRAMS::NucFragFluka4Dragon nucfragXsecs;
   const CRAMS::Particles noParents;
 
   particle.buildVectors(input);
   particle.buildGrammage(input);
   particle.buildLosses(input);
   particle.buildPrimarySource(input);
-  particle.buildSecondarySource(input, noParents);
+  particle.buildSecondarySource(input, noParents, nucfragXsecs);
   particle.reset();
 
   particle.buildVectors(input);

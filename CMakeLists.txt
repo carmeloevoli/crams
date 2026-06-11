@@ -27,11 +27,11 @@ set(git_revision_cpp "${CMAKE_CURRENT_BINARY_DIR}/git_revision.cpp")
 configure_file("src/utils/git_revision.cpp.in" "${git_revision_cpp}" @ONLY)
 
 set( CRAMS_SRCS
-     src/xsecs/Evoli2019.cpp
      src/utils/csvreader.cpp
      src/utils/utilities.cpp
      src/physics/grammage.cpp
      src/inelastic.cpp
+     src/fragmentation.cpp
      src/core/input.cpp
      src/physics/losses.cpp
      src/core/output.cpp

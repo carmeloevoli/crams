@@ -13,6 +13,7 @@
 
 #include "crams/core/cgs.h"
 #include "crams/core/input.h"
+#include "crams/fragmentation.h"
 #include "crams/inelastic.h"
 #include "crams/particlelist.h"
 #include "crams/physics/grammage.h"
@@ -21,7 +22,6 @@
 #include "crams/secondary.h"
 #include "crams/utils/numeric.h"
 #include "crams/utils/utilities.h"
-#include "crams/xsecs/Evoli2019.h"
 
 namespace CRAMS {
 namespace {
@@ -134,9 +134,9 @@ double Particle::productionProfileFromUnstable(const Input& input, double T, dou
   return value * profile;
 }
 
-void Particle::buildSecondarySource(const Input& input, const std::vector<Particle>& particles) {
+void Particle::buildSecondarySource(const Input& input, const std::vector<Particle>& particles,
+                                    const NucFragXsec& nucfrag) {
   m_doSecondary = input.doSecondary();
-  const auto xsecs = SpallationXsecs(m_pid, input.id() != 0);
   const auto T_s = makeSourceEnergyGrid();
   std::vector<double> Q_s;
   Q_s.reserve(T_s.size());
@@ -146,7 +146,7 @@ void Particle::buildSecondarySource(const Input& input, const std::vector<Partic
     for (const auto& particle : particles) {
       const auto& parentPid = particle.getPid();
       if (parentPid.getA() <= m_pid.getA() || !particle.isDone()) continue;
-      value += xsecs.getXsecOnISM(parentPid, T) * particle.I_T_interpol(T);
+      value += nucfrag.getXsecOnISM(parentPid, m_pid, T) * particle.I_T_interpol(T);
     }
     Q_s.push_back(value / CGS::meanISMmass);
   }
@@ -187,9 +187,9 @@ void Particle::buildTertiarySource(const std::vector<Particle>& particles) {
   m_Q_ter = std::make_unique<SecondarySource>(m_pid, T_t, Q_t);
 }
 
-void Particle::buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles) {
+void Particle::buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles,
+                                     const NucFragXsec& nucfrag) {
   m_doGrammageAtSource = true;
-  const auto xsecs = SpallationXsecs(m_pid, input.id() != 0);
   const auto T_X = makeSourceEnergyGrid();
   std::vector<double> Q_X(T_X.size(), 0.);
 
@@ -200,7 +200,7 @@ void Particle::buildGrammageAtSource(const Input& input, const std::vector<Parti
     const auto Q_p = PrimarySource(parentPid, particle.getAbundance(), particle.getSlope(), input.mu());
     for (size_t i = 0; i < T_X.size(); ++i) {
       const double T = T_X[i];
-      const double r = input.X_s() / CGS::meanISMmass * xsecs.getXsecOnISM(parentPid, T);
+      const double r = input.X_s() / CGS::meanISMmass * nucfrag.getXsecOnISM(parentPid, m_pid, T);
       Q_X[i] += r * Q_p.get(T);
     }
   }

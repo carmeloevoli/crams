@@ -13,6 +13,7 @@ class Grammage;
 class InelasticXsec;
 class Input;
 class Losses;
+class NucFragXsec;
 class PrimarySource;
 class SecondarySource;
 struct NucleusParameters;
@@ -45,8 +46,8 @@ class Particle {
   void buildPrimarySource(const Input& input);
   void buildLosses(const Input& input);
   void buildInelasticXsecs(const InelasticXsec& sigmaIn);
-  void buildSecondarySource(const Input& input, const std::vector<Particle>& particles);
-  void buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles);
+  void buildSecondarySource(const Input& input, const std::vector<Particle>& particles, const NucFragXsec& nucfrag);
+  void buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles, const NucFragXsec& nucfrag);
   void buildTertiarySource(const std::vector<Particle>& particles);
   void reset();
   void computeIntensity(const Input& input);

@@ -1,9 +1,11 @@
 #include <iostream>
+#include <memory>
 #include <vector>
 
 #include "crams/core/cgs.h"
 #include "crams/core/input.h"
 #include "crams/core/output.h"
+#include "crams/fragmentation.h"
 #include "crams/inelastic.h"
 #include "crams/particle.h"
 #include "crams/particlelist.h"
@@ -50,17 +52,28 @@ int main(int argc, char* argv[]) {
       particles.emplace_back(pid, nucleusParams);
     }
 
-    CRAMS::InXsecTripathi99 inelasticXsecs;
+    std::unique_ptr<CRAMS::InelasticXsec> inelasticXsecs;
+    switch (input.inelasticModel()) {
+      case CRAMS::InelasticModel::Glauber:
+        inelasticXsecs = std::make_unique<CRAMS::InXsecGlauber>();
+        break;
+      case CRAMS::InelasticModel::Tripathi99:
+        inelasticXsecs = std::make_unique<CRAMS::InXsecTripathi99>();
+        break;
+    }
+
+    std::unique_ptr<CRAMS::NucFragXsec> nucfragXsecs = std::make_unique<CRAMS::NucFragFluka4Dragon>();
+
     for (auto& particle : particles) {
       LOGI << "running : " << particle.getPid();
       particle.buildVectors(input);
       particle.buildGrammage(input);
       particle.buildLosses(input);
       particle.buildPrimarySource(input);
-      particle.buildInelasticXsecs(inelasticXsecs);
-      //  particle.buildSecondarySource(input, particles);
+      particle.buildInelasticXsecs(*inelasticXsecs);
+      particle.buildSecondarySource(input, particles, *nucfragXsecs);
       //  if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(particles);
-      //  if (input.X_s() > 0.) particle.buildGrammageAtSource(input, particles);
+      //  if (input.X_s() > 0.) particle.buildGrammageAtSource(input, particles, *nucfragXsecs);
       particle.dump();
       particle.computeIntensity(input);
       particle.reset();
