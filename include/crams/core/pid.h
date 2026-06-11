@@ -29,8 +29,8 @@ class PID {
   constexpr bool operator==(const PID& other) const { return m_id == other.m_id && m_isTertiary == other.m_isTertiary; }
   constexpr bool operator!=(const PID& other) const { return !(*this == other); }
 
-  // Special ordering: unstable isotopes (Be10, C14, Cl36, Mn54) come after
-  // their stable counterparts so they are computed last in the propagation loop.
+  // Special ordering: same-A radioactive parents come after their decay products
+  // so they are computed first in the reversed propagation loop.
   bool operator<(const PID& other) const {
     if (m_id == 10005 && other.m_id == 10004) return true;
     if (m_id == 10004 && other.m_id == 10005) return false;
@@ -40,6 +40,8 @@ class PID {
     if (m_id == 54025 && other.m_id == 54026) return false;
     if (m_id == 36018 && other.m_id == 36017) return true;
     if (m_id == 36017 && other.m_id == 36018) return false;
+    if (m_id == 60028 && other.m_id == 60026) return true;
+    if (m_id == 60026 && other.m_id == 60028) return false;
     if (m_id != other.m_id) return m_id < other.m_id;
     return m_isTertiary;
   }

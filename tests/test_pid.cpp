@@ -119,22 +119,23 @@ void test_ordering() {
   check(H1_ter < H1, "H1_ter < H1 (tertiary processed later)");
   check(!(H1 < H1_ter), "!(H1 < H1_ter)");
 
-  // Special cases: unstable isotope sorts after stable counterpart
-  // Be10 (unstable) must be processed after Be9 (stable)
-  check(!(Be10 < Be9), "Be10 not less than Be9 (processed after)");
-  check(Be9 < Be10, "Be9 < Be10");
+  // Special cases: same-A radioactive parents sort after their decay products,
+  // so parents are processed first in the reversed propagation loop.
+  check(!(Be10 < B10), "Be10 not less than B10");
+  check(B10 < Be10, "B10 < Be10");
 
-  // C14 (unstable) after C13 (stable)
-  check(!(C14 < C13), "C14 not less than C13");
-  check(C13 < C14, "C13 < C14");
+  check(!(C14 < N14), "C14 not less than N14");
+  check(N14 < C14, "N14 < C14");
 
-  // Cl36 (unstable) after Cl35 (stable)
-  check(!(Cl36 < Cl35), "Cl36 not less than Cl35");
-  check(Cl35 < Cl36, "Cl35 < Cl36");
+  check(!(Cl36 < Ar36), "Cl36 not less than Ar36");
+  check(Ar36 < Cl36, "Ar36 < Cl36");
 
-  // Mn54 (unstable) after Mn53 (stable)
-  check(!(Mn54 < Mn53), "Mn54 not less than Mn53");
-  check(Mn53 < Mn54, "Mn53 < Mn54");
+  check(!(Mn54 < Fe54), "Mn54 not less than Fe54");
+  check(Fe54 < Mn54, "Fe54 < Mn54");
+
+  // Fe60 (unstable) before Ni60 in the propagation loop
+  check(!(Fe60 < Ni60), "Fe60 not less than Ni60");
+  check(Ni60 < Fe60, "Ni60 < Fe60");
 
   // Verify PID works correctly as a std::map key
   std::map<PID, int> m;

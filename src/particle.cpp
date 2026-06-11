@@ -38,6 +38,7 @@ struct DecayContribution {
 
 const DecayContribution kDecayContributions[] = {
     {B10, Be10}, {N14, C14}, {Mg26, Al26}, {Ar36, Cl36}, {Fe54, Mn54},
+    {Ni60, Fe60},
 };
 
 double coth(double x) { return 1. / std::tanh(x); }

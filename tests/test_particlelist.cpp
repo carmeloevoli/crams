@@ -60,6 +60,7 @@ void test_default_list_and_injection_parameters() {
   CHECK(list.find(CRAMS::H1) != list.end());
   CHECK(list.find(CRAMS::He4) != list.end());
   CHECK(list.find(CRAMS::C12) != list.end());
+  CHECK(list.find(CRAMS::C14) != list.end());
 
   CHECK(approx(list.at(CRAMS::H1).abundance, 5.06605e-02 * 0.9999806));
   CHECK(approx(list.at(CRAMS::H2).abundance, 5.06605e-02 * 0.0000194));

@@ -42,6 +42,22 @@ X0 = np.array([p.value for p in ACTIVE])
 BIG = 1e12  # penalty returned for failed / out-of-bounds evaluations
 
 
+def _read_ini_values(path: Path) -> dict[str, float]:
+    """Read numeric 'key value' lines from a crams .ini (skips comments/strings)."""
+    vals: dict[str, float] = {}
+    for line in Path(path).read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) >= 2:
+            try:
+                vals[parts[0]] = float(parts[1])
+            except ValueError:
+                continue
+    return vals
+
+
 def make_chi2(runner: CramsRunner, cache: dict, bounded: bool = True):
     """Return f(theta) -> total chi^2.
 
@@ -99,18 +115,18 @@ def _nelder_mead(f, x0, step, maxfev=500, tol=1e-4):
     return sim[order][0], float(fval[order][0]), nfev, None
 
 
-def _fit_nelder_mead(f, maxfev, rng, bounded=True):
+def _fit_nelder_mead(f, x0, maxfev, rng, bounded=True):
     step = 0.05 * (HI - LO)
-    return _nelder_mead(f, X0.copy(), step, maxfev=maxfev)
+    return _nelder_mead(f, np.array(x0, float), step, maxfev=maxfev)
 
 
-def _fit_iminuit(f, maxfev, rng, bounded=True):
+def _fit_iminuit(f, x0, maxfev, rng, bounded=True):
     try:
         from iminuit import Minuit
     except ImportError:
         sys.exit("iminuit not installed.  pip install iminuit  (or use --method nelder-mead)")
 
-    m = Minuit(lambda *a: f(np.array(a)), *X0, name=NAMES)
+    m = Minuit(lambda *a: f(np.array(a)), *x0, name=NAMES)
     m.errordef = 1.0  # objective is a chi^2
     if bounded:
         for name, lo, hi in zip(NAMES, LO, HI):
@@ -120,14 +136,14 @@ def _fit_iminuit(f, maxfev, rng, bounded=True):
     return np.array(m.values), float(m.fval), int(m.nfcn), errors
 
 
-def _fit_scipy(f, maxfev, rng, bounded=True, scipy_method="Powell"):
+def _fit_scipy(f, x0, maxfev, rng, bounded=True, scipy_method="Powell"):
     try:
         from scipy.optimize import minimize
     except ImportError:
         sys.exit("scipy not installed.  pip install scipy  (or use --method nelder-mead)")
 
     res = minimize(
-        f, X0, method=scipy_method,
+        f, x0, method=scipy_method,
         bounds=list(zip(LO, HI)) if bounded else None,
         options={"maxfev": maxfev} if scipy_method in ("Powell", "Nelder-Mead") else {"maxiter": maxfev},
     )
@@ -189,6 +205,8 @@ def main(argv=None) -> None:
     p.add_argument("--maxfev", type=int, default=600, help="max crams evaluations (default: 600)")
     p.add_argument("--unbounded", action="store_true",
                    help="do not restrict to the run_mcmc prior ranges (find the unconstrained best-fit)")
+    p.add_argument("--start", default=None,
+                   help="crams .ini whose active values are used as the starting point (e.g. bestfit.ini)")
     p.add_argument("--output", default="bestfit.ini", help="best-fit crams .ini (default: bestfit.ini)")
     p.add_argument("--build-dir", default=None, help="path to crams build/")
     p.add_argument("--seed", type=int, default=0)
@@ -197,19 +215,24 @@ def main(argv=None) -> None:
     if not ACTIVE:
         sys.exit("No active parameters to fit.")
 
+    x0 = X0.copy()
+    if args.start:
+        start = _read_ini_values(Path(args.start))
+        x0 = np.array([start.get(name, x0[i]) for i, name in enumerate(NAMES)], float)
+
     rng = np.random.default_rng(args.seed)
     runner = CramsRunner(build_dir=args.build_dir)
     cache: dict = {}
     bounded = not args.unbounded
     chi2_fn = make_chi2(runner, cache, bounded=bounded)
 
-    chi2_start = chi2_fn(X0)
+    chi2_start = chi2_fn(x0)
     print(f"Active parameters ({len(ACTIVE)}): {NAMES}")
     print(f"Datasets ({len(DATASETS)}): {[d.numerator + ('/' + d.denominator if d.denominator else '') for d in DATASETS]}")
     print(f"Method: {args.method}   maxfev: {args.maxfev}   bounds: {'priors' if bounded else 'NONE (unbounded)'}")
-    print(f"Starting chi^2 = {chi2_start:.1f}")
+    print(f"Start: {args.start or 'run_mcmc defaults'}   chi^2 = {chi2_start:.1f}")
 
-    theta, chi2, nfev, errors = OPTIMISERS[args.method](chi2_fn, args.maxfev, rng, bounded=bounded)
+    theta, chi2, nfev, errors = OPTIMISERS[args.method](chi2_fn, x0, args.maxfev, rng, bounded=bounded)
     if bounded:
         # the simplex/optimiser may report a coordinate just outside the limits;
         # report the value that was actually evaluated (clipped into the priors).
