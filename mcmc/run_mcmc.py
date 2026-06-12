@@ -64,27 +64,28 @@ from fitting import (
 #   rb                – diffusion break rigidity [GV]
 #   h                 – halo half-height [kpc]
 PARAMETERS: list[Parameter] = [
-    # --- free parameters ---
-    Parameter("qh",      5.07e-2,    1e-2,  2e-1,  active=True),   # H injection abundance
-    Parameter("qhe",     2.54e-2,    5e-3,  1e-1,  active=True),   # He injection abundance
-    Parameter("qc",      3.98879e-3, 1e-3,  2e-2,  active=True),   # C injection abundance
-    Parameter("qn",      3.98879e-3, 1e-3,  2e-2,  active=True),   # N injection abundance
-    Parameter("qo",      7.15129e-3, 1e-3,  3e-2,  active=True),   # O injection abundance
-    Parameter("qne",     1.34031e-3, 3e-4,  5e-3,  active=True),   # Ne injection abundance
-    Parameter("qmg",     2.38948e-3, 5e-4,  8e-3,  active=True),   # Mg injection abundance
-    Parameter("qsi",     2.77911e-3, 5e-4,  8e-3,  active=True),   # Si injection abundance
-    Parameter("qfe",     7.15129e-3, 1e-3,  3e-2,  active=True),   # Fe injection abundance
-    Parameter("hslope",  4.37,       4.0,   4.8,   active=True),   # H spectral index
-    Parameter("heslope", 4.31,       4.0,   4.8,   active=True),   # He spectral index
-    Parameter("slope",   4.33,       4.0,   4.8,   active=True),   # nuclei common spectral index
-    Parameter("phi",     0.488,      0.1,   1.0,   active=True),   # solar modulation [GV]
-    Parameter("rb",      290.0,      100.,  600.,  active=True),   # diffusion break rigidity [GV]
+    # --- free parameters (initial values = best-fit point) ---
+    Parameter("qh",      4.111e-2,   1e-2,  2e-1,  active=True),   # H injection abundance
+    Parameter("qhe",     2.025e-2,   5e-3,  1e-1,  active=True),   # He injection abundance
+    Parameter("qc",      4.004e-3,   1e-3,  2e-2,  active=True),   # C injection abundance
+    Parameter("qn",      3.872e-4,   1e-4,  2e-3,  active=True),   # N injection abundance
+    Parameter("qo",      7.213e-3,   1e-3,  3e-2,  active=True),   # O injection abundance
+    Parameter("qne",     1.351e-3,   3e-4,  5e-3,  active=True),   # Ne injection abundance
+    Parameter("qmg",     2.372e-3,   5e-4,  8e-3,  active=True),   # Mg injection abundance
+    Parameter("qsi",     2.923e-3,   5e-4,  8e-3,  active=True),   # Si injection abundance
+    Parameter("qs",      5.154e-4,   1e-4,  4e-3,  active=True),   # S injection abundance
+    Parameter("qfe",     7.407e-3,   1e-3,  3e-2,  active=True),   # Fe injection abundance
+    Parameter("hslope",  4.3685,     4.0,   4.8,   active=True),   # H spectral index
+    Parameter("heslope", 4.2955,     4.0,   4.8,   active=True),   # He spectral index
+    Parameter("slope",   4.3587,     4.0,   4.8,   active=True),   # nuclei common spectral index
+    Parameter("phi",     0.4431,     0.1,   1.0,   active=True),   # solar modulation [GV]
     # --- diffusion parameters (constrained by B/C) ---
-    Parameter("d0",      2.48,    0.5,   6.0,   active=True),    # diffusion coefficient [1e28 cm²/s]
-    Parameter("delta",   0.565,   0.3,   0.8,   active=True),    # diffusion spectral index
-    Parameter("ddelta",  0.22,    0.0,   0.5,   active=True),    # low-rigidity diffusion break amplitude
+    Parameter("d0",      2.376,   0.5,   6.0,   active=True),    # diffusion coefficient [1e28 cm²/s]
+    Parameter("delta",   0.5391,  0.3,   0.8,   active=True),    # diffusion spectral index
+    Parameter("ddelta",  0.2662,  0.0,   0.5,   active=True),    # low-rigidity diffusion break amplitude
+    Parameter("rb",      316.9,      100.,  600.,  active=True),   # diffusion break rigidity [GV]
+    Parameter("va",      3.396,   1.0,   15.0,  active=True),    # Alfvén speed [km/s]
     # --- fixed propagation parameters ---
-    Parameter("va",      4.41,    1.0,   15.0,  active=False),
     Parameter("h",       7.0,     1.0,   15.0,  active=False),
 ]
 
@@ -95,27 +96,28 @@ PARAMETERS: list[Parameter] = [
 # R_min/R_max : rigidity range [GV] included in the chi²
 # weight      : relative weight of this dataset in the total chi²
 DATASETS: list[Dataset] = [
-    Dataset("AMS-02_H_rigidity.txt",  "H",  "", R_min=10.0, R_max=1500.0, weight=1.0),
-    Dataset("AMS-02_He_rigidity.txt", "He", "", R_min=10.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_H_He_rigidity.txt", "H", "He", R_min=10.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_C_rigidity.txt",  "C",  "", R_min=10.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_O_rigidity.txt",  "O",  "", R_min=10.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_B_C_rigidity.txt", "B", "C", R_min=10.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_B_O_rigidity.txt", "B", "O", R_min=10.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_C_O_rigidity.txt", "C", "O", R_min=10.0, R_max=2500.0, weight=1.0),
-    # N and the heavier primaries: only above 50 GV and down-weighted — slightly
+    Dataset("AMS-02_H_rigidity.txt",  "H",  "", R_min=5.0, R_max=1500.0, weight=1.0),
+    Dataset("AMS-02_He_rigidity.txt", "He", "", R_min=5.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_H_He_rigidity.txt", "H", "He", R_min=5.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_C_rigidity.txt",  "C",  "", R_min=5.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_O_rigidity.txt",  "O",  "", R_min=5.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_B_C_rigidity.txt", "B", "C", R_min=5.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_B_O_rigidity.txt", "B", "O", R_min=5.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_C_O_rigidity.txt", "C", "O", R_min=5.0, R_max=2500.0, weight=1.0),
+    # N and the heavier primaries: only above 40 GV and down-weighted — slightly
     # less relevant, and their small error bars would otherwise dominate the fit.
-    Dataset("AMS-02_N_rigidity.txt", "N", "", R_min=50.0, R_max=2500.0, weight=0.2),
-    Dataset("AMS-02_Ne_rigidity.txt", "Ne", "", R_min=50.0, R_max=2500.0, weight=0.2),
-    Dataset("AMS-02_Mg_rigidity.txt", "Mg", "", R_min=50.0, R_max=2500.0, weight=0.2),
-    Dataset("AMS-02_Si_rigidity.txt", "Si", "", R_min=50.0, R_max=2500.0, weight=0.2),
-    Dataset("AMS-02_Fe_rigidity.txt", "Fe", "", R_min=50.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_N_rigidity.txt", "N", "", R_min=40.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_Ne_rigidity.txt", "Ne", "", R_min=40.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_Mg_rigidity.txt", "Mg", "", R_min=40.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_Si_rigidity.txt", "Si", "", R_min=40.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_S_rigidity.txt", "S", "", R_min=40.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_Fe_rigidity.txt", "Fe", "", R_min=40.0, R_max=2500.0, weight=0.2),
 ]
 
 # ── MCMC defaults ──────────────────────────────────────────────────────────────
-N_WALKERS = 64
-N_BURN    = 200
-N_STEPS   = 1000
+N_WALKERS = 96     # ~5x ndim; pilot acceptance ~0.32
+N_BURN    = 300    # ~3.5x tau (tau_max ~56 from pilot); walkers start at the best-fit
+N_STEPS   = 4000   # ~53x tau -> ~5000 independent samples
 
 
 def _parse_args(argv=None):
@@ -197,7 +199,17 @@ def main(argv=None) -> None:
     flat_chain = sampler.get_chain(flat=True)
     log_probs  = sampler.get_log_prob(flat=True)
     acceptance = float(np.mean(sampler.acceptance_fraction))
-    print(f"\nMean acceptance fraction: {acceptance:.3f}")
+    print(f"\nMean acceptance fraction: {acceptance:.3f}  (healthy: ~0.2–0.5)")
+
+    # Autocorrelation time: production should be >> tau (rule of thumb: N_STEPS >= 50*tau)
+    try:
+        tau = sampler.get_autocorr_time(quiet=True)
+        tau_max = float(np.nanmax(tau))
+        print(f"Autocorrelation time: mean τ = {np.nanmean(tau):.1f}, max τ = {tau_max:.1f} steps")
+        print(f"  N_STEPS / max τ = {args.nsteps / tau_max:.0f}  (aim ≳ 50);  "
+              f"suggested burn ≈ {2 * tau_max:.0f}, steps ≈ {50 * tau_max:.0f}")
+    except Exception as exc:  # chain too short to estimate reliably
+        print(f"Autocorrelation time: unavailable ({exc})")
 
     param_names = [p.name for p in active]
     _print_summary(flat_chain, param_names)
