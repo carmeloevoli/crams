@@ -19,6 +19,11 @@ class NucFragXsec {
   // Cross-section for projectile -> fragment on the ISM (H + He), at kinetic
   // energy per nucleon T. Returns 0 if the channel is absent from the model.
   double getXsecOnISM(const PID& projectile, const PID& fragment, const double& T) const;
+  // Vectorised form: out[i] = getXsecOnISM(projectile, fragment, T[i]) with a
+  // single channel lookup. The default loops the scalar version; tabulated
+  // models override it for speed.
+  virtual void getXsecOnISM(const PID& projectile, const PID& fragment, const std::vector<double>& T,
+                            std::vector<double>& out) const;
   virtual double getXsecOnHtarget(const PID& projectile, const PID& fragment, const double& T) const = 0;
 };
 
@@ -27,7 +32,10 @@ class NucFragXsec {
 // share all the table machinery here and just supply those via the constructor.
 class NucFragFromTable : public NucFragXsec {
  public:
+  using NucFragXsec::getXsecOnISM;  // keep the scalar overload visible
   double getXsecOnHtarget(const PID& projectile, const PID& fragment, const double& T) const override;
+  void getXsecOnISM(const PID& projectile, const PID& fragment, const std::vector<double>& T,
+                    std::vector<double>& out) const override;
 
  protected:
   NucFragFromTable(std::string modelName, std::string tableFilename, double T_min, double T_max, size_t T_size);

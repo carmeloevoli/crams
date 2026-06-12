@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
       if (!particle.getPid().isTertiary()) particle.buildSecondarySource(input, particles, *nucfragXsecs);
       if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(particles);
       //  if (input.X_s() > 0.) particle.buildGrammageAtSource(input, particles, *nucfragXsecs);
-      particle.dump();
+      if (!quiet) particle.dump();
       particle.computeIntensity(input);
       particle.reset();
     }

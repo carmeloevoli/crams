@@ -55,6 +55,9 @@ class Particle {
   void computeFluxAtEnergyCrankNicolson();
   void computeFluxAtEnergyExponential();
   double I_T_interpol(double T) const;
+  // Flux interpolated on the (fixed) secondary-source energy grid, cached so it
+  // is not recomputed for every fragment that uses this particle as a parent.
+  const std::vector<double>& fluxOnSourceGrid() const;
   double I_T_TOA(double T, double modulationPotential) const;
   double I_R_TOA(double R, double modulationPotential) const;
 
@@ -80,6 +83,7 @@ class Particle {
   double m_decayTime = -1;
   std::vector<double> m_T;
   std::vector<double> m_I_T;
+  mutable std::vector<double> m_fluxOnSourceGrid;  // lazily-filled cache (see fluxOnSourceGrid)
   std::unique_ptr<Grammage> m_X;
   std::unique_ptr<PrimarySource> m_Q_p;
   std::unique_ptr<SecondarySource> m_Q_sec;

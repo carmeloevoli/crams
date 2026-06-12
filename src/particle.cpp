@@ -38,8 +38,7 @@ struct DecayContribution {
 };
 
 const DecayContribution kDecayContributions[] = {
-    {B10, Be10}, {N14, C14}, {Mg26, Al26}, {Ar36, Cl36}, {Fe54, Mn54},
-    {Ni60, Fe60},
+    {B10, Be10}, {N14, C14}, {Mg26, Al26}, {Ar36, Cl36}, {Fe54, Mn54}, {Ni60, Fe60},
 };
 
 double coth(double x) { return 1. / std::tanh(x); }
@@ -139,30 +138,42 @@ double Particle::productionProfileFromUnstable(const Input& input, double T, dou
   return value * profile;
 }
 
+const std::vector<double>& Particle::fluxOnSourceGrid() const {
+  if (m_fluxOnSourceGrid.empty()) {
+    const auto T_s = makeSourceEnergyGrid();
+    m_fluxOnSourceGrid.reserve(T_s.size());
+    for (const auto T : T_s) m_fluxOnSourceGrid.push_back(I_T_interpol(T));
+  }
+  return m_fluxOnSourceGrid;
+}
+
 void Particle::buildSecondarySource(const Input& input, const std::vector<Particle>& particles,
                                     const NucFragXsec& nucfrag) {
   m_doSecondary = input.doSecondary();
   const auto T_s = makeSourceEnergyGrid();
-  std::vector<double> Q_s;
-  Q_s.reserve(T_s.size());
+  std::vector<double> Q_s(T_s.size(), 0.);
+  std::vector<double> sigma;  // reused per-channel buffer
 
-  for (const auto T : T_s) {
-    double value = 0.;
-    for (const auto& particle : particles) {
-      const auto& parentPid = particle.getPid();
-      if (parentPid.getA() <= m_pid.getA() || !particle.isDone()) continue;
-      value += nucfrag.getXsecOnISM(parentPid, m_pid, T) * particle.I_T_interpol(T);
-    }
-    Q_s.push_back(value / CGS::meanISMmass);
+  // Sum spallation of every heavier, already-solved parent. Loop parents on the
+  // outside so each channel is looked up once and each parent flux is read from
+  // its cache; the per-T_s accumulation order is unchanged.
+  for (const auto& particle : particles) {
+    const auto& parentPid = particle.getPid();
+    if (parentPid.getA() <= m_pid.getA() || !particle.isDone()) continue;
+    nucfrag.getXsecOnISM(parentPid, m_pid, T_s, sigma);
+    const auto& parentFlux = particle.fluxOnSourceGrid();
+    for (size_t i = 0; i < T_s.size(); ++i) Q_s[i] += sigma[i] * parentFlux[i];
   }
+  for (auto& q : Q_s) q /= CGS::meanISMmass;
 
   for (const auto& contribution : kDecayContributions) {
     if (m_pid != contribution.child) continue;
 
     const auto& parent = findParticleOrThrow(particles, contribution.parent);
     const double parentDecayTime = parent.getDecayTime();
+    const auto& parentFlux = parent.fluxOnSourceGrid();
     for (size_t i = 0; i < T_s.size(); ++i) {
-      Q_s[i] += productionProfileFromUnstable(input, T_s[i], parentDecayTime) * parent.I_T_interpol(T_s[i]);
+      Q_s[i] += productionProfileFromUnstable(input, T_s[i], parentDecayTime) * parentFlux[i];
     }
     break;
   }

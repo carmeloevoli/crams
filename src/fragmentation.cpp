@@ -45,6 +45,12 @@ double NucFragXsec::getXsecOnISM(const PID& projectile, const PID& fragment, con
   return sigma_H * (1. + CGS::K_He * CGS::f_He) / (1. + CGS::f_He);
 }
 
+void NucFragXsec::getXsecOnISM(const PID& projectile, const PID& fragment, const std::vector<double>& T,
+                               std::vector<double>& out) const {
+  out.resize(T.size());
+  for (size_t i = 0; i < T.size(); ++i) out[i] = getXsecOnISM(projectile, fragment, T[i]);
+}
+
 NucFragFromTable::NucFragFromTable(std::string modelName, std::string tableFilename, double T_min, double T_max,
                                    size_t T_size)
     : m_modelName(std::move(modelName)),
@@ -81,6 +87,26 @@ double NucFragFromTable::getXsecOnHtarget(const PID& projectile, const PID& frag
   // Clamp into the tabulated grid so a boundary point does not trip the interpolator.
   const double T_clamped = std::min(std::max(T, m_T.front()), m_T.back());
   return Numeric::LinearInterpolator<double>(m_T, it->second, T_clamped);
+}
+
+void NucFragFromTable::getXsecOnISM(const PID& projectile, const PID& fragment, const std::vector<double>& T,
+                                    std::vector<double>& out) const {
+  // One channel lookup, then interpolate on the whole T grid (same result as the
+  // scalar getXsecOnISM called per point, but without the repeated map find).
+  out.assign(T.size(), 0.);
+  const auto it = m_table.find({projectile, fragment});
+  if (it == m_table.end()) return;  // channel absent -> all zero
+
+  const double ismFactor = (1. + CGS::K_He * CGS::f_He) / (1. + CGS::f_He);
+  constexpr double edgeTol = 1e-6;
+  for (size_t i = 0; i < T.size(); ++i) {
+    if (T[i] < m_T_min * (1. - edgeTol) || T[i] > m_T_max * (1. + edgeTol))
+      throw std::runtime_error(m_modelName + " fragmentation xsec requested at T = " + std::to_string(T[i] / CGS::GeV) +
+                               " GeV, outside the tabulated range [" + std::to_string(m_T_min / CGS::GeV) + ", " +
+                               std::to_string(m_T_max / CGS::GeV) + "] GeV");
+    const double T_clamped = std::min(std::max(T[i], m_T.front()), m_T.back());
+    out[i] = ismFactor * Numeric::LinearInterpolator<double>(m_T, it->second, T_clamped);
+  }
 }
 
 void NucFragFromTable::loadXsecTable() {
