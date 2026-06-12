@@ -3,11 +3,10 @@
 #include <plog/Log.h>
 
 #include <algorithm>
-#include <fstream>
-#include <sstream>
 #include <stdexcept>
 #include <utility>
 
+#include "crams/utils/csvreader.h"
 #include "crams/utils/numeric.h"
 #include "crams/utils/utilities.h"
 
@@ -15,6 +14,32 @@ namespace CRAMS {
 
 using Utilities::pow2;
 using Utilities::pow3;
+
+namespace {
+
+// Checks that the table's first-row energy grid (in GeV, after *idColumns* label
+// cells) matches the grid the reader built from T_min/T_max/T_size.
+void validateEnergyGrid(const std::string& modelName, const std::vector<std::string>& header, size_t idColumns,
+                        const std::vector<double>& grid) {
+  if (header.size() != idColumns + grid.size())
+    throw std::runtime_error(modelName + ": energy grid header has " + std::to_string(header.size()) +
+                             " columns, expected " + std::to_string(idColumns + grid.size()));
+  constexpr double tol = 1e-4;
+  for (size_t i = 0; i < grid.size(); ++i) {
+    double fileT;
+    try {
+      fileT = std::stod(header[idColumns + i]);
+    } catch (const std::exception&) {
+      throw std::runtime_error(modelName + ": non-numeric energy grid value '" + header[idColumns + i] + "'");
+    }
+    const double codeT = grid[i] / CGS::GeV;
+    if (std::abs(fileT - codeT) > tol * codeT)
+      throw std::runtime_error(modelName + ": energy grid mismatch at column " + std::to_string(idColumns + i) +
+                               " (file " + std::to_string(fileT) + " GeV vs built " + std::to_string(codeT) + " GeV)");
+  }
+}
+
+}  // namespace
 
 double sigma_pp(const double& T) {
   // Kafexhiu et al., Phys.Rev.D 90 (2014) 12, 123014
@@ -91,30 +116,35 @@ double InXsecFromTable::getXsecOnHtarget(const PID& projectile, const double& T)
 }
 
 void InXsecFromTable::loadXsecTable() {
-  std::ifstream inf(m_tableFilename.c_str());
-  std::string line;
-  int Z_proj, A_proj;
-  double x_temp;
-  while (std::getline(inf, line)) {
-    if (line.empty() || line[0] == '#') continue;
-    std::istringstream iss(line);
-    if (!(iss >> Z_proj >> A_proj)) continue;
+  const auto headerAndData = CSVReader(m_tableFilename).getHeaderAndData();
+  validateEnergyGrid(m_modelName, headerAndData.first, 2, m_T);  // Z, A + energy grid
+
+  const size_t expectedColumns = m_T_size + 2;  // Z, A, sigma(T_0 .. T_N-1)
+  for (const auto& row : headerAndData.second) {
+    if (row.size() != expectedColumns)
+      throw std::runtime_error("malformed " + m_modelName + " inelastic xsecs row: expected " +
+                               std::to_string(expectedColumns) + " columns, got " + std::to_string(row.size()));
+    const PID projectile(static_cast<int>(row[0]), static_cast<int>(row[1]));
     std::vector<double> x;
     x.reserve(m_T_size);
-    for (size_t i = 0; i < m_T_size; ++i) {
-      if (!(iss >> x_temp)) throw std::runtime_error("malformed " + m_modelName + " inelastic xsecs row: " + line);
-      x.emplace_back(x_temp * CGS::mbarn);
-    }
-    m_table[PID(Z_proj, A_proj)] = x;
+    for (size_t i = 0; i < m_T_size; ++i) x.push_back(row[2 + i] * CGS::mbarn);
+    m_table[projectile] = x;
   }
-  inf.close();
 }
 
+constexpr double kInelasticTmin = 0.01 * CGS::GeV;
+constexpr double kInelasticTmax = 1e5 * CGS::GeV;
+constexpr size_t kInelasticTsize = 448;
+
 InXsecTripathi99::InXsecTripathi99()
-    : InXsecFromTable("Tripathi1999", "data/crams_inelastic_tripathi99.txt", 0.01 * CGS::GeV, 1e5 * CGS::GeV, 224) {}
+    : InXsecFromTable("Tripathi1999", "data/crams_inelastic_tripathi99.csv", kInelasticTmin, kInelasticTmax,
+                      kInelasticTsize) {}
 
 InXsecGlauber::InXsecGlauber()
-    : InXsecFromTable("Glauber", "data/crams_inelastic_glauber.txt", 0.01 * CGS::GeV, 1e5 * CGS::GeV, 224) {}
+    : InXsecFromTable("Glauber", "data/crams_inelastic_glauber.csv", kInelasticTmin, kInelasticTmax, kInelasticTsize) {}
+
+InXsecCrosec::InXsecCrosec()
+    : InXsecFromTable("CROSEC", "data/crams_inelastic_crosec.csv", kInelasticTmin, kInelasticTmax, kInelasticTsize) {}
 
 double InelasticXsecST98::getXsecOnHtarget(const PID& projectile, const double& T) const {
   if (projectile.getZ() == 1 && projectile.getA() == 1) return sigma_pp(T);

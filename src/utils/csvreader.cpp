@@ -3,6 +3,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -39,6 +40,60 @@ std::vector<std::vector<std::string>> CSVReader::getData() const {
     dataList.push_back(split(line, m_delimiter));
   }
   return dataList;
+}
+
+namespace {
+
+std::vector<double> toDoubleRow(const std::vector<std::string>& tokens, const std::string& filename, size_t rowIndex) {
+  std::vector<double> row;
+  row.reserve(tokens.size());
+  for (const auto& token : tokens) {
+    try {
+      row.push_back(std::stod(token));
+    } catch (const std::exception&) {
+      throw std::runtime_error("CSVReader: non-numeric value '" + token + "' in '" + filename + "' data row " +
+                               std::to_string(rowIndex));
+    }
+  }
+  return row;
+}
+
+}  // namespace
+
+std::vector<std::vector<double>> CSVReader::getDataAsDouble() const {
+  std::ifstream file(m_filename);
+  if (!file.is_open()) throw std::runtime_error("CSVReader: cannot open file '" + m_filename + "'");
+
+  std::vector<std::vector<double>> dataList;
+  std::string line;
+  size_t rowIndex = 0;
+  while (std::getline(file, line)) {
+    if (line.empty() || line[0] == '#') continue;
+    dataList.push_back(toDoubleRow(split(line, m_delimiter), m_filename, ++rowIndex));
+  }
+  return dataList;
+}
+
+std::pair<std::vector<std::string>, std::vector<std::vector<double>>> CSVReader::getHeaderAndData() const {
+  std::ifstream file(m_filename);
+  if (!file.is_open()) throw std::runtime_error("CSVReader: cannot open file '" + m_filename + "'");
+
+  std::vector<std::string> header;
+  std::vector<std::vector<double>> dataList;
+  std::string line;
+  bool haveHeader = false;
+  size_t rowIndex = 0;
+  while (std::getline(file, line)) {
+    if (line.empty() || line[0] == '#') continue;
+    if (!haveHeader) {
+      header = split(line, m_delimiter);
+      haveHeader = true;
+      continue;
+    }
+    dataList.push_back(toDoubleRow(split(line, m_delimiter), m_filename, ++rowIndex));
+  }
+  if (!haveHeader) throw std::runtime_error("CSVReader: no rows in '" + m_filename + "'");
+  return {std::move(header), std::move(dataList)};
 }
 
 }  // namespace CRAMS

@@ -17,6 +17,14 @@ enum class FluxSolver {
 enum class InelasticModel {
   Tripathi99,
   Glauber,
+  Crosec,
+};
+
+enum class FragmentationModel {
+  Fluka4Dragon,
+  UsineGalprop17Opt12,
+  UsineGalprop17Opt22,
+  UsineWebber03Coste12,
 };
 
 class Input {
@@ -54,6 +62,8 @@ class Input {
   std::string fluxSolverName() const;
   InelasticModel inelasticModel() const { return m_inelasticModel; }
   std::string inelasticModelName() const;
+  FragmentationModel fragmentationModel() const { return m_fragmentationModel; }
+  std::string fragmentationModelName() const;
   const std::string& simname() const { return m_simname; }
 
  private:
@@ -80,6 +90,7 @@ class Input {
   size_t m_id = 0;
   FluxSolver m_fluxSolver = FluxSolver::CrankNicolson;
   InelasticModel m_inelasticModel = InelasticModel::Tripathi99;
+  FragmentationModel m_fragmentationModel = FragmentationModel::Fluka4Dragon;
   std::string m_simname = "test";
 };
 

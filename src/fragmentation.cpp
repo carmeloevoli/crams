@@ -3,15 +3,40 @@
 #include <plog/Log.h>
 
 #include <algorithm>
-#include <fstream>
-#include <sstream>
 #include <stdexcept>
 #include <utility>
 
+#include "crams/utils/csvreader.h"
 #include "crams/utils/numeric.h"
 #include "crams/utils/utilities.h"
 
 namespace CRAMS {
+
+namespace {
+
+// Checks that the table's first-row energy grid (in GeV, after *idColumns* label
+// cells) matches the grid the reader built from T_min/T_max/T_size.
+void validateEnergyGrid(const std::string& modelName, const std::vector<std::string>& header, size_t idColumns,
+                        const std::vector<double>& grid) {
+  if (header.size() != idColumns + grid.size())
+    throw std::runtime_error(modelName + ": energy grid header has " + std::to_string(header.size()) +
+                             " columns, expected " + std::to_string(idColumns + grid.size()));
+  constexpr double tol = 1e-4;
+  for (size_t i = 0; i < grid.size(); ++i) {
+    double fileT;
+    try {
+      fileT = std::stod(header[idColumns + i]);
+    } catch (const std::exception&) {
+      throw std::runtime_error(modelName + ": non-numeric energy grid value '" + header[idColumns + i] + "'");
+    }
+    const double codeT = grid[i] / CGS::GeV;
+    if (std::abs(fileT - codeT) > tol * codeT)
+      throw std::runtime_error(modelName + ": energy grid mismatch at column " + std::to_string(idColumns + i) +
+                               " (file " + std::to_string(fileT) + " GeV vs built " + std::to_string(codeT) + " GeV)");
+  }
+}
+
+}  // namespace
 
 NucFragXsec::~NucFragXsec() { LOGD << "deleted NucFragXsec"; }
 
@@ -59,27 +84,40 @@ double NucFragFromTable::getXsecOnHtarget(const PID& projectile, const PID& frag
 }
 
 void NucFragFromTable::loadXsecTable() {
-  std::ifstream inf(m_tableFilename.c_str());
-  std::string line;
-  int Z_proj, A_proj, Z_frag, A_frag;
-  double x_temp;
-  while (std::getline(inf, line)) {
-    if (line.empty() || line[0] == '#') continue;
-    std::istringstream iss(line);
-    if (!(iss >> Z_proj >> A_proj >> Z_frag >> A_frag)) continue;
+  const auto headerAndData = CSVReader(m_tableFilename).getHeaderAndData();
+  validateEnergyGrid(m_modelName, headerAndData.first, 4, m_T);  // Z_proj, A_proj, Z_frag, A_frag + energy grid
+
+  const size_t expectedColumns = m_T_size + 4;  // Z_proj, A_proj, Z_frag, A_frag, sigma(T_0 .. T_N-1)
+  for (const auto& row : headerAndData.second) {
+    if (row.size() != expectedColumns)
+      throw std::runtime_error("malformed " + m_modelName + " fragmentation xsecs row: expected " +
+                               std::to_string(expectedColumns) + " columns, got " + std::to_string(row.size()));
+    const PID projectile(static_cast<int>(row[0]), static_cast<int>(row[1]));
+    const PID fragment(static_cast<int>(row[2]), static_cast<int>(row[3]));
     std::vector<double> x;
     x.reserve(m_T_size);
-    for (size_t i = 0; i < m_T_size; ++i) {
-      if (!(iss >> x_temp)) throw std::runtime_error("malformed " + m_modelName + " fragmentation xsecs row: " + line);
-      x.emplace_back(x_temp * CGS::mbarn);
-    }
-    m_table[{PID(Z_proj, A_proj), PID(Z_frag, A_frag)}] = x;
+    for (size_t i = 0; i < m_T_size; ++i) x.push_back(row[4 + i] * CGS::mbarn);
+    m_table[{projectile, fragment}] = x;
   }
-  inf.close();
 }
 
+constexpr double kFragTmin = 0.01 * CGS::GeV;
+constexpr double kFragTmax = 1e5 * CGS::GeV;
+constexpr size_t kFragTsize = 112;
+
 NucFragFluka4Dragon::NucFragFluka4Dragon()
-    : NucFragFromTable("Fluka4Dragon", "data/crams_fragmentation_fluka4dragon.txt", 0.01 * CGS::GeV, 1e5 * CGS::GeV,
-                       224) {}
+    : NucFragFromTable("Fluka4Dragon", "data/crams_fragmentation_fluka4dragon.csv", kFragTmin, kFragTmax, kFragTsize) {}
+
+NucFragUsineGalprop17Opt12::NucFragUsineGalprop17Opt12()
+    : NucFragFromTable("USINE_GALPROP17_OPT12", "data/crams_fragmentation_usine_galprop17_opt12.csv", kFragTmin,
+                       kFragTmax, kFragTsize) {}
+
+NucFragUsineGalprop17Opt22::NucFragUsineGalprop17Opt22()
+    : NucFragFromTable("USINE_GALPROP17_OPT22", "data/crams_fragmentation_usine_galprop17_opt22.csv", kFragTmin,
+                       kFragTmax, kFragTsize) {}
+
+NucFragUsineWebber03Coste12::NucFragUsineWebber03Coste12()
+    : NucFragFromTable("USINE_WEBBER03_COSTE12", "data/crams_fragmentation_usine_webber03+coste12.csv", kFragTmin,
+                       kFragTmax, kFragTsize) {}
 
 }  // namespace CRAMS

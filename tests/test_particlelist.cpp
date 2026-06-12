@@ -41,7 +41,7 @@ static void write_file(const std::string& path, const std::string& content) {
 }
 
 static size_t count_nucleilist_rows() {
-  std::ifstream f("data/nucleilist.csv");
+  std::ifstream f("data/crams_nucleilist.csv");
   assert(f.is_open());
 
   size_t count = 0;

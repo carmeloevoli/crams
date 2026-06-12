@@ -60,9 +60,26 @@ int main(int argc, char* argv[]) {
       case CRAMS::InelasticModel::Tripathi99:
         inelasticXsecs = std::make_unique<CRAMS::InXsecTripathi99>();
         break;
+      case CRAMS::InelasticModel::Crosec:
+        inelasticXsecs = std::make_unique<CRAMS::InXsecCrosec>();
+        break;
     }
 
-    std::unique_ptr<CRAMS::NucFragXsec> nucfragXsecs = std::make_unique<CRAMS::NucFragFluka4Dragon>();
+    std::unique_ptr<CRAMS::NucFragXsec> nucfragXsecs;
+    switch (input.fragmentationModel()) {
+      case CRAMS::FragmentationModel::Fluka4Dragon:
+        nucfragXsecs = std::make_unique<CRAMS::NucFragFluka4Dragon>();
+        break;
+      case CRAMS::FragmentationModel::UsineGalprop17Opt12:
+        nucfragXsecs = std::make_unique<CRAMS::NucFragUsineGalprop17Opt12>();
+        break;
+      case CRAMS::FragmentationModel::UsineGalprop17Opt22:
+        nucfragXsecs = std::make_unique<CRAMS::NucFragUsineGalprop17Opt22>();
+        break;
+      case CRAMS::FragmentationModel::UsineWebber03Coste12:
+        nucfragXsecs = std::make_unique<CRAMS::NucFragUsineWebber03Coste12>();
+        break;
+    }
 
     for (auto& particle : particles) {
       LOGI << "running : " << particle.getPid();

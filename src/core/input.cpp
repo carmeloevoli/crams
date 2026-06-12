@@ -45,6 +45,7 @@ CRAMS::InelasticModel parseInelasticModel(const std::string& value) {
   const auto model = CRAMS::Utilities::simplifyKey(value);
   if (model == "tripathi99" || model == "tripathi1999") return CRAMS::InelasticModel::Tripathi99;
   if (model == "glauber") return CRAMS::InelasticModel::Glauber;
+  if (model == "crosec") return CRAMS::InelasticModel::Crosec;
 
   throw std::runtime_error("Input: unknown inelastic model '" + value + "'");
 }
@@ -55,6 +56,33 @@ std::string inelasticModelName(CRAMS::InelasticModel model) {
       return "tripathi99";
     case CRAMS::InelasticModel::Glauber:
       return "glauber";
+    case CRAMS::InelasticModel::Crosec:
+      return "crosec";
+  }
+
+  return "unknown";
+}
+
+CRAMS::FragmentationModel parseFragmentationModel(const std::string& value) {
+  const auto model = CRAMS::Utilities::simplifyKey(value);
+  if (model == "fluka4dragon") return CRAMS::FragmentationModel::Fluka4Dragon;
+  if (model == "usinegalprop17opt12") return CRAMS::FragmentationModel::UsineGalprop17Opt12;
+  if (model == "usinegalprop17opt22") return CRAMS::FragmentationModel::UsineGalprop17Opt22;
+  if (model == "usinewebber03coste12") return CRAMS::FragmentationModel::UsineWebber03Coste12;
+
+  throw std::runtime_error("Input: unknown fragmentation model '" + value + "'");
+}
+
+std::string fragmentationModelName(CRAMS::FragmentationModel model) {
+  switch (model) {
+    case CRAMS::FragmentationModel::Fluka4Dragon:
+      return "fluka4dragon";
+    case CRAMS::FragmentationModel::UsineGalprop17Opt12:
+      return "usine_galprop17_opt12";
+    case CRAMS::FragmentationModel::UsineGalprop17Opt22:
+      return "usine_galprop17_opt22";
+    case CRAMS::FragmentationModel::UsineWebber03Coste12:
+      return "usine_webber03_coste12";
   }
 
   return "unknown";
@@ -67,6 +95,8 @@ namespace CRAMS {
 std::string Input::fluxSolverName() const { return ::fluxSolverName(m_fluxSolver); }
 
 std::string Input::inelasticModelName() const { return ::inelasticModelName(m_inelasticModel); }
+
+std::string Input::fragmentationModelName() const { return ::fragmentationModelName(m_fragmentationModel); }
 
 void Input::setParam(const std::string& KEY, double value) {
   const auto key = Utilities::simplifyKey(KEY);
@@ -121,6 +151,12 @@ void Input::readParamsFromFile(const std::string& filename) {
       continue;
     }
 
+    if (Utilities::simplifyKey(key) == "fragmentationmodel") {
+      m_fragmentationModel = parseFragmentationModel(valueToken);
+      LOGD << "changed fragmentation model to " << fragmentationModelName();
+      continue;
+    }
+
     double value = 0.;
     try {
       value = std::stod(valueToken);
@@ -160,6 +196,7 @@ void Input::print() const {
   LOGD << "doSecondary         : " << std::boolalpha << m_doSecondary;
   LOGD << "flux solver         : " << fluxSolverName();
   LOGD << "inelastic model     : " << inelasticModelName();
+  LOGD << "fragmentation model : " << fragmentationModelName();
 }
 
 }  // namespace CRAMS

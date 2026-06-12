@@ -13,7 +13,7 @@
 
 namespace {
 
-const char kNucleilistFilename[] = "data/nucleilist.csv";
+const char kNucleilistFilename[] = "data/crams_nucleilist.csv";
 
 struct AbundanceSetting {
   const char* key;
@@ -53,7 +53,7 @@ const SlopeSetting kDefaultChargeSlopes[] = {
 
 constexpr double kDefaultNucleiSlope = 4.32798;
 constexpr int kDefaultNucleiMinCharge = 3;
-constexpr size_t kNucleilistColumns = 7;
+constexpr size_t kNucleilistColumns = 5;
 
 template <typename T>
 T parseCsvValue(const std::vector<std::string>& row, size_t column, size_t rowIndex);
@@ -238,12 +238,11 @@ void ParticleList::loadNucleilist(const std::string& filename) {
     const bool isTertiary = parseCsvValue<int>(row, 2, rowIndex) != 0;
     const double decayHalfLife = parseCsvValue<double>(row, 3, rowIndex) * CGS::Myr;
     const double isotopicFractionISM = 0.01 * parseCsvValue<double>(row, 4, rowIndex);
-    const double injectionAb = parseCsvValue<double>(row, 5, rowIndex);
-    const double injectionSlope = parseCsvValue<double>(row, 6, rowIndex);
 
+    // Injection abundance and slope are set by applyDefaultInjectionParameters()
+    // and the .ini, so they start at zero here.
     const auto pid = PID{Z, A, isTertiary};
-    const auto params =
-        NucleusParameters{injectionAb, injectionSlope, isotopicFractionISM, decayHalfLife, decayHalfLife < 0., false};
+    const auto params = NucleusParameters{0., 0., isotopicFractionISM, decayHalfLife, decayHalfLife < 0., false};
     insert(pid, params);
   }
 }

@@ -50,6 +50,21 @@ class NucFragFluka4Dragon : public NucFragFromTable {
   NucFragFluka4Dragon();
 };
 
+class NucFragUsineGalprop17Opt12 : public NucFragFromTable {
+ public:
+  NucFragUsineGalprop17Opt12();
+};
+
+class NucFragUsineGalprop17Opt22 : public NucFragFromTable {
+ public:
+  NucFragUsineGalprop17Opt22();
+};
+
+class NucFragUsineWebber03Coste12 : public NucFragFromTable {
+ public:
+  NucFragUsineWebber03Coste12();
+};
+
 }  // namespace CRAMS
 
 #endif  // CRAMS_FRAGMENTATION_H_

@@ -55,6 +55,11 @@ class InXsecGlauber : public InXsecFromTable {
   InXsecGlauber();
 };
 
+class InXsecCrosec : public InXsecFromTable {
+ public:
+  InXsecCrosec();
+};
+
 class InelasticXsecST98 : public InelasticXsec {
  public:
   InelasticXsecST98() = default;

@@ -65,6 +65,8 @@ void test_input_numerics() {
   CHECK(in.fluxSolverName() == "crank_nicolson");
   CHECK(in.inelasticModel() == CRAMS::InelasticModel::Glauber);
   CHECK(in.inelasticModelName() == "glauber");
+  CHECK(in.fragmentationModel() == CRAMS::FragmentationModel::Fluka4Dragon);
+  CHECK(in.fragmentationModelName() == "fluka4dragon");
 }
 
 void test_injection_slopes() {

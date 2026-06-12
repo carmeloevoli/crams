@@ -131,6 +131,10 @@ add_executable(test_inelastic tests/test_inelastic.cpp)
 target_link_libraries(test_inelastic crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_inelastic COMMAND test_inelastic)
 
+add_executable(test_models tests/test_models.cpp)
+target_link_libraries(test_models crams_core ${CRAMS_EXTRA_LIBRARIES})
+add_test(NAME test_models COMMAND test_models)
+
 add_executable(test_output tests/test_output.cpp)
 target_link_libraries(test_output crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_output COMMAND test_output)
