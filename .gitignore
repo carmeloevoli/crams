@@ -1,7 +1,11 @@
 build*/
+*/__pycache__/
 compile_commands.json
 .DS_Store
 .vscode/
 kiss_tables/
 crams.code-workspace
 external/plog/
+mcmc/*.ini
+mcmc/figs
+mcmc/*.npz
