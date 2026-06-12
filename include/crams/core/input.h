@@ -90,7 +90,7 @@ class Input {
   size_t m_id = 0;
   FluxSolver m_fluxSolver = FluxSolver::CrankNicolson;
   InelasticModel m_inelasticModel = InelasticModel::Tripathi99;
-  FragmentationModel m_fragmentationModel = FragmentationModel::Fluka4Dragon;
+  FragmentationModel m_fragmentationModel = FragmentationModel::UsineWebber03Coste12;
   std::string m_simname = "test";
 };
 
