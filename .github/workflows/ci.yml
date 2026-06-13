@@ -27,6 +27,9 @@ jobs:
           brew install gsl
           echo "GSL_ROOT_DIR=$(brew --prefix gsl)" >> "$GITHUB_ENV"
 
+      - name: Fetch plog (header-only dependency)
+        run: cd external && sh get_plog.sh
+
       - name: Configure
         run: cmake -S . -B build
 
