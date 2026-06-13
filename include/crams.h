@@ -11,6 +11,8 @@
 // Simulation components
 #include "crams/core/input.h"
 #include "crams/core/output.h"
+#include "crams/fragmentation.h"
+#include "crams/inelastic.h"
 #include "crams/particle.h"
 
 // Infrastructure

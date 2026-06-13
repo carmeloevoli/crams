@@ -1,16 +1,10 @@
-#include <iostream>
+#include <exception>
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
-#include "crams/core/cgs.h"
-#include "crams/core/input.h"
-#include "crams/core/output.h"
-#include "crams/fragmentation.h"
-#include "crams/inelastic.h"
-#include "crams/particle.h"
-#include "crams/particlelist.h"
-#include "crams/utils/logging.h"
-#include "crams/utils/utilities.h"
+#include "crams.h"
 
 int main(int argc, char* argv[]) {
   bool quiet = false;
@@ -98,9 +92,9 @@ int main(int argc, char* argv[]) {
 
     CRAMS::OutputManager outputManager(particles, input);
     outputManager.dumpSpectraRigidity();
+    outputManager.dumpIsotopes();  // cheap (2 columns); needed by the MCMC Be10/Be9 posterior
     if (!quiet) {
       outputManager.dumpSpectraEkn();
-      outputManager.dumpIsotopes();
     }
   } catch (const std::exception& e) {
     LOGE << "exception caught with message: " << e.what();
