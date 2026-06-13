@@ -41,6 +41,7 @@ for model in "${MODELS[@]}"; do
   python3 find_bestfit.py \
     --fragmentation-model "${model}" \
     --method nelder-mead \
+    --unbounded \
     --halosize "${HALOSIZE}" \
     --maxfev "${NM_MAXFEV}" \
     --output "${seed}" \
@@ -50,6 +51,7 @@ for model in "${MODELS[@]}"; do
   python3 find_bestfit.py \
     --fragmentation-model "${model}" \
     --method iminuit \
+    --unbounded \
     --halosize "${HALOSIZE}" \
     --maxfev "${MAXFEV}" \
     --start "${seed}" \
