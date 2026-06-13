@@ -31,7 +31,7 @@ import numpy as np
 
 from fitting import _chi2_dataset, log_likelihood, unpack_theta
 from run_mcmc import DATASETS, PARAMETERS, set_halo_size
-from runner import FRAGMENTATION_MODELS, CramsRunner, to_ini_params
+from runner import FRAGMENTATION_MODELS, CramsRunner, from_ini_params, to_ini_params
 
 ACTIVE = [p for p in PARAMETERS if p.active]
 NAMES = [p.name for p in ACTIVE]
@@ -229,7 +229,8 @@ def main(argv=None) -> None:
 
     x0 = X0.copy()
     if args.start:
-        start = _read_ini_values(Path(args.start))
+        # crams .ini stores d0/rb; map them back to the fit-space d0_h/rb_log.
+        start = from_ini_params(_read_ini_values(Path(args.start)))
         x0 = np.array([start.get(name, x0[i]) for i, name in enumerate(NAMES)], float)
 
     rng = np.random.default_rng(args.seed)

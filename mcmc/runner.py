@@ -43,6 +43,23 @@ def to_ini_params(params: dict[str, float]) -> dict[str, float]:
     return p
 
 
+def from_ini_params(params: dict[str, float]) -> dict[str, float]:
+    """Inverse of to_ini_params: express physical crams keys in fit space.
+
+    Lets a crams .ini (which stores d0 and rb) seed the fit, whose free
+    parameters are d0_h and rb_log:
+      - ``d0`` (+ ``h``) -> ``d0_h = d0 / h``
+      - ``rb``           -> ``rb_log = log10(rb)``
+    Values already in fit space are left untouched.
+    """
+    p = dict(params)
+    if "d0_h" not in p and "d0" in p and p.get("h", 0.0) > 0.0:
+        p["d0_h"] = p["d0"] / p["h"]
+    if "rb_log" not in p and p.get("rb", 0.0) > 0.0:
+        p["rb_log"] = float(np.log10(p["rb"]))
+    return p
+
+
 class CramsRunner:
     """Thin wrapper around the crams binary.
 
