@@ -15,6 +15,33 @@ _ELEMENTS = [
 ]
 CHARGE: dict[str, int] = {sym: i for i, sym in enumerate(_ELEMENTS) if sym}
 
+# Fragmentation cross-section models accepted by crams (see src/core/input.cpp).
+FRAGMENTATION_MODELS = [
+    "fluka4dragon",
+    "usine_galprop17_opt12",
+    "usine_galprop17_opt22",
+    "usine_webber03_coste12",
+]
+
+
+def to_ini_params(params: dict[str, float]) -> dict[str, float]:
+    """Convert fit-space keys to the keys crams expects (returns a new dict).
+
+    The fit samples reparametrised quantities; crams needs the physical ones:
+      - ``d0_h`` (= d0/h)   -> ``d0 = d0_h * h``
+      - ``rb_log`` (log10R) -> ``rb = 10**rb_log``
+    """
+    p = dict(params)
+    if "d0_h" in p:
+        try:
+            h = p["h"]
+        except KeyError:
+            raise KeyError("'d0_h' parametrization requires 'h' in params")
+        p["d0"] = p.pop("d0_h") * h
+    if "rb_log" in p:
+        p["rb"] = 10.0 ** p.pop("rb_log")
+    return p
+
 
 class CramsRunner:
     """Thin wrapper around the crams binary.
@@ -37,6 +64,7 @@ class CramsRunner:
         timeout: int = 120,
         quiet: bool = True,
         inelastic_model: str = "tripathi99",
+        fragmentation_model: str | None = None,
         read_isotopes: bool = False,
     ) -> None:
         if build_dir is None:
@@ -46,6 +74,10 @@ class CramsRunner:
         self.timeout = timeout
         self.quiet = quiet
         self.inelastic_model = inelastic_model
+        # None -> let crams use its built-in default fragmentation model.
+        # Accepted: fluka4dragon, usine_galprop17_opt12, usine_galprop17_opt22,
+        #           usine_webber03_coste12
+        self.fragmentation_model = fragmentation_model
         self.read_isotopes = read_isotopes
         self._counter = 0
 
@@ -62,6 +94,9 @@ class CramsRunner:
         params:
             Mapping of .ini key → value (in the units expected by crams, e.g.
             ``d0`` in units of 1e28 cm²/s, ``delta`` dimensionless, etc.).
+            As special cases, the key ``d0_h`` (= d0/h) is converted to
+            ``d0 = d0_h * h`` and ``rb_log`` to ``rb = 10**rb_log`` before the
+            .ini is written.
 
         Returns
         -------
@@ -76,11 +111,17 @@ class CramsRunner:
         output_file = self.build_dir / "output" / f"{tag}_spectra_R_0.txt"
         isotope_file = self.build_dir / "output" / f"{tag}_isotopes_R_0.txt"
 
+        # Reconstruct the physical crams keys (d0 from d0/h and the fixed halo
+        # height; rb from log10 rb) just before writing the .ini.
+        params = to_ini_params(params)
+
         try:
             with open(ini_path, "w") as f:
                 for key, value in params.items():
                     f.write(f"{key} {value:.6e}\n")
                 f.write(f"inelastic_model {self.inelastic_model}\n")
+                if self.fragmentation_model is not None:
+                    f.write(f"fragmentation_model {self.fragmentation_model}\n")
                 f.write("id 0\n")
 
             cmd = [str(self.binary_path), ini_name]

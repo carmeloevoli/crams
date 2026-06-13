@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from fitting import KISS_DIR, _read_kiss_table, unpack_theta
-from run_mcmc import PARAMETERS
-from runner import CramsRunner
+from run_mcmc import PARAMETERS, set_halo_size
+from runner import FRAGMENTATION_MODELS, CramsRunner
 
 STYLE = Path(__file__).parent.parent.parent / "crams-plots" / "crams.mplstyle"
 
@@ -92,7 +92,11 @@ def _load_chain(path: Path, discard: int = 0, thin: int = 1):
         chain = chain[::thin]
     param_names = list(d["param_names"])
     acceptance  = float(d["acceptance"])
-    return chain, param_names, acceptance
+    # Fragmentation model the chain was fit with ("" if absent / crams default).
+    frag = str(d["fragmentation_model"]) if "fragmentation_model" in d else ""
+    # Halo half-height the chain was fit with (None if not recorded).
+    halo = float(d["halo_size"]) if "halo_size" in d else None
+    return chain, param_names, acceptance, (frag or None), halo
 
 
 def _median_params(chain: np.ndarray, param_names: list[str]) -> dict[str, float]:
@@ -201,6 +205,12 @@ def main(argv=None) -> None:
                    help="output prefix (default: <chain_file> stem); "
                         "each panel is saved as <prefix>_<species>.pdf")
     p.add_argument("--build-dir", default=None, help="path to crams build/")
+    p.add_argument("--fragmentation-model", default=None, choices=FRAGMENTATION_MODELS,
+                   help="override the fragmentation model (default: the one the "
+                        "chain was fit with, recorded in the .npz)")
+    p.add_argument("--halosize", type=float, default=None,
+                   help="override the halo half-height h [kpc] (default: the one "
+                        "the chain was fit with, recorded in the .npz)")
     p.add_argument("--seed",      type=int, default=0)
     args = p.parse_args(argv)
 
@@ -209,11 +219,20 @@ def main(argv=None) -> None:
     prefix.parent.mkdir(parents=True, exist_ok=True)
     rng        = np.random.default_rng(args.seed)
 
-    chain, param_names, acceptance = _load_chain(chain_path, args.discard, args.thin)
+    chain, param_names, acceptance, chain_frag, chain_halo = _load_chain(
+        chain_path, args.discard, args.thin)
     print(f"Chain: {chain.shape[0]:,} samples, parameters: {param_names}")
     print(f"Acceptance fraction: {acceptance:.3f}")
 
-    runner = CramsRunner(build_dir=args.build_dir, read_isotopes=True)
+    # Plot with the model/halo the chain was fit with unless the user overrides.
+    frag_model = args.fragmentation_model or chain_frag
+    halo = args.halosize if args.halosize is not None else chain_halo
+    if halo is not None:
+        set_halo_size(halo)
+    halo_size = next(p.value for p in PARAMETERS if p.name == "h")
+    print(f"Fragmentation model: {frag_model or 'crams default'}   halo h: {halo_size} kpc")
+    runner = CramsRunner(build_dir=args.build_dir, read_isotopes=True,
+                         fragmentation_model=frag_model)
 
     print("Running median best-fit…")
     ini_median      = _median_params(chain, param_names)

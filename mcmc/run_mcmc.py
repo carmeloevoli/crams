@@ -39,7 +39,7 @@ try:
 except ImportError:
     sys.exit("emcee is required. Install with:  pip install emcee")
 
-from runner import CramsRunner
+from runner import FRAGMENTATION_MODELS, CramsRunner
 from fitting import (
     Dataset,
     Parameter,
@@ -58,35 +58,39 @@ from fitting import (
 #   hslope, heslope   – injection spectral index for H and He
 #   slope             – common injection spectral index for nuclei Z≥3 (C, O, …)
 #   phi               – solar modulation potential [GV]
-#   d0                – diffusion coefficient [units of 1e28 cm²/s]
+#   d0_h              – diffusion / halo height, d0/h [1e28 cm²/s / kpc]; the
+#                       runner reconstructs d0 = d0_h * h when writing the .ini,
+#                       so h can be changed without re-tuning this prior
 #   delta, ddelta     – diffusion spectral index and break amplitude
 #   va                – Alfvén speed [km/s]
-#   rb                – diffusion break rigidity [GV]
+#   rb_log            – log10(rb/GV); the runner reconstructs rb = 10**rb_log
+#                       when writing the .ini (break rigidity is a scale param,
+#                       better sampled in log)
 #   h                 – halo half-height [kpc]
 PARAMETERS: list[Parameter] = [
     # --- free parameters (initial values = best-fit point) ---
-    Parameter("qh",      4.111e-2,   1e-2,  2e-1,  active=True),   # H injection abundance
-    Parameter("qhe",     2.025e-2,   5e-3,  1e-1,  active=True),   # He injection abundance
-    Parameter("qc",      4.004e-3,   1e-3,  2e-2,  active=True),   # C injection abundance
-    Parameter("qn",      3.872e-4,   1e-4,  2e-3,  active=True),   # N injection abundance
-    Parameter("qo",      7.213e-3,   1e-3,  3e-2,  active=True),   # O injection abundance
-    Parameter("qne",     1.351e-3,   3e-4,  5e-3,  active=True),   # Ne injection abundance
-    Parameter("qmg",     2.372e-3,   5e-4,  8e-3,  active=True),   # Mg injection abundance
-    Parameter("qsi",     2.923e-3,   5e-4,  8e-3,  active=True),   # Si injection abundance
-    Parameter("qs",      5.154e-4,   1e-4,  4e-3,  active=True),   # S injection abundance
-    Parameter("qfe",     7.407e-3,   1e-3,  3e-2,  active=True),   # Fe injection abundance
-    Parameter("hslope",  4.3685,     4.0,   4.8,   active=True),   # H spectral index
-    Parameter("heslope", 4.2955,     4.0,   4.8,   active=True),   # He spectral index
-    Parameter("slope",   4.3587,     4.0,   4.8,   active=True),   # nuclei common spectral index
-    Parameter("phi",     0.4431,     0.1,   1.0,   active=True),   # solar modulation [GV]
+    Parameter("qh",      4.14e-2,   1e-2,  2e-1,  active=True),   # H injection abundance
+    Parameter("qhe",     2.04e-2,   5e-3,  1e-1,  active=True),   # He injection abundance
+    Parameter("qc",      4.00e-3,   1e-3,  2e-2,  active=True),   # C injection abundance
+    Parameter("qn",      3.83e-4,   1e-4,  2e-3,  active=True),   # N injection abundance
+    Parameter("qo",      7.21e-3,   1e-3,  3e-2,  active=True),   # O injection abundance
+    Parameter("qne",     1.35e-3,   3e-4,  5e-3,  active=True),   # Ne injection abundance
+    Parameter("qmg",     2.38e-3,   5e-4,  8e-3,  active=True),   # Mg injection abundance
+    Parameter("qsi",     2.83e-3,   5e-4,  8e-3,  active=True),   # Si injection abundance
+    Parameter("qs",      5.06e-4,   1e-4,  4e-3,  active=True),   # S injection abundance
+    Parameter("qfe",     7.53e-3,   1e-3,  3e-2,  active=True),   # Fe injection abundance
+    Parameter("hslope",  4.37,      4.1,   4.7,   active=True),   # H spectral index
+    Parameter("heslope", 4.30,      4.1,   4.7,   active=True),   # He spectral index
+    Parameter("slope",   4.36,      4.1,   4.7,   active=True),   # nuclei common spectral index
+    Parameter("phi",     0.47,      0.1,   1.0,   active=True),   # solar modulation [GV]
     # --- diffusion parameters (constrained by B/C) ---
-    Parameter("d0",      2.376,   0.5,   6.0,   active=True),    # diffusion coefficient [1e28 cm²/s]
-    Parameter("delta",   0.5391,  0.3,   0.8,   active=True),    # diffusion spectral index
-    Parameter("ddelta",  0.2662,  0.0,   0.5,   active=True),    # low-rigidity diffusion break amplitude
-    Parameter("rb",      316.9,      100.,  600.,  active=True),   # diffusion break rigidity [GV]
-    Parameter("va",      3.396,   1.0,   15.0,  active=True),    # Alfvén speed [km/s]
+    Parameter("d0_h",    0.34,      0.05,  1.0,   active=True),    # d0/h [1e28 cm²/s / kpc]; d0 = d0_h * h (= 2.376 at h=7)
+    Parameter("delta",   0.54,      0.2,   0.8,   active=True),    # diffusion spectral index
+    Parameter("ddelta",  0.27,      0.0,   0.5,   active=True),    # low-rigidity diffusion break amplitude
+    Parameter("rb_log",  2.26,      2.0,   3.0,   active=True),   # log10(rb/GV); rb = 10**rb_log (= 316.9 GV), prior 100–600 GV
+    Parameter("va",      3.32,      1.0,   15.0,  active=True),    # Alfvén speed [km/s]
     # --- fixed propagation parameters ---
-    Parameter("h",       7.0,     1.0,   15.0,  active=False),
+    Parameter("h",       5.0,       1.0,   15.0,  active=False),
 ]
 
 # ── Datasets ───────────────────────────────────────────────────────────────────
@@ -96,28 +100,45 @@ PARAMETERS: list[Parameter] = [
 # R_min/R_max : rigidity range [GV] included in the chi²
 # weight      : relative weight of this dataset in the total chi²
 DATASETS: list[Dataset] = [
+    # Fluxes
     Dataset("AMS-02_H_rigidity.txt",  "H",  "", R_min=5.0, R_max=1500.0, weight=1.0),
     Dataset("AMS-02_He_rigidity.txt", "He", "", R_min=5.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_H_He_rigidity.txt", "H", "He", R_min=5.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_B_rigidity.txt", "B", "", R_min=5.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_C_rigidity.txt",  "C",  "", R_min=5.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_O_rigidity.txt",  "O",  "", R_min=5.0, R_max=2500.0, weight=1.0),
+    # Ratios
+    Dataset("AMS-02_H_He_rigidity.txt", "H", "He", R_min=5.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_He_O_rigidity.txt", "He", "O", R_min=5.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_B_C_rigidity.txt", "B", "C", R_min=5.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_B_O_rigidity.txt", "B", "O", R_min=5.0, R_max=2500.0, weight=1.0),
     Dataset("AMS-02_C_O_rigidity.txt", "C", "O", R_min=5.0, R_max=2500.0, weight=1.0),
     # N and the heavier primaries: only above 40 GV and down-weighted — slightly
     # less relevant, and their small error bars would otherwise dominate the fit.
-    Dataset("AMS-02_N_rigidity.txt", "N", "", R_min=40.0, R_max=2500.0, weight=0.2),
-    Dataset("AMS-02_Ne_rigidity.txt", "Ne", "", R_min=40.0, R_max=2500.0, weight=0.2),
-    Dataset("AMS-02_Mg_rigidity.txt", "Mg", "", R_min=40.0, R_max=2500.0, weight=0.2),
-    Dataset("AMS-02_Si_rigidity.txt", "Si", "", R_min=40.0, R_max=2500.0, weight=0.2),
-    Dataset("AMS-02_S_rigidity.txt", "S", "", R_min=40.0, R_max=2500.0, weight=0.2),
-    Dataset("AMS-02_Fe_rigidity.txt", "Fe", "", R_min=40.0, R_max=2500.0, weight=0.2),
+    Dataset("AMS-02_N_rigidity.txt", "N", "", R_min=40.0, R_max=2500.0, weight=0.25),
+    Dataset("AMS-02_Ne_rigidity.txt", "Ne", "", R_min=40.0, R_max=2500.0, weight=0.25),
+    Dataset("AMS-02_Mg_rigidity.txt", "Mg", "", R_min=40.0, R_max=2500.0, weight=0.25),
+    Dataset("AMS-02_Si_rigidity.txt", "Si", "", R_min=40.0, R_max=2500.0, weight=0.25),
+    Dataset("AMS-02_S_rigidity.txt", "S", "", R_min=40.0, R_max=2500.0, weight=0.25),
+    Dataset("AMS-02_Fe_rigidity.txt", "Fe", "", R_min=40.0, R_max=2500.0, weight=0.25),
 ]
 
 # ── MCMC defaults ──────────────────────────────────────────────────────────────
 N_WALKERS = 96     # ~5x ndim; pilot acceptance ~0.32
 N_BURN    = 300    # ~3.5x tau (tau_max ~56 from pilot); walkers start at the best-fit
 N_STEPS   = 4000   # ~53x tau -> ~5000 independent samples
+
+
+def set_halo_size(h_kpc: float) -> None:
+    """Override the fixed halo half-height h (kpc) in PARAMETERS, in place.
+
+    Because the diffusion parameter is sampled as d0/h, changing h only rescales
+    the reconstructed d0 (d0 = d0_h * h) and leaves the d0_h prior untouched.
+    """
+    for p in PARAMETERS:
+        if p.name == "h":
+            p.value = h_kpc
+            return
+    raise KeyError("no fixed 'h' parameter found in PARAMETERS")
 
 
 def _parse_args(argv=None):
@@ -128,6 +149,11 @@ def _parse_args(argv=None):
     p.add_argument("--nburn",     type=int, default=N_BURN,    help="burn-in steps (discarded)")
     p.add_argument("--nsteps",    type=int, default=N_STEPS,   help="production steps")
     p.add_argument("--output",    default="mcmc_chain.npz",    help="output .npz file")
+    p.add_argument("--fragmentation-model", default=None, choices=FRAGMENTATION_MODELS,
+                   help="crams fragmentation cross-section model "
+                        "(default: None = crams built-in default)")
+    p.add_argument("--halosize",  type=float, default=None,
+                   help="halo half-height h [kpc] (default: PARAMETERS value, 7)")
     p.add_argument("--build-dir", default=None,                help="path to crams build/")
     p.add_argument("--seed",      type=int, default=42,        help="random seed")
     p.add_argument("--ncores",    type=int, default=1,
@@ -146,7 +172,12 @@ def main(argv=None) -> None:
     args = _parse_args(argv)
     rng = np.random.default_rng(args.seed)
 
-    runner = CramsRunner(build_dir=args.build_dir)
+    if args.halosize is not None:
+        set_halo_size(args.halosize)
+    halo_size = next(p.value for p in PARAMETERS if p.name == "h")
+
+    runner = CramsRunner(build_dir=args.build_dir,
+                         fragmentation_model=args.fragmentation_model)
     data_cache: dict = {}
 
     active = [p for p in PARAMETERS if p.active]
@@ -162,6 +193,8 @@ def main(argv=None) -> None:
     print(f"Active parameters ({ndim}): {[p.name for p in active]}")
     print(f"Fixed parameters: {[p.name for p in PARAMETERS if not p.active]}")
     print(f"Datasets ({len(DATASETS)}): {[d.filename for d in DATASETS]}")
+    print(f"Fragmentation model: {args.fragmentation_model or 'crams default'}")
+    print(f"Halo half-height h: {halo_size} kpc")
     print(f"Walkers: {args.nwalkers}  Burn-in: {args.nburn}  Production: {args.nsteps}  Cores: {ncores}")
 
     # Initialise walkers as a tight Gaussian ball around the starting point
@@ -221,6 +254,8 @@ def main(argv=None) -> None:
         log_prob=log_probs,
         param_names=np.array(param_names),
         acceptance=acceptance,
+        fragmentation_model=np.array(args.fragmentation_model or ""),
+        halo_size=np.array(halo_size),
     )
     print(f"\nChain saved to {output_path.resolve()}")
     print(

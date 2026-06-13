@@ -30,8 +30,8 @@ from pathlib import Path
 import numpy as np
 
 from fitting import _chi2_dataset, log_likelihood, unpack_theta
-from run_mcmc import DATASETS, PARAMETERS
-from runner import CramsRunner
+from run_mcmc import DATASETS, PARAMETERS, set_halo_size
+from runner import FRAGMENTATION_MODELS, CramsRunner, to_ini_params
 
 ACTIVE = [p for p in PARAMETERS if p.active]
 NAMES = [p.name for p in ACTIVE]
@@ -160,11 +160,14 @@ def _full_ini(theta: np.ndarray) -> dict[str, float]:
     return unpack_theta(theta, PARAMETERS)
 
 
-def _write_ini(ini: dict[str, float], path: Path, method: str, chi2: float) -> None:
+def _write_ini(ini: dict[str, float], path: Path, method: str, chi2: float,
+               fragmentation_model: str | None = None) -> None:
     with open(path, "w") as f:
         f.write(f"# crams best-fit parameters (pre-fit, method={method}, chi2={chi2:.1f})\n")
-        for key, value in ini.items():
+        for key, value in to_ini_params(ini).items():
             f.write(f"{key} {value:.6e}\n")
+        if fragmentation_model is not None:
+            f.write(f"fragmentation_model {fragmentation_model}\n")
         f.write("id 0\n")
 
 
@@ -208,6 +211,11 @@ def main(argv=None) -> None:
     p.add_argument("--start", default=None,
                    help="crams .ini whose active values are used as the starting point (e.g. bestfit.ini)")
     p.add_argument("--output", default="bestfit.ini", help="best-fit crams .ini (default: bestfit.ini)")
+    p.add_argument("--fragmentation-model", default=None, choices=FRAGMENTATION_MODELS,
+                   help="crams fragmentation cross-section model "
+                        "(default: None = crams built-in default)")
+    p.add_argument("--halosize", type=float, default=None,
+                   help="halo half-height h [kpc] (default: PARAMETERS value, 7)")
     p.add_argument("--build-dir", default=None, help="path to crams build/")
     p.add_argument("--seed", type=int, default=0)
     args = p.parse_args(argv)
@@ -215,13 +223,18 @@ def main(argv=None) -> None:
     if not ACTIVE:
         sys.exit("No active parameters to fit.")
 
+    if args.halosize is not None:
+        set_halo_size(args.halosize)
+    halo_size = next(p.value for p in PARAMETERS if p.name == "h")
+
     x0 = X0.copy()
     if args.start:
         start = _read_ini_values(Path(args.start))
         x0 = np.array([start.get(name, x0[i]) for i, name in enumerate(NAMES)], float)
 
     rng = np.random.default_rng(args.seed)
-    runner = CramsRunner(build_dir=args.build_dir)
+    runner = CramsRunner(build_dir=args.build_dir,
+                         fragmentation_model=args.fragmentation_model)
     cache: dict = {}
     bounded = not args.unbounded
     chi2_fn = make_chi2(runner, cache, bounded=bounded)
@@ -230,6 +243,7 @@ def main(argv=None) -> None:
     print(f"Active parameters ({len(ACTIVE)}): {NAMES}")
     print(f"Datasets ({len(DATASETS)}): {[d.numerator + ('/' + d.denominator if d.denominator else '') for d in DATASETS]}")
     print(f"Method: {args.method}   maxfev: {args.maxfev}   bounds: {'priors' if bounded else 'NONE (unbounded)'}")
+    print(f"Fragmentation model: {args.fragmentation_model or 'crams default'}   halo h: {halo_size} kpc")
     print(f"Start: {args.start or 'run_mcmc defaults'}   chi^2 = {chi2_start:.1f}")
 
     theta, chi2, nfev, errors = OPTIMISERS[args.method](chi2_fn, x0, args.maxfev, rng, bounded=bounded)
@@ -242,7 +256,8 @@ def main(argv=None) -> None:
     _report(theta, chi2, errors, runner, cache)
 
     out_path = Path(args.output)
-    _write_ini(_full_ini(theta), out_path, args.method, chi2)
+    _write_ini(_full_ini(theta), out_path, args.method, chi2,
+               fragmentation_model=args.fragmentation_model)
     print(f"\nBest-fit crams .ini written to {out_path.resolve()}")
     print("Use it to seed run_mcmc.py (update the PARAMETERS initial values) "
           "or run it directly:  ./crams " + str(out_path))
