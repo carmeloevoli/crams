@@ -36,6 +36,7 @@ COLORS = {
     "N":  "#E76F9A",
     "O":  "#D62728",
     "B":  "#7E57C2",
+    "Be": "#2CA02C",
     "Fe": "#5F6A6A",
 }
 
@@ -72,7 +73,14 @@ PANELS = [
     Panel("Fe", "AMS-02_Fe_rigidity.txt",               color=COLORS["Fe"]),
     Panel("B",  "AMS-02_B_C_rigidity.txt", denominator="C", color=COLORS["B"]),
     Panel("C",  "AMS-02_C_O_rigidity.txt", denominator="O", color=COLORS["C"]),
+    # Isotope ratio: model-only posterior (no published AMS-02 data table).
+    Panel("Be10", "", denominator="Be9", R_min=2.0, R_max=100.0, color=COLORS["Be"]),
 ]
+
+# Pretty axis labels for ratios whose generic "num/den" form is not ideal.
+ISOTOPE_LABELS = {
+    "Be10_Be9": r"$^{10}\mathrm{Be}/^{9}\mathrm{Be}$",
+}
 
 
 def _load_chain(path: Path, discard: int = 0, thin: int = 1):
@@ -125,24 +133,25 @@ def _model_observable(spectra: dict, panel: Panel) -> tuple[np.ndarray, np.ndarr
 
 
 def _plot_panel(panel: Panel, spectra_median: dict, spectra_samples: list) -> plt.Figure:
-    fig, ax = plt.subplots(figsize=(7.5, 6.4))
+    fig, ax = plt.subplots(figsize=(11.5, 8.0))
     power = 0.0 if panel.is_ratio else POWER
 
     # ── data (shown from 1 GV for context, up to R_max) ────────────────────────
-    x, y, err_lo, err_hi = _read_kiss_table(KISS_DIR / panel.filename)
-    cut = (x >= 1.0) & (x <= panel.R_max)
-    x, y = x[cut], y[cut]
-    err_lo, err_hi = err_lo[cut], err_hi[cut]
+    if panel.filename:
+        x, y, err_lo, err_hi = _read_kiss_table(KISS_DIR / panel.filename)
+        cut = (x >= 1.0) & (x <= panel.R_max)
+        x, y = x[cut], y[cut]
+        err_lo, err_hi = err_lo[cut], err_hi[cut]
 
-    scale = x ** power
-    ax.errorbar(
-        x, scale * y,
-        yerr=[scale * err_lo, scale * err_hi],
-        fmt="o", color=panel.color, markersize=4,
-        elinewidth=1.2, capsize=0,
-        label=f"AMS-02 {panel.label}",
-        zorder=3,
-    )
+        scale = x ** power
+        ax.errorbar(
+            x, scale * y,
+            yerr=[scale * err_lo, scale * err_hi],
+            fmt="o", color=panel.color, markersize=4,
+            elinewidth=1.2, capsize=0,
+            label=f"AMS-02 {panel.label}",
+            zorder=3,
+        )
 
     # ── posterior 68% band ─────────────────────────────────────────────────────
     if spectra_samples:
@@ -164,6 +173,8 @@ def _plot_panel(panel: Panel, spectra_median: dict, spectra_samples: list) -> pl
     ax.plot(
         R_fit, R_fit**power * y_med[fit_mask],
         color=panel.color, linewidth=2.2, zorder=4,
+        # label the model only when there is no data series to anchor the legend
+        label=f"crams {ISOTOPE_LABELS.get(panel.tag, panel.label)}" if not panel.filename else None,
     )
 
     # ── style ──────────────────────────────────────────────────────────────────
@@ -171,7 +182,7 @@ def _plot_panel(panel: Panel, spectra_median: dict, spectra_samples: list) -> pl
     ax.set_xlabel(r"$R$ [GV]")
     ax.set_xlim(1.0, panel.R_max * 1.1)
     if panel.is_ratio:
-        ax.set_ylabel(panel.label)
+        ax.set_ylabel(ISOTOPE_LABELS.get(panel.tag, panel.label))
     else:
         ax.set_yscale("log")
         ax.set_ylabel(r"$R^{2.7} \times \Phi\ [\mathrm{GV^{1.7}\ m^{-2}\ s^{-1}\ sr^{-1}}]$")
@@ -202,7 +213,7 @@ def main(argv=None) -> None:
     print(f"Chain: {chain.shape[0]:,} samples, parameters: {param_names}")
     print(f"Acceptance fraction: {acceptance:.3f}")
 
-    runner = CramsRunner(build_dir=args.build_dir)
+    runner = CramsRunner(build_dir=args.build_dir, read_isotopes=True)
 
     print("Running median best-fit…")
     ini_median      = _median_params(chain, param_names)

@@ -37,6 +37,7 @@ class CramsRunner:
         timeout: int = 120,
         quiet: bool = True,
         inelastic_model: str = "tripathi99",
+        read_isotopes: bool = False,
     ) -> None:
         if build_dir is None:
             build_dir = Path(__file__).parent.parent / "build"
@@ -45,6 +46,7 @@ class CramsRunner:
         self.timeout = timeout
         self.quiet = quiet
         self.inelastic_model = inelastic_model
+        self.read_isotopes = read_isotopes
         self._counter = 0
 
         if not self.binary_path.exists():
@@ -72,6 +74,7 @@ class CramsRunner:
         ini_name = f"{tag}.ini"
         ini_path = self.build_dir / ini_name
         output_file = self.build_dir / "output" / f"{tag}_spectra_R_0.txt"
+        isotope_file = self.build_dir / "output" / f"{tag}_isotopes_R_0.txt"
 
         try:
             with open(ini_path, "w") as f:
@@ -96,12 +99,18 @@ class CramsRunner:
             spectra: dict[str, np.ndarray] = {"R": data[:, 0]}
             for Z, sym in enumerate(_ELEMENTS[1:], start=1):
                 spectra[sym] = data[:, Z]
+
+            # Isotope-resolved Be (columns: R, Be9, Be10) for the Be10/Be9 ratio.
+            if self.read_isotopes and isotope_file.exists():
+                iso = np.loadtxt(isotope_file, comments="#")
+                spectra["Be9"] = iso[:, 1]
+                spectra["Be10"] = iso[:, 2]
             return spectra
 
         except Exception:
             return None
 
         finally:
-            for path in (ini_path, output_file):
+            for path in (ini_path, output_file, isotope_file):
                 if path.exists():
                     path.unlink(missing_ok=True)
