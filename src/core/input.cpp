@@ -69,6 +69,8 @@ CRAMS::FragmentationModel parseFragmentationModel(const std::string& value) {
   if (model == "usinegalprop17opt12") return CRAMS::FragmentationModel::UsineGalprop17Opt12;
   if (model == "usinegalprop17opt22") return CRAMS::FragmentationModel::UsineGalprop17Opt22;
   if (model == "usinewebber03coste12") return CRAMS::FragmentationModel::UsineWebber03Coste12;
+  if (model == "evoli2026w93") return CRAMS::FragmentationModel::Evoli2026W93;
+  if (model == "evoli2026st99") return CRAMS::FragmentationModel::Evoli2026St99;
 
   throw std::runtime_error("Input: unknown fragmentation model '" + value + "'");
 }
@@ -83,6 +85,10 @@ std::string fragmentationModelName(CRAMS::FragmentationModel model) {
       return "usine_galprop17_opt22";
     case CRAMS::FragmentationModel::UsineWebber03Coste12:
       return "usine_webber03_coste12";
+    case CRAMS::FragmentationModel::Evoli2026W93:
+      return "evoli2026_w93";
+    case CRAMS::FragmentationModel::Evoli2026St99:
+      return "evoli2026_st99";
   }
 
   return "unknown";

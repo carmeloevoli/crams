@@ -1,6 +1,6 @@
 # XS4GCR CRAMS inelastic cross-section table
-# created: 2026-06-12
-# code_version: XS4GCR v (git: 11728ab)
+# created: 2026-06-16
+# code_version: XS4GCR v (git: 7d0141c+local)
 # model: CROSEC
 # reference: TODO
 # isotope_source: data/crams_nucleilist.csv

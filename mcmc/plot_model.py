@@ -54,23 +54,49 @@ def read_ini(path: Path) -> dict[str, float]:
     return vals
 
 
+def read_ini_str(path: Path, key: str) -> str | None:
+    """Return the value of a non-numeric 'key value' line (e.g. fragmentation_model)."""
+    for line in Path(path).read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) >= 2 and parts[0] == key:
+            return parts[1]
+    return None
+
+
 def median_params(chain_file: Path) -> dict[str, float]:
     d = np.load(chain_file, allow_pickle=True)
     names = [str(x) for x in d["param_names"]]
     return dict(zip(names, np.median(d["chain"], axis=0)))
 
 
+# Some quantities have two equivalent representations: the physical key crams
+# writes (d0, rb) and the fit-space key run_mcmc samples (d0_h = d0/h,
+# rb_log = log10 rb). They must never coexist in the param dict, or
+# runner.to_ini_params would let the fit-space value override the physical one.
+_CONJUGATE = {"d0": "d0_h", "d0_h": "d0", "rb": "rb_log", "rb_log": "rb"}
+
+
+def _merge(dst: dict[str, float], src: dict[str, float]) -> None:
+    """Update dst with src; a newly-set key removes its stale conjugate."""
+    for key, value in src.items():
+        dst.pop(_CONJUGATE.get(key, ""), None)
+        dst[key] = value
+
+
 def resolve_params(args) -> dict[str, float]:
     ini = {p.name: p.value for p in PARAMETERS}
     if args.ini:
-        ini.update(read_ini(Path(args.ini)))
+        _merge(ini, read_ini(Path(args.ini)))
     if args.chain:
-        ini.update(median_params(Path(args.chain)))
+        _merge(ini, median_params(Path(args.chain)))
     for ov in args.overrides:
         if "=" not in ov:
             sys.exit(f"bad override '{ov}', expected key=value")
         key, value = ov.split("=", 1)
-        ini[key.strip()] = float(value)
+        _merge(ini, {key.strip(): float(value)})
     return ini
 
 
@@ -128,10 +154,20 @@ def main(argv=None) -> None:
     p.add_argument("--chain", default=None, help="chain .npz; use its posterior median")
     p.add_argument("--output", default="figs/model", help="output prefix; each panel is saved as <prefix>_<species>.pdf")
     p.add_argument("--build-dir", default=None, help="path to crams build/")
+    p.add_argument("--fragmentation-model", default=None,
+                   help="crams fragmentation model; defaults to the one in --ini, else crams' built-in default")
     args = p.parse_args(argv)
 
     ini = resolve_params(args)
-    runner = CramsRunner(build_dir=args.build_dir)
+    # The fragmentation model is a string (not a fit parameter), so it isn't in
+    # `ini`; read it from the .ini unless overridden, and pass it to the runner.
+    # Otherwise crams falls back to its built-in default and the chi^2 won't match
+    # the best-fit.
+    frag_model = args.fragmentation_model
+    if frag_model is None and args.ini:
+        frag_model = read_ini_str(Path(args.ini), "fragmentation_model")
+    print(f"Fragmentation model: {frag_model or 'crams default'}")
+    runner = CramsRunner(build_dir=args.build_dir, fragmentation_model=frag_model)
     spectra = runner.run(ini)
     if spectra is None:
         sys.exit("crams run failed for the requested parameters.")

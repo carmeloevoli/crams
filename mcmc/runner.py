@@ -21,6 +21,8 @@ FRAGMENTATION_MODELS = [
     "usine_galprop17_opt12",
     "usine_galprop17_opt22",
     "usine_webber03_coste12",
+    "evoli2026w93",
+    "evoli2026st99",
 ]
 
 
@@ -158,11 +160,13 @@ class CramsRunner:
             for Z, sym in enumerate(_ELEMENTS[1:], start=1):
                 spectra[sym] = data[:, Z]
 
-            # Isotope-resolved Be (columns: R, Be9, Be10) for the Be10/Be9 ratio.
+            # Isotope-resolved Be (columns: R, Be7, Be9, Be10) for the Be isotope
+            # ratios (Be9/Be7, Be10/Be9).
             if self.read_isotopes and isotope_file.exists():
                 iso = np.loadtxt(isotope_file, comments="#")
-                spectra["Be9"] = iso[:, 1]
-                spectra["Be10"] = iso[:, 2]
+                spectra["Be7"] = iso[:, 1]
+                spectra["Be9"] = iso[:, 2]
+                spectra["Be10"] = iso[:, 3]
             return spectra
 
         except Exception:

@@ -73,6 +73,16 @@ class NucFragUsineWebber03Coste12 : public NucFragFromTable {
   NucFragUsineWebber03Coste12();
 };
 
+class NucFragEvoli2026W93 : public NucFragFromTable {
+ public:
+  NucFragEvoli2026W93();
+};
+
+class NucFragEvoli2026St99 : public NucFragFromTable {
+ public:
+  NucFragEvoli2026St99();
+};
+
 }  // namespace CRAMS
 
 #endif  // CRAMS_FRAGMENTATION_H_

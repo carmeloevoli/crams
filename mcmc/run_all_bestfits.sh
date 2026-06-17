@@ -12,14 +12,12 @@ cd "$(dirname "$0")"
 # ── Configuration ─────────────────────────────────────────────────────────────
 HALOSIZE=5
 NM_MAXFEV=300     # quick Nelder-Mead pre-fit, used to seed MINUIT
-MAXFEV=2000       # MINUIT (iminuit) evaluations
+MAXFEV=3000       # MINUIT (iminuit) evaluations
 # ──────────────────────────────────────────────────────────────────────────────
 
 MODELS=(
-  fluka4dragon
-  usine_galprop17_opt12
-  usine_galprop17_opt22
-  usine_webber03_coste12
+  evoli2026w93
+  evoli2026st99
 )
 
 OUTDIR="bestfits"

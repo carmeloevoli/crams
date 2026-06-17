@@ -73,6 +73,12 @@ int main(int argc, char* argv[]) {
       case CRAMS::FragmentationModel::UsineWebber03Coste12:
         nucfragXsecs = std::make_unique<CRAMS::NucFragUsineWebber03Coste12>();
         break;
+      case CRAMS::FragmentationModel::Evoli2026W93:
+        nucfragXsecs = std::make_unique<CRAMS::NucFragEvoli2026W93>();
+        break;
+      case CRAMS::FragmentationModel::Evoli2026St99:
+        nucfragXsecs = std::make_unique<CRAMS::NucFragEvoli2026St99>();
+        break;
     }
 
     for (auto& particle : particles) {

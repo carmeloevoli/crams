@@ -48,6 +48,8 @@ void test_fragmentation_models_load() {
   CHECK(loads([] { CRAMS::NucFragUsineGalprop17Opt12 m; }));
   CHECK(loads([] { CRAMS::NucFragUsineGalprop17Opt22 m; }));
   CHECK(loads([] { CRAMS::NucFragUsineWebber03Coste12 m; }));
+  CHECK(loads([] { CRAMS::NucFragEvoli2026W93 m; }));
+  CHECK(loads([] { CRAMS::NucFragEvoli2026St99 m; }));
 }
 
 void test_inelastic_values_sane() {

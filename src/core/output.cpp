@@ -46,8 +46,9 @@ void writeChargeGroupColumns(std::ostream& out, const std::string& axisLabel) {
 void writeIsotopeColumns(std::ostream& out) {
   out << "# Columns\n";
   out << "# R [GV] -> 1\n";
-  out << "# Be9 -> 2\n";
-  out << "# Be10 -> 3\n";
+  out << "# Be7 -> 2\n";
+  out << "# Be9 -> 3\n";
+  out << "# Be10 -> 4\n";
   writeFluxUnit(out);
 }
 
@@ -112,6 +113,7 @@ void OutputManager::dumpIsotopes() const {
   writeIsotopeColumns(out);
   for (const auto& R : m_R) {
     out << R / CGS::GeV << "\t";
+    out << getFluxChargeIsotope(4, 7, R) / units << "\t";
     out << getFluxChargeIsotope(4, 9, R) / units << "\t";
     out << getFluxChargeIsotope(4, 10, R) / units << "\t";
     out << "\n";

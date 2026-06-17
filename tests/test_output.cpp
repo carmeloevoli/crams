@@ -53,8 +53,9 @@ void test_spectra_headers_map_species_to_columns() {
   CHECK(ekn.find("# H -> 2") != std::string::npos);
   CHECK(ekn.find("# He -> 3") != std::string::npos);
 
-  CHECK(isotopes.find("# Be9 -> 2") != std::string::npos);
-  CHECK(isotopes.find("# Be10 -> 3") != std::string::npos);
+  CHECK(isotopes.find("# Be7 -> 2") != std::string::npos);
+  CHECK(isotopes.find("# Be9 -> 3") != std::string::npos);
+  CHECK(isotopes.find("# Be10 -> 4") != std::string::npos);
 }
 
 int main() {

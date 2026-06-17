@@ -25,6 +25,8 @@ enum class FragmentationModel {
   UsineGalprop17Opt12,
   UsineGalprop17Opt22,
   UsineWebber03Coste12,
+  Evoli2026W93,
+  Evoli2026St99,
 };
 
 class Input {

@@ -135,6 +135,11 @@ add_executable(test_models tests/test_models.cpp)
 target_link_libraries(test_models crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_models COMMAND test_models)
 
+add_test(NAME test_data_tables
+         COMMAND ${CMAKE_COMMAND}
+                 -DCRAMS_DATA_DIR=${CMAKE_SOURCE_DIR}/data
+                 -P ${CMAKE_SOURCE_DIR}/tests/check_data_tables.cmake)
+
 add_executable(test_output tests/test_output.cpp)
 target_link_libraries(test_output crams_core ${CRAMS_EXTRA_LIBRARIES})
 add_test(NAME test_output COMMAND test_output)
