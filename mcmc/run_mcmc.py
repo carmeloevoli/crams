@@ -39,7 +39,7 @@ try:
 except ImportError:
     sys.exit("emcee is required. Install with:  pip install emcee")
 
-from runner import FRAGMENTATION_MODELS, CramsRunner
+from runner import FRAGMENTATION_MODELS, CramsRunner, from_ini_params
 from fitting import (
     Dataset,
     Parameter,
@@ -141,6 +141,36 @@ def set_halo_size(h_kpc: float) -> None:
     raise KeyError("no fixed 'h' parameter found in PARAMETERS")
 
 
+def _read_ini_values(path: Path) -> dict[str, float]:
+    """Read numeric 'key value' lines from a crams .ini (skips comments/strings)."""
+    vals: dict[str, float] = {}
+    for line in Path(path).read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split()
+        if len(parts) >= 2:
+            try:
+                vals[parts[0]] = float(parts[1])
+            except ValueError:
+                continue
+    return vals
+
+
+def set_start_from_ini(path: str) -> None:
+    """Override the initial value of each active parameter from a crams .ini.
+
+    The .ini stores physical crams keys (d0, rb); from_ini_params maps them back
+    to the fit-space parameters (d0_h, rb_log). Parameters absent from the file
+    keep their default value. The walkers are seeded in a tight ball around these
+    values, so this sets where the MCMC starts (e.g. a MINUIT best-fit point).
+    """
+    start = from_ini_params(_read_ini_values(Path(path)))
+    for p in PARAMETERS:
+        if p.active and p.name in start:
+            p.value = start[p.name]
+
+
 def _parse_args(argv=None):
     p = argparse.ArgumentParser(
         description="MCMC fit of crams propagation model to cosmic-ray data"
@@ -154,6 +184,9 @@ def _parse_args(argv=None):
                         "(default: None = crams built-in default)")
     p.add_argument("--halosize",  type=float, default=None,
                    help="halo half-height h [kpc] (default: PARAMETERS value, 7)")
+    p.add_argument("--start",     default=None,
+                   help="crams .ini (e.g. a MINUIT bestfit) whose active values "
+                        "seed the walkers (default: PARAMETERS values)")
     p.add_argument("--build-dir", default=None,                help="path to crams build/")
     p.add_argument("--seed",      type=int, default=42,        help="random seed")
     p.add_argument("--ncores",    type=int, default=1,
@@ -176,6 +209,9 @@ def main(argv=None) -> None:
         set_halo_size(args.halosize)
     halo_size = next(p.value for p in PARAMETERS if p.name == "h")
 
+    if args.start is not None:
+        set_start_from_ini(args.start)
+
     runner = CramsRunner(build_dir=args.build_dir,
                          fragmentation_model=args.fragmentation_model)
     data_cache: dict = {}
@@ -195,6 +231,7 @@ def main(argv=None) -> None:
     print(f"Datasets ({len(DATASETS)}): {[d.filename for d in DATASETS]}")
     print(f"Fragmentation model: {args.fragmentation_model or 'crams default'}")
     print(f"Halo half-height h: {halo_size} kpc")
+    print(f"Start point: {args.start or 'PARAMETERS defaults'}")
     print(f"Walkers: {args.nwalkers}  Burn-in: {args.nburn}  Production: {args.nsteps}  Cores: {ncores}")
 
     # Initialise walkers as a tight Gaussian ball around the starting point
