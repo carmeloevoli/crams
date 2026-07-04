@@ -69,6 +69,7 @@ CRAMS::FragmentationModel parseFragmentationModel(const std::string& value) {
   if (model == "usinegalprop17opt12") return CRAMS::FragmentationModel::UsineGalprop17Opt12;
   if (model == "usinegalprop17opt22") return CRAMS::FragmentationModel::UsineGalprop17Opt22;
   if (model == "usinewebber03coste12") return CRAMS::FragmentationModel::UsineWebber03Coste12;
+  if (model == "evoli2019") return CRAMS::FragmentationModel::Evoli2019;
   if (model == "evoli2026w93") return CRAMS::FragmentationModel::Evoli2026W93;
   if (model == "evoli2026st99") return CRAMS::FragmentationModel::Evoli2026St99;
 
@@ -85,6 +86,8 @@ std::string fragmentationModelName(CRAMS::FragmentationModel model) {
       return "usine_galprop17_opt22";
     case CRAMS::FragmentationModel::UsineWebber03Coste12:
       return "usine_webber03_coste12";
+    case CRAMS::FragmentationModel::Evoli2019:
+      return "evoli2019";
     case CRAMS::FragmentationModel::Evoli2026W93:
       return "evoli2026_w93";
     case CRAMS::FragmentationModel::Evoli2026St99:
@@ -130,6 +133,15 @@ void Input::setParam(const std::string& KEY, double value) {
   } else if (key == "phi") {
     m_modulationPotential = value * CGS::GeV;
     LOGD << "changed phi to " << m_modulationPotential / CGS::GeV << " GV";
+  } else if (key == "fudgebe7") {  // .ini key "fudge_be7" (simplifyKey strips '_')
+    m_fudgeBe7 = value;
+    LOGD << "changed fudge_Be7 to " << m_fudgeBe7;
+  } else if (key == "fudgebe9") {
+    m_fudgeBe9 = value;
+    LOGD << "changed fudge_Be9 to " << m_fudgeBe9;
+  } else if (key == "fudgebe10") {
+    m_fudgeBe10 = value;
+    LOGD << "changed fudge_Be10 to " << m_fudgeBe10;
   } else if (key == "id") {
     m_id = static_cast<size_t>(value);
   }
@@ -196,6 +208,8 @@ void Input::print() const {
   LOGD << "R_b    [GV]         : " << m_R_b / CGS::GeV;
   LOGD << "s      []           : " << m_smoothness;
   LOGD << "phi    [GeV]        : " << m_modulationPotential / CGS::GeV;
+  if (m_fudgeBe7 != 1. || m_fudgeBe9 != 1. || m_fudgeBe10 != 1.)
+    LOGD << "fudge Be7/9/10      : " << m_fudgeBe7 << " / " << m_fudgeBe9 << " / " << m_fudgeBe10;
   LOGD << "E_min  [GeV]        : " << m_TSimMin / CGS::GeV;
   LOGD << "E_max  [GeV]        : " << m_TSimMax / CGS::GeV;
   LOGD << "E_size []           : " << m_TSimSize;

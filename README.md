@@ -128,7 +128,8 @@ above is just a human-readable index. To add or update a table:
 The [`mcmc/`](mcmc/) folder is an **auxiliary toolkit**, not part of the core
 code: a set of Python scripts that drive the `crams` binary to fit transport and
 injection parameters to cosmic-ray data (e.g. via `emcee`/`iminuit`), locate the
-best-fit point, and plot the resulting fluxes, ratios, and isotopic posteriors.
+best-fit point, and plot the resulting fluxes, ratios, isotope predictions, and
+parameter posteriors.
 See the scripts and their docstrings in that directory for usage.
 
 ## Versions

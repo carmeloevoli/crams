@@ -146,6 +146,9 @@ NucFragUsineWebber03Coste12::NucFragUsineWebber03Coste12()
     : NucFragFromTable("USINE_WEBBER03_COSTE12", "data/crams_fragmentation_usine_webber03+coste12.csv", kFragTmin,
                        kFragTmax, kFragTsize) {}
 
+NucFragEvoli2019::NucFragEvoli2019()
+    : NucFragFromTable("Evoli2019", "data/crams_fragmentation_evoli2019.csv", kFragTmin, kFragTmax, kFragTsize) {}
+
 NucFragEvoli2026W93::NucFragEvoli2026W93()
     : NucFragFromTable("Evoli2026W93", "data/crams_fragmentation_evoli2026_w93.csv", kFragTmin, kFragTmax, kFragTsize) {}
 

@@ -43,6 +43,15 @@ const DecayContribution kDecayContributions[] = {
 
 double coth(double x) { return 1. / std::tanh(x); }
 
+// Multiplicative correction on the Be isotope production cross-sections, read
+// from the .ini (fudge_be7/9/10). Returns 1 for every other species.
+double beProductionFudge(const Input& input, const PID& pid) {
+  if (pid == Be7) return input.fudgeBe7();
+  if (pid == Be9) return input.fudgeBe9();
+  if (pid == Be10) return input.fudgeBe10();
+  return 1.;
+}
+
 std::vector<double> makeSourceEnergyGrid() {
   return Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, kSourceGridSize);
 }
@@ -166,6 +175,15 @@ void Particle::buildSecondarySource(const Input& input, const std::vector<Partic
   }
   for (auto& q : Q_s) q /= CGS::meanISMmass;
 
+  // Scale the spallation production of Be isotopes by the .ini fudge factor
+  // (a production cross-section correction; leaves the decay feed-in below
+  // untouched). The total Be flux stays consistent as the sum of the scaled
+  // isotopes because it is rebuilt from them downstream.
+  const double beFudge = beProductionFudge(input, m_pid);
+  if (beFudge != 1.) {
+    for (auto& q : Q_s) q *= beFudge;
+  }
+
   for (const auto& contribution : kDecayContributions) {
     if (m_pid != contribution.child) continue;
 
@@ -219,6 +237,10 @@ void Particle::buildGrammageAtSource(const Input& input, const std::vector<Parti
       const double r = input.X_s() / CGS::meanISMmass * nucfrag.getXsecOnISM(parentPid, m_pid, T);
       Q_X[i] += r * Q_p.get(T);
     }
+  }
+  const double beFudge = beProductionFudge(input, m_pid);
+  if (beFudge != 1.) {
+    for (auto& q : Q_X) q *= beFudge;
   }
   m_Q_Xs = std::make_unique<SecondarySource>(m_pid, T_X, Q_X);
 }

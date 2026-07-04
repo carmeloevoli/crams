@@ -30,6 +30,9 @@ LABELS: dict[str, str] = {
     "rb":      r"$R_b$ [GV]",
     "h":       r"$H$ [kpc]",
     "xs":      r"$X_s$ [g/cm$^2$]",
+    "fudge_be7":  r"$f_{^{7}\mathrm{Be}}$",
+    "fudge_be9":  r"$f_{^{9}\mathrm{Be}}$",
+    "fudge_be10": r"$f_{^{10}\mathrm{Be}}$",
 }
 
 

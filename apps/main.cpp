@@ -73,6 +73,9 @@ int main(int argc, char* argv[]) {
       case CRAMS::FragmentationModel::UsineWebber03Coste12:
         nucfragXsecs = std::make_unique<CRAMS::NucFragUsineWebber03Coste12>();
         break;
+      case CRAMS::FragmentationModel::Evoli2019:
+        nucfragXsecs = std::make_unique<CRAMS::NucFragEvoli2019>();
+        break;
       case CRAMS::FragmentationModel::Evoli2026W93:
         nucfragXsecs = std::make_unique<CRAMS::NucFragEvoli2026W93>();
         break;

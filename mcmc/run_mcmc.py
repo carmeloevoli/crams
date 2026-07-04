@@ -4,6 +4,9 @@
 Usage
 -----
     python run_mcmc.py                          # default settings
+    python run_mcmc.py --scenario variable_h_beb
+    python run_mcmc.py --scenario variable_h_preliminary_be
+    python run_mcmc.py --scenario variable_h_variable_xsecs_preliminary_be
     python run_mcmc.py --nwalkers 64 --nsteps 1000 --nburn 300
     python run_mcmc.py --output my_chain.npz
 
@@ -19,6 +22,7 @@ An .npz file with keys:
   log_prob    – log-posterior for each sample
   param_names – active parameter names
   acceptance  – mean acceptance fraction
+  scenario    – fit scenario used to build parameters and datasets
 
 To plot results afterwards use corner.py:
   import corner, numpy as np
@@ -28,6 +32,7 @@ To plot results afterwards use corner.py:
 from __future__ import annotations
 
 import argparse
+import copy
 import multiprocessing
 import sys
 from pathlib import Path
@@ -67,6 +72,8 @@ from fitting import (
 #                       when writing the .ini (break rigidity is a scale param,
 #                       better sampled in log)
 #   h                 – halo half-height [kpc]
+#   fudge_be7/9/10    – multiplicative corrections on the Be isotope production
+#                       cross-sections, applied inside crams (written to the .ini)
 PARAMETERS: list[Parameter] = [
     # --- free parameters (initial values = best-fit point) ---
     Parameter("qh",      4.14e-2,   1e-2,  2e-1,  active=True),   # H injection abundance
@@ -99,27 +106,28 @@ PARAMETERS: list[Parameter] = [
 # denominator : element symbol for ratio, or '' for absolute flux
 # R_min/R_max : rigidity range [GV] included in the chi²
 # weight      : relative weight of this dataset in the total chi²
+RMAX = 3000.0  # GV; upper limit of all datasets (AMS-02 published range)
 DATASETS: list[Dataset] = [
     # Fluxes
-    Dataset("AMS-02_H_rigidity.txt",  "H",  "", R_min=5.0, R_max=1500.0, weight=1.0),
-    Dataset("AMS-02_He_rigidity.txt", "He", "", R_min=5.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_B_rigidity.txt", "B", "", R_min=5.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_C_rigidity.txt",  "C",  "", R_min=5.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_O_rigidity.txt",  "O",  "", R_min=5.0, R_max=2500.0, weight=1.0),
+    Dataset("AMS-02_H_rigidity.txt",  "H",  "", R_min=5.0, R_max=RMAX, weight=1.0),
+    Dataset("AMS-02_He_rigidity.txt", "He", "", R_min=5.0, R_max=RMAX, weight=1.0),
+    Dataset("AMS-02_B_rigidity.txt", "B", "", R_min=5.0, R_max=RMAX, weight=1.0),
+    Dataset("AMS-02_C_rigidity.txt",  "C",  "", R_min=5.0, R_max=RMAX, weight=1.0),
+    Dataset("AMS-02_O_rigidity.txt",  "O",  "", R_min=5.0, R_max=RMAX, weight=1.0),
     # Ratios
-    Dataset("AMS-02_H_He_rigidity.txt", "H", "He", R_min=5.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_He_O_rigidity.txt", "He", "O", R_min=5.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_B_C_rigidity.txt", "B", "C", R_min=5.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_B_O_rigidity.txt", "B", "O", R_min=5.0, R_max=2500.0, weight=1.0),
-    Dataset("AMS-02_C_O_rigidity.txt", "C", "O", R_min=5.0, R_max=2500.0, weight=1.0),
-    # N and the heavier primaries: only above 40 GV and down-weighted — slightly
+    Dataset("AMS-02_H_He_rigidity.txt", "H", "He", R_min=5.0, R_max=RMAX, weight=1.0),
+    Dataset("AMS-02_He_O_rigidity.txt", "He", "O", R_min=5.0, R_max=RMAX, weight=1.0),
+    Dataset("AMS-02_B_C_rigidity.txt", "B", "C", R_min=5.0, R_max=RMAX, weight=1.0),
+    Dataset("AMS-02_B_O_rigidity.txt", "B", "O", R_min=5.0, R_max=RMAX, weight=1.0),
+    Dataset("AMS-02_C_O_rigidity.txt", "C", "O", R_min=5.0, R_max=RMAX, weight=1.0),
+    # N and the heavier primaries: only above 30 GV and down-weighted — slightly
     # less relevant, and their small error bars would otherwise dominate the fit.
-    Dataset("AMS-02_N_rigidity.txt", "N", "", R_min=40.0, R_max=2500.0, weight=0.25),
-    Dataset("AMS-02_Ne_rigidity.txt", "Ne", "", R_min=40.0, R_max=2500.0, weight=0.25),
-    Dataset("AMS-02_Mg_rigidity.txt", "Mg", "", R_min=40.0, R_max=2500.0, weight=0.25),
-    Dataset("AMS-02_Si_rigidity.txt", "Si", "", R_min=40.0, R_max=2500.0, weight=0.25),
-    Dataset("AMS-02_S_rigidity.txt", "S", "", R_min=40.0, R_max=2500.0, weight=0.25),
-    Dataset("AMS-02_Fe_rigidity.txt", "Fe", "", R_min=40.0, R_max=2500.0, weight=0.25),
+    Dataset("AMS-02_N_rigidity.txt", "N", "", R_min=30.0, R_max=RMAX, weight=0.25),
+    Dataset("AMS-02_Ne_rigidity.txt", "Ne", "", R_min=30.0, R_max=RMAX, weight=0.25),
+    Dataset("AMS-02_Mg_rigidity.txt", "Mg", "", R_min=30.0, R_max=RMAX, weight=0.25),
+    Dataset("AMS-02_Si_rigidity.txt", "Si", "", R_min=30.0, R_max=RMAX, weight=0.25),
+    Dataset("AMS-02_S_rigidity.txt", "S", "", R_min=30.0, R_max=RMAX, weight=0.25),
+    Dataset("AMS-02_Fe_rigidity.txt", "Fe", "", R_min=30.0, R_max=RMAX, weight=0.25),
 ]
 
 # ── MCMC defaults ──────────────────────────────────────────────────────────────
@@ -127,14 +135,130 @@ N_WALKERS = 96     # ~5x ndim; pilot acceptance ~0.32
 N_BURN    = 300    # ~3.5x tau (tau_max ~56 from pilot); walkers start at the best-fit
 N_STEPS   = 4000   # ~53x tau -> ~5000 independent samples
 
+VARIABLE_H_BE_SCENARIOS = (
+    "variable_h_beb",
+    "variable_h_preliminary_be",
+    "variable_h_variable_xsecs_preliminary_be",
+)
+SCENARIOS = ("baseline", *VARIABLE_H_BE_SCENARIOS)
+BE_FUDGE_PRIORS = {
+    "Be7": (0.94, 0.032),
+    "Be9": (0.88, 0.07),
+    "Be10": (0.99, 0.08),
+}
 
-def set_halo_size(h_kpc: float) -> None:
+
+def _activate_parameter(params: list[Parameter], name: str) -> None:
+    for p in params:
+        if p.name == name:
+            p.active = True
+            return
+    raise KeyError(f"no '{name}' parameter found")
+
+
+def _be_fudge_parameters() -> list[Parameter]:
+    # to_crams=True: written to the .ini as fudge_be7/9/10 and applied inside
+    # crams to the Be production cross-sections, so the total Be flux stays the
+    # consistent sum of the scaled isotopes.
+    return [
+        Parameter(f"fudge_{isotope.lower()}", prior_mu, 0.2, 2.0,
+                  active=True, prior_kind="gaussian",
+                  prior_mu=prior_mu, prior_sigma=prior_sigma)
+        for isotope, (prior_mu, prior_sigma) in BE_FUDGE_PRIORS.items()
+    ]
+
+
+def _published_be_ratio_datasets() -> list[Dataset]:
+    return [
+        Dataset("AMS-02_Be_B_rigidity.txt", "Be", "B",
+                R_min=5.0, R_max=RMAX, weight=1.0),
+        Dataset("AMS-02_Be_C_rigidity.txt", "Be", "C",
+                R_min=5.0, R_max=RMAX, weight=1.0),
+    ]
+
+
+def _total_be_flux_dataset() -> Dataset:
+    return Dataset("AMS-02_Be_rigidity.txt", "Be", "",
+                   R_min=5.0, R_max=RMAX, weight=1.0)
+
+
+def _preliminary_be_isotope_flux_datasets() -> list[Dataset]:
+    return [
+        Dataset("AMS-02_preliminary_Be_isotopes_ECRS.csv", "Be7",
+                R_min=5.0, R_max=RMAX, weight=1.0,
+                source="preliminary_csv", csv_column="Be7_flux_R2p7",
+                model_power=2.7),
+        Dataset("AMS-02_preliminary_Be_isotopes_ECRS.csv", "Be9",
+                R_min=5.0, R_max=RMAX, weight=1.0,
+                source="preliminary_csv", csv_column="Be9_flux_R2p7",
+                model_power=2.7),
+        Dataset("AMS-02_preliminary_Be_isotopes_ECRS.csv", "Be10",
+                R_min=5.0, R_max=RMAX, weight=1.0,
+                source="preliminary_csv", csv_column="Be10_flux_R2p7",
+                model_power=2.7),
+    ]
+
+
+def _preliminary_be10_be9_dataset() -> Dataset:
+    return Dataset("AMS-02_preliminary_Be_ratios.csv", "Be10", "Be9",
+                   R_min=5.0, R_max=RMAX, weight=1.0,
+                   source="preliminary_csv", csv_column="Be10_over_Be9")
+
+
+def make_parameters(scenario: str = "baseline") -> list[Parameter]:
+    """Return parameters for one fit scenario."""
+    params = copy.deepcopy(PARAMETERS)
+    if scenario == "baseline":
+        return params
+    if scenario in VARIABLE_H_BE_SCENARIOS:
+        _activate_parameter(params, "h")
+        if scenario == "variable_h_variable_xsecs_preliminary_be":
+            params.extend(_be_fudge_parameters())
+        return params
+    raise ValueError(f"unknown scenario '{scenario}'")
+
+
+def make_datasets(scenario: str = "baseline") -> list[Dataset]:
+    """Return datasets for one fit scenario."""
+    datasets = copy.deepcopy(DATASETS)
+    if scenario == "baseline":
+        return datasets
+    if scenario in VARIABLE_H_BE_SCENARIOS:
+        if scenario == "variable_h_variable_xsecs_preliminary_be":
+            # Total Be flux + preliminary Be7/Be9/Be10 fluxes + down-weighted Be/B
+            datasets.append(_total_be_flux_dataset())
+            datasets.extend(_preliminary_be_isotope_flux_datasets())
+            datasets.append(Dataset("AMS-02_Be_B_rigidity.txt", "Be", "B",
+                                    R_min=5.0, R_max=RMAX, weight=0.25))
+            return datasets
+        datasets.extend(_published_be_ratio_datasets())
+        if scenario == "variable_h_beb":
+            return datasets
+        datasets.append(_preliminary_be10_be9_dataset())
+        return datasets
+    raise ValueError(f"unknown scenario '{scenario}'")
+
+
+def datasets_need_isotopes(datasets: list[Dataset]) -> bool:
+    isotope_keys = {"Be7", "Be9", "Be10"}
+    return any(ds.numerator in isotope_keys or ds.denominator in isotope_keys for ds in datasets)
+
+
+def dataset_label(dataset: Dataset) -> str:
+    quantity = dataset.numerator + (f"/{dataset.denominator}" if dataset.denominator else "")
+    if dataset.source == "preliminary_csv":
+        return f"{dataset.filename}:{dataset.csv_column} ({quantity})"
+    return f"{dataset.filename} ({quantity})"
+
+
+def set_halo_size(h_kpc: float, params: list[Parameter] | None = None) -> None:
     """Override the fixed halo half-height h (kpc) in PARAMETERS, in place.
 
     Because the diffusion parameter is sampled as d0/h, changing h only rescales
     the reconstructed d0 (d0 = d0_h * h) and leaves the d0_h prior untouched.
     """
-    for p in PARAMETERS:
+    target = PARAMETERS if params is None else params
+    for p in target:
         if p.name == "h":
             p.value = h_kpc
             return
@@ -157,7 +281,7 @@ def _read_ini_values(path: Path) -> dict[str, float]:
     return vals
 
 
-def set_start_from_ini(path: str) -> None:
+def set_start_from_ini(path: str, params: list[Parameter] | None = None) -> None:
     """Override the initial value of each active parameter from a crams .ini.
 
     The .ini stores physical crams keys (d0, rb); from_ini_params maps them back
@@ -166,7 +290,8 @@ def set_start_from_ini(path: str) -> None:
     values, so this sets where the MCMC starts (e.g. a MINUIT best-fit point).
     """
     start = from_ini_params(_read_ini_values(Path(path)))
-    for p in PARAMETERS:
+    target = PARAMETERS if params is None else params
+    for p in target:
         if p.active and p.name in start:
             p.value = start[p.name]
 
@@ -175,6 +300,17 @@ def _parse_args(argv=None):
     p = argparse.ArgumentParser(
         description="MCMC fit of crams propagation model to cosmic-ray data"
     )
+    p.add_argument("--scenario", default="baseline", choices=SCENARIOS,
+                   help="fit scenario: baseline = current published-data, fixed-h fit; "
+                        "variable_h_beb = free halo h plus published Be/B and "
+                        "Be/C, without preliminary data; "
+                        "variable_h_preliminary_be = same plus preliminary "
+                        "Be10/Be9 above 5 GV; "
+                        "variable_h_variable_xsecs_preliminary_be = free halo h "
+                        "with total Be flux plus preliminary Be7/Be9 fluxes and "
+                        "Be10/Be9 (no published Be/B, Be/C ratios), and "
+                        "likelihood-only Be isotope renormalization factors with "
+                        "10%% Gaussian priors")
     p.add_argument("--nwalkers",  type=int, default=N_WALKERS, help="number of emcee walkers")
     p.add_argument("--nburn",     type=int, default=N_BURN,    help="burn-in steps (discarded)")
     p.add_argument("--nsteps",    type=int, default=N_STEPS,   help="production steps")
@@ -183,7 +319,7 @@ def _parse_args(argv=None):
                    help="crams fragmentation cross-section model "
                         "(default: None = crams built-in default)")
     p.add_argument("--halosize",  type=float, default=None,
-                   help="halo half-height h [kpc] (default: PARAMETERS value, 7)")
+                   help="halo half-height h [kpc] (default: PARAMETERS value)")
     p.add_argument("--start",     default=None,
                    help="crams .ini (e.g. a MINUIT bestfit) whose active values "
                         "seed the walkers (default: PARAMETERS values)")
@@ -205,20 +341,27 @@ def main(argv=None) -> None:
     args = _parse_args(argv)
     rng = np.random.default_rng(args.seed)
 
-    if args.halosize is not None:
-        set_halo_size(args.halosize)
-    halo_size = next(p.value for p in PARAMETERS if p.name == "h")
+    params = make_parameters(args.scenario)
+    datasets = make_datasets(args.scenario)
 
     if args.start is not None:
-        set_start_from_ini(args.start)
+        set_start_from_ini(args.start, params)
+
+    if args.halosize is not None:
+        set_halo_size(args.halosize, params)
+
+    halo_param = next(p for p in params if p.name == "h")
+    halo_size = halo_param.value
+    read_isotopes = datasets_need_isotopes(datasets)
 
     runner = CramsRunner(build_dir=args.build_dir,
-                         fragmentation_model=args.fragmentation_model)
+                         fragmentation_model=args.fragmentation_model,
+                         read_isotopes=read_isotopes)
     data_cache: dict = {}
 
-    active = [p for p in PARAMETERS if p.active]
+    active = [p for p in params if p.active]
     ndim   = len(active)
-    theta0 = pack_theta(PARAMETERS)
+    theta0 = pack_theta(params)
 
     if ndim == 0:
         sys.exit("No active parameters. Set active=True for at least one parameter.")
@@ -226,11 +369,16 @@ def main(argv=None) -> None:
         sys.exit(f"nwalkers ({args.nwalkers}) must be at least 2 × ndim ({2 * ndim}).")
 
     ncores = min(args.ncores, args.nwalkers)
+    print(f"Scenario: {args.scenario}")
     print(f"Active parameters ({ndim}): {[p.name for p in active]}")
-    print(f"Fixed parameters: {[p.name for p in PARAMETERS if not p.active]}")
-    print(f"Datasets ({len(DATASETS)}): {[d.filename for d in DATASETS]}")
+    print(f"Fixed parameters: {[p.name for p in params if not p.active]}")
+    nuisance = [p.name for p in active if not p.to_crams]
+    if nuisance:
+        print(f"Likelihood-only nuisance parameters: {nuisance}")
+    print(f"Datasets ({len(datasets)}): {[dataset_label(d) for d in datasets]}")
     print(f"Fragmentation model: {args.fragmentation_model or 'crams default'}")
-    print(f"Halo half-height h: {halo_size} kpc")
+    print(f"Halo half-height h: {'free' if halo_param.active else f'{halo_size} kpc'}")
+    print(f"Read isotope spectra: {read_isotopes}")
     print(f"Start point: {args.start or 'PARAMETERS defaults'}")
     print(f"Walkers: {args.nwalkers}  Burn-in: {args.nburn}  Production: {args.nsteps}  Cores: {ncores}")
 
@@ -243,7 +391,7 @@ def main(argv=None) -> None:
         args.nwalkers,
         ndim,
         log_posterior,
-        args=(PARAMETERS, DATASETS, runner, data_cache),
+        args=(params, datasets, runner, data_cache),
         pool=pool,
     )
 
@@ -293,6 +441,7 @@ def main(argv=None) -> None:
         acceptance=acceptance,
         fragmentation_model=np.array(args.fragmentation_model or ""),
         halo_size=np.array(halo_size),
+        scenario=np.array(args.scenario),
     )
     print(f"\nChain saved to {output_path.resolve()}")
     print(

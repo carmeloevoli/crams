@@ -10,6 +10,7 @@ import numpy as np
 from runner import CramsRunner
 
 KISS_DIR = Path(__file__).parent / "kiss_tables"
+PRELIMINARY_DIR = Path(__file__).parent / "preliminary"
 
 
 # ── Data structures ────────────────────────────────────────────────────────────
@@ -26,7 +27,13 @@ class Parameter:
       - rb    : GV            (e.g. 290.0)
       - phi   : GV            (e.g. 0.488)
       - delta, ddelta, xs : dimensionless / g cm⁻²
-    *prior_lo*, *prior_hi* define the flat (uniform) prior.
+    *prior_lo*, *prior_hi* define hard bounds. For the default ``'flat'`` prior
+    they are the full prior; for ``'gaussian'`` they act as safety bounds around
+    the Gaussian penalty.
+    *prior_kind* is ``'flat'`` or ``'gaussian'``.
+    *prior_mu*, *prior_sigma* define the Gaussian prior when used.
+    *to_crams* marks parameters written to the crams .ini. Set it False for
+    likelihood-only nuisance parameters.
     Set *active = False* to hold the parameter fixed at *value*.
     """
     name: str
@@ -34,19 +41,27 @@ class Parameter:
     prior_lo: float
     prior_hi: float
     active: bool = True
+    prior_kind: str = "flat"
+    prior_mu: Optional[float] = None
+    prior_sigma: Optional[float] = None
+    to_crams: bool = True
 
 
 @dataclass
 class Dataset:
-    """One cosmic-ray dataset from kiss_tables to include in the fit.
+    """One cosmic-ray dataset to include in the fit.
 
-    *filename* : file inside kiss_tables/ (e.g. ``'AMS-02_B_C_rigidity.txt'``).
+    *filename* : data file inside kiss_tables/ or preliminary/.
     *numerator* : element symbol for the model quantity (e.g. ``'B'``).
     *denominator* : element symbol for the denominator; ``''`` = absolute flux.
     *R_min*, *R_max* : rigidity range [GV] used in the chi².
     *weight* : relative weight of this dataset in the total chi².
     *error_mode* : how stat and sys errors are combined —
         ``'quadrature'`` (default), ``'stat'``, ``'sys'``, or ``'linear'``.
+    *source* : ``'kiss'`` for CRDB/KISS tables or ``'preliminary_csv'``.
+    *csv_column* : value column to read when *source* is ``'preliminary_csv'``.
+    *model_power* : multiply model predictions by ``R**model_power`` before
+        interpolation; used for preliminary flux columns stored as R^2.7 flux.
     """
     filename: str
     numerator: str
@@ -55,6 +70,9 @@ class Dataset:
     R_max: float = 1000.0
     weight: float = 1.0
     error_mode: str = "quadrature"
+    source: str = "kiss"
+    csv_column: str = ""
+    model_power: float = 0.0
 
 
 # ── Data loading ───────────────────────────────────────────────────────────────
@@ -101,6 +119,34 @@ def _read_kiss_table(
     return x, y, err_lo, err_hi
 
 
+def _read_preliminary_csv(
+    path: Path,
+    column: str,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Return (R, y, err_lo, err_hi) from a preliminary AMS-02 CSV column."""
+    data = np.genfromtxt(path, delimiter=",", names=True)
+    err_column = column[:-len("_flux_R2p7")] if column.endswith("_flux_R2p7") else column
+    return (
+        np.asarray(data["R_GV"], dtype=float),
+        np.asarray(data[column], dtype=float),
+        np.asarray(data[f"{err_column}_err_minus"], dtype=float),
+        np.asarray(data[f"{err_column}_err_plus"], dtype=float),
+    )
+
+
+def read_dataset_data(dataset: Dataset) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Return (R, y, err_lo, err_hi) for a configured dataset."""
+    if dataset.source == "kiss":
+        return _read_kiss_table(KISS_DIR / dataset.filename, dataset.error_mode)
+
+    if dataset.source == "preliminary_csv":
+        if not dataset.csv_column:
+            raise ValueError(f"preliminary CSV dataset {dataset.filename} has no csv_column")
+        return _read_preliminary_csv(PRELIMINARY_DIR / dataset.filename, dataset.csv_column)
+
+    raise ValueError(f"unknown dataset source '{dataset.source}'")
+
+
 # ── Model evaluation ───────────────────────────────────────────────────────────
 
 def _interpolate_loglog(
@@ -136,6 +182,8 @@ def compute_observable(
             y_model = np.where(denom > 0, num / denom, np.nan)
     else:
         y_model = num
+    if dataset.model_power:
+        y_model = R_model**dataset.model_power * y_model
     return _interpolate_loglog(R_model, y_model, R_data)
 
 
@@ -149,7 +197,7 @@ def pack_theta(params: list[Parameter]) -> np.ndarray:
 def unpack_theta(
     theta: np.ndarray, params: list[Parameter]
 ) -> dict[str, float]:
-    """Map active *theta* values back onto the full .ini parameter dict."""
+    """Map active *theta* values back onto the full fit parameter dict."""
     ini: dict[str, float] = {p.name: p.value for p in params}
     active = [p for p in params if p.active]
     for val, param in zip(theta, active):
@@ -157,15 +205,40 @@ def unpack_theta(
     return ini
 
 
+def crams_params_from_fit_params(
+    values: dict[str, float],
+    params: list[Parameter],
+) -> dict[str, float]:
+    """Return only the fit parameters that should be written to crams."""
+    return {
+        p.name: values[p.name]
+        for p in params
+        if p.to_crams and p.name in values
+    }
+
+
 # ── Likelihood ─────────────────────────────────────────────────────────────────
 
 def log_prior(theta: np.ndarray, params: list[Parameter]) -> float:
-    """Flat prior: 0 inside bounds, -inf outside."""
+    """Evaluate parameter priors."""
     active = [p for p in params if p.active]
+    lp = 0.0
     for val, param in zip(theta, active):
+        if not np.isfinite(val):
+            return -np.inf
         if not (param.prior_lo <= val <= param.prior_hi):
             return -np.inf
-    return 0.0
+        if param.prior_kind == "flat":
+            continue
+        if param.prior_kind == "gaussian":
+            mu = param.value if param.prior_mu is None else param.prior_mu
+            sigma = param.prior_sigma
+            if sigma is None or sigma <= 0.0:
+                raise ValueError(f"Gaussian prior for {param.name} needs prior_sigma > 0")
+            lp += -0.5 * ((val - mu) / sigma) ** 2
+            continue
+        raise ValueError(f"unknown prior_kind {param.prior_kind!r} for {param.name}")
+    return lp
 
 
 def _chi2_dataset(
@@ -174,9 +247,9 @@ def _chi2_dataset(
     data_cache: dict,
 ) -> float:
     """Chi² contribution from one dataset."""
-    cache_key = (dataset.filename, dataset.error_mode)
+    cache_key = (dataset.source, dataset.filename, dataset.csv_column, dataset.error_mode)
     if cache_key not in data_cache:
-        data_cache[cache_key] = _read_kiss_table(KISS_DIR / dataset.filename, dataset.error_mode)
+        data_cache[cache_key] = read_dataset_data(dataset)
 
     x_all, y_all, err_lo_all, err_hi_all = data_cache[cache_key]
     cut = (x_all >= dataset.R_min) & (x_all <= dataset.R_max) & (err_lo_all > 0) & (err_hi_all > 0)
@@ -186,7 +259,10 @@ def _chi2_dataset(
     if len(x) == 0:
         return 0.0
 
-    y_model = compute_observable(spectra, dataset, x)
+    try:
+        y_model = compute_observable(spectra, dataset, x)
+    except KeyError:
+        return 1e10
     valid = np.isfinite(y_model)
     if not valid.any():
         return 1e10
@@ -205,7 +281,8 @@ def log_likelihood(
     data_cache: dict,
 ) -> float:
     ini_params = unpack_theta(theta, params)
-    spectra = runner.run(ini_params)
+    crams_params = crams_params_from_fit_params(ini_params, params)
+    spectra = runner.run(crams_params)
     if spectra is None:
         return -np.inf
     total_chi2 = sum(

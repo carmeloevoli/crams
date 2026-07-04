@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 #
 # Run run_mcmc.py for every crams fragmentation cross-section model, one after
-# another, starting each chain from the MINUIT best-fit produced by
-# run_all_bestfits.sh (bestfits/bestfit_<model>_h<H>.ini).
+# another, starting each chain from the per-model best-fit seed produced by
+#   python find_bestfit.py --scenario "$SCENARIO" --fragmentation-model <model> ...
+# and saved as bestfits/bestfit_<model>_ecrs.ini (these already contain the
+# fitted h and fudge_be7/9/10, so no --halosize is passed: h is a free parameter
+# seeded from the .ini).
 #
 # Edit the configuration below to change the MCMC settings.
 #
@@ -11,10 +14,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-HALOSIZE=5
 NWALKERS=96
-NBURN=300
-NSTEPS=4000
+NBURN=400
+NSTEPS=6000
 NCORES=16
 SEED=42
 # ──────────────────────────────────────────────────────────────────────────────
@@ -24,31 +26,33 @@ MODELS=(
   evoli2026st99
 )
 
-BESTFITDIR="bestfits"   # where run_all_bestfits.sh wrote the seed .ini files
+SCENARIO="variable_h_variable_xsecs_preliminary_be"
+
+BESTFITDIR="bestfits"   # per-model ECRS best-fit seeds (bestfit_<model>_ecrs.ini)
 OUTDIR="mcmc_chains"
 mkdir -p "$OUTDIR"
 
 for model in "${MODELS[@]}"; do
-  tag="${model}_h${HALOSIZE}"
-  start="$BESTFITDIR/bestfit_${tag}.ini"   # MINUIT best-fit from run_all_bestfits.sh
-  out="$OUTDIR/mcmc_${tag}.npz"            # MCMC chain
-  log="$OUTDIR/mcmc_${tag}.log"
+  run_tag="${model}_${SCENARIO}_ecrs"
+  start="$BESTFITDIR/bestfit_${model}_ecrs.ini"   # ECRS best-fit seed (find_bestfit)
+  out="$OUTDIR/mcmc_${run_tag}.npz"               # MCMC chain
+  log="$OUTDIR/mcmc_${run_tag}.log"
   echo "=============================================================="
   echo ">>> MCMC with fragmentation model: ${model}"
-  echo "    halosize=${HALOSIZE}  nwalkers=${NWALKERS}  nburn=${NBURN}  nsteps=${NSTEPS}  ncores=${NCORES}"
+  echo "    scenario=${SCENARIO}  nwalkers=${NWALKERS}  nburn=${NBURN}  nsteps=${NSTEPS}  ncores=${NCORES}"
   echo "    start:  ${start}"
   echo "    output: ${out}"
   echo "    log:    ${log}"
   echo "=============================================================="
 
   if [[ ! -f "${start}" ]]; then
-    echo "!!! missing best-fit seed ${start} — run run_all_bestfits.sh first; skipping ${model}" >&2
+    echo "!!! missing best-fit seed ${start} — run find_bestfit.py --scenario ${SCENARIO} first; skipping ${model}" >&2
     continue
   fi
 
   python3 run_mcmc.py \
+    --scenario "${SCENARIO}" \
     --fragmentation-model "${model}" \
-    --halosize "${HALOSIZE}" \
     --start "${start}" \
     --nwalkers "${NWALKERS}" \
     --nburn "${NBURN}" \
@@ -61,9 +65,9 @@ done
 
 echo
 echo "=============================================================="
-echo "Summary (mean acceptance fraction per model, h=${HALOSIZE}):"
+echo "Summary (mean acceptance fraction per model, scenario=${SCENARIO}):"
 for model in "${MODELS[@]}"; do
-  log="$OUTDIR/mcmc_${model}_h${HALOSIZE}.log"
+  log="$OUTDIR/mcmc_${model}_${SCENARIO}_ecrs.log"
   line=$(grep -E "^Mean acceptance fraction" "${log}" 2>/dev/null | tail -1 || true)
   printf "  %-26s %s\n" "${model}" "${line:-<no chain found, check ${log}>}"
 done

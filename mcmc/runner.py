@@ -14,6 +14,10 @@ _ELEMENTS = [
     "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni",
 ]
 CHARGE: dict[str, int] = {sym: i for i, sym in enumerate(_ELEMENTS) if sym}
+# Fit parameters that are NOT written to the crams .ini (applied in the Python
+# likelihood instead). The Be isotope fudge factors used to live here; they are
+# now real crams .ini parameters (fudge_be7/9/10), so this set is empty.
+LIKELIHOOD_ONLY_PARAMS: set[str] = set()
 
 # Fragmentation cross-section models accepted by crams (see src/core/input.cpp).
 FRAGMENTATION_MODELS = [
@@ -21,6 +25,7 @@ FRAGMENTATION_MODELS = [
     "usine_galprop17_opt12",
     "usine_galprop17_opt22",
     "usine_webber03_coste12",
+    "evoli2019",
     "evoli2026w93",
     "evoli2026st99",
 ]
@@ -32,8 +37,9 @@ def to_ini_params(params: dict[str, float]) -> dict[str, float]:
     The fit samples reparametrised quantities; crams needs the physical ones:
       - ``d0_h`` (= d0/h)   -> ``d0 = d0_h * h``
       - ``rb_log`` (log10R) -> ``rb = 10**rb_log``
+    Likelihood-only nuisance parameters are dropped.
     """
-    p = dict(params)
+    p = {key: value for key, value in params.items() if key not in LIKELIHOOD_ONLY_PARAMS}
     if "d0_h" in p:
         try:
             h = p["h"]

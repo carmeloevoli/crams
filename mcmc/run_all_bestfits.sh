@@ -10,9 +10,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # ── Configuration ─────────────────────────────────────────────────────────────
-HALOSIZE=5
-NM_MAXFEV=300     # quick Nelder-Mead pre-fit, used to seed MINUIT
-MAXFEV=3000       # MINUIT (iminuit) evaluations
+HALOSIZE=7
+NM_MAXFEV=500     # quick Nelder-Mead pre-fit, used to seed MINUIT
+MAXFEV=5000       # MINUIT (iminuit) evaluations
 # ──────────────────────────────────────────────────────────────────────────────
 
 MODELS=(

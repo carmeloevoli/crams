@@ -30,9 +30,19 @@ from pathlib import Path
 import numpy as np
 
 from fitting import _chi2_dataset, log_likelihood, unpack_theta
-from run_mcmc import DATASETS, PARAMETERS, set_halo_size
+from run_mcmc import (
+    DATASETS,
+    PARAMETERS,
+    SCENARIOS,
+    datasets_need_isotopes,
+    make_datasets,
+    make_parameters,
+    set_halo_size,
+)
 from runner import FRAGMENTATION_MODELS, CramsRunner, from_ini_params, to_ini_params
 
+# Fit configuration; defaults to the baseline scenario and rebuilt in main() once
+# the --scenario argument is known (see _set_scenario).
 ACTIVE = [p for p in PARAMETERS if p.active]
 NAMES = [p.name for p in ACTIVE]
 LO = np.array([p.prior_lo for p in ACTIVE])
@@ -40,6 +50,18 @@ HI = np.array([p.prior_hi for p in ACTIVE])
 X0 = np.array([p.value for p in ACTIVE])
 
 BIG = 1e12  # penalty returned for failed / out-of-bounds evaluations
+
+
+def _set_scenario(scenario: str) -> None:
+    """Rebuild the module-level PARAMETERS/DATASETS and fit arrays for *scenario*."""
+    global PARAMETERS, DATASETS, ACTIVE, NAMES, LO, HI, X0
+    PARAMETERS = make_parameters(scenario)
+    DATASETS = make_datasets(scenario)
+    ACTIVE = [p for p in PARAMETERS if p.active]
+    NAMES = [p.name for p in ACTIVE]
+    LO = np.array([p.prior_lo for p in ACTIVE])
+    HI = np.array([p.prior_hi for p in ACTIVE])
+    X0 = np.array([p.value for p in ACTIVE])
 
 
 def _read_ini_values(path: Path) -> dict[str, float]:
@@ -191,7 +213,7 @@ def _report(theta, chi2, errors, runner, cache):
     print("\nPer-dataset chi^2:")
     for d in DATASETS:
         c = _chi2_dataset(spectra, d, cache)
-        x, _, lo, hi = cache[(d.filename, d.error_mode)]
+        x, _, lo, hi = cache[(d.source, d.filename, d.csv_column, d.error_mode)]
         n = int(np.sum((x >= d.R_min) & (x <= d.R_max) & (lo > 0) & (hi > 0)))
         ndata += n
         label = d.numerator + ("/" + d.denominator if d.denominator else "")
@@ -216,15 +238,19 @@ def main(argv=None) -> None:
                         "(default: None = crams built-in default)")
     p.add_argument("--halosize", type=float, default=None,
                    help="halo half-height h [kpc] (default: PARAMETERS value, 7)")
+    p.add_argument("--scenario", default="baseline", choices=SCENARIOS,
+                   help="fit scenario (parameters + datasets); see run_mcmc.py "
+                        "(default: baseline)")
     p.add_argument("--build-dir", default=None, help="path to crams build/")
     p.add_argument("--seed", type=int, default=0)
     args = p.parse_args(argv)
 
+    _set_scenario(args.scenario)
     if not ACTIVE:
         sys.exit("No active parameters to fit.")
 
     if args.halosize is not None:
-        set_halo_size(args.halosize)
+        set_halo_size(args.halosize, PARAMETERS)
     halo_size = next(p.value for p in PARAMETERS if p.name == "h")
 
     x0 = X0.copy()
@@ -235,7 +261,8 @@ def main(argv=None) -> None:
 
     rng = np.random.default_rng(args.seed)
     runner = CramsRunner(build_dir=args.build_dir,
-                         fragmentation_model=args.fragmentation_model)
+                         fragmentation_model=args.fragmentation_model,
+                         read_isotopes=datasets_need_isotopes(DATASETS))
     cache: dict = {}
     bounded = not args.unbounded
     chi2_fn = make_chi2(runner, cache, bounded=bounded)

@@ -85,8 +85,8 @@ validated CSV format, with **runtime-selectable** cross-section models:
 - **Added** a complete Python MCMC / best-fit workflow under `mcmc/`:
   - `run_mcmc.py`, `runner.py`, `fitting.py`, `find_bestfit.py`,
     `write_bestfit_ini.py`, `run_all_bestfits.sh`.
-  - Plotting: `plot_bestfit.py`, `plot_model.py`, `plot_model_Be.py`,
-    `plot_corner.py`.
+  - Plotting: `plot_mcmc_posterior.py`, `plot_mcmc_params_posterior.py`,
+    `plot_model.py`, `plot_corner.py`.
   - `requirements.txt` for the Python dependencies.
   - Preliminary AMS-02 Be data: `mcmc/preliminary/AMS-02_preliminary_Be_isotopes.csv`,
     `…_Be_ratios.csv`.

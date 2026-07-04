@@ -73,6 +73,11 @@ class NucFragUsineWebber03Coste12 : public NucFragFromTable {
   NucFragUsineWebber03Coste12();
 };
 
+class NucFragEvoli2019 : public NucFragFromTable {
+ public:
+  NucFragEvoli2019();
+};
+
 class NucFragEvoli2026W93 : public NucFragFromTable {
  public:
   NucFragEvoli2026W93();

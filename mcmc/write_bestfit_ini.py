@@ -21,6 +21,7 @@ from pathlib import Path
 import numpy as np
 
 from run_mcmc import PARAMETERS
+from runner import to_ini_params
 
 
 def best_fit_params(
@@ -84,7 +85,7 @@ def write_bestfit_ini(
     with open(out_path, "w") as f:
         f.write(f"# crams best-fit parameters from {chain_path.name}\n")
         f.write(f"# estimator: {estimator}  discard: {discard}  thin: {thin}\n")
-        for key, value in ini.items():
+        for key, value in to_ini_params(ini).items():
             f.write(f"{key} {value:.6e}\n")
         f.write("id 0\n")
     return out_path

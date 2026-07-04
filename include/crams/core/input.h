@@ -25,6 +25,7 @@ enum class FragmentationModel {
   UsineGalprop17Opt12,
   UsineGalprop17Opt22,
   UsineWebber03Coste12,
+  Evoli2019,
   Evoli2026W93,
   Evoli2026St99,
 };
@@ -59,6 +60,9 @@ class Input {
   double D_0() const { return m_D_0; }
   double X_s() const { return m_X_s; }
   double modulationPotential() const { return m_modulationPotential; }
+  double fudgeBe7() const { return m_fudgeBe7; }
+  double fudgeBe9() const { return m_fudgeBe9; }
+  double fudgeBe10() const { return m_fudgeBe10; }
   size_t id() const { return m_id; }
   FluxSolver fluxSolver() const { return m_fluxSolver; }
   std::string fluxSolverName() const;
@@ -89,6 +93,11 @@ class Input {
   double m_D_0 = 2.48255e28 * CGS::cm2 / CGS::sec;
   double m_X_s = -1.;
   double m_modulationPotential = 4.87754e-01 * CGS::GeV;
+  // Multiplicative fudge on the Be isotope production cross-sections (1 = off).
+  // Applied to the secondary source term in Particle::buildSecondarySource.
+  double m_fudgeBe7 = 1.;
+  double m_fudgeBe9 = 1.;
+  double m_fudgeBe10 = 1.;
   size_t m_id = 0;
   FluxSolver m_fluxSolver = FluxSolver::CrankNicolson;
   InelasticModel m_inelasticModel = InelasticModel::Tripathi99;
