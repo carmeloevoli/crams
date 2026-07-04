@@ -97,7 +97,7 @@ PARAMETERS: list[Parameter] = [
     Parameter("rb_log",  2.26,      2.0,   3.0,   active=True),   # log10(rb/GV); rb = 10**rb_log (= 316.9 GV), prior 100–600 GV
     Parameter("va",      3.32,      1.0,   15.0,  active=True),    # Alfvén speed [km/s]
     # --- fixed propagation parameters ---
-    Parameter("h",       5.0,       1.0,   15.0,  active=False),
+    Parameter("h",       7.0,       1.0,   15.0,  active=False),
 ]
 
 # ── Datasets ───────────────────────────────────────────────────────────────────

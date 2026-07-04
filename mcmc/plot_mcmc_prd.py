@@ -196,10 +196,10 @@ def _scenario_chain_path(
     halosize: float,
 ) -> Path:
     model = MODEL_STYLES[model_key]["fragmentation_model"]
-    # run_all_mcmc.sh tags chains with the ECRS best-fit seed suffix (h is a
-    # free parameter, so no halo tag is baked into the filename).
-    del halosize  # kept for signature compatibility; unused in the ECRS naming
-    return chain_dir / f"mcmc_{model}_{scenario}_ecrs.npz"
+    # run_all_mcmc.sh tags chains with the fixed halo height (bestfit_<model>_h7
+    # seed -> mcmc_<model>_<scenario>_h7.npz).
+    halo_tag = _format_halo_tag(halosize)
+    return chain_dir / f"mcmc_{model}_{scenario}_h{halo_tag}.npz"
 
 
 def _load_chain(
