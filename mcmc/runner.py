@@ -37,6 +37,8 @@ def to_ini_params(params: dict[str, float]) -> dict[str, float]:
     The fit samples reparametrised quantities; crams needs the physical ones:
       - ``d0_h`` (= d0/h)   -> ``d0 = d0_h * h``
       - ``rb_log`` (log10R) -> ``rb = 10**rb_log``
+      - ``fudge_be``        -> ``fudge_be7 = fudge_be9 = fudge_be10`` (one common
+                               multiplier applied to all Be isotope channels)
     Likelihood-only nuisance parameters are dropped.
     """
     p = {key: value for key, value in params.items() if key not in LIKELIHOOD_ONLY_PARAMS}
@@ -48,6 +50,9 @@ def to_ini_params(params: dict[str, float]) -> dict[str, float]:
         p["d0"] = p.pop("d0_h") * h
     if "rb_log" in p:
         p["rb"] = 10.0 ** p.pop("rb_log")
+    if "fudge_be" in p:
+        f = p.pop("fudge_be")
+        p["fudge_be7"] = p["fudge_be9"] = p["fudge_be10"] = f
     return p
 
 

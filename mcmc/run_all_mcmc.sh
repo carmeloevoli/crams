@@ -20,8 +20,8 @@ cd "$(dirname "$0")"
 # ── Configuration ─────────────────────────────────────────────────────────────
 HALOSIZE=7        # halo half-height h [kpc]; must match run_all_bestfits.sh
 NWALKERS=96
-NBURN=400
-NSTEPS=6000
+NBURN=1000
+NSTEPS=10000
 NCORES=16
 SEED=42
 # ──────────────────────────────────────────────────────────────────────────────
@@ -31,7 +31,7 @@ MODELS=(
   evoli2026st99
 )
 
-SCENARIO="baseline"
+SCENARIO="free_h_preliminary_be"
 
 BESTFITDIR="bestfits"   # per-model baseline best-fit seeds (bestfit_<model>_h<HALOSIZE>.ini)
 OUTDIR="mcmc_chains"

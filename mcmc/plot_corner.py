@@ -18,18 +18,31 @@ import matplotlib.pyplot as plt
 
 # LaTeX-style labels keyed by parameter name
 LABELS: dict[str, str] = {
+    # injection abundances q_X
     "qh":      r"$q_\mathrm{H}$",
     "qhe":     r"$q_\mathrm{He}$",
+    "qc":      r"$q_\mathrm{C}$",
+    "qn":      r"$q_\mathrm{N}$",
+    "qo":      r"$q_\mathrm{O}$",
+    "qne":     r"$q_\mathrm{Ne}$",
+    "qmg":     r"$q_\mathrm{Mg}$",
+    "qsi":     r"$q_\mathrm{Si}$",
+    "qs":      r"$q_\mathrm{S}$",
+    "qfe":     r"$q_\mathrm{Fe}$",
+    # injection spectral indices
     "hslope":  r"$\gamma_\mathrm{H}$",
     "heslope": r"$\gamma_\mathrm{He}$",
+    "slope":   r"$\gamma_{Z\geq3}$",
+    # transport / modulation
     "phi":     r"$\phi$ [GV]",
-    "d0":      r"$D_0\ [10^{28}\ \mathrm{cm^2/s}]$",
+    "d0_h":    r"$D_0/H\ [10^{28}\ \mathrm{cm^2\,s^{-1}\,kpc^{-1}}]$",
     "delta":   r"$\delta$",
     "ddelta":  r"$\Delta\delta$",
+    "rb_log":  r"$\log_{10}(R_b/\mathrm{GV})$",
     "va":      r"$v_A$ [km/s]",
-    "rb":      r"$R_b$ [GV]",
     "h":       r"$H$ [kpc]",
-    "xs":      r"$X_s$ [g/cm$^2$]",
+    # Be production fudge factors
+    "fudge_be":   r"$f_\mathrm{Be}$",
     "fudge_be7":  r"$f_{^{7}\mathrm{Be}}$",
     "fudge_be9":  r"$f_{^{9}\mathrm{Be}}$",
     "fudge_be10": r"$f_{^{10}\mathrm{Be}}$",

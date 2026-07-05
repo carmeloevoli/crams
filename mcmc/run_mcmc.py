@@ -4,9 +4,8 @@
 Usage
 -----
     python run_mcmc.py                          # default settings
-    python run_mcmc.py --scenario variable_h_beb
-    python run_mcmc.py --scenario variable_h_preliminary_be
-    python run_mcmc.py --scenario variable_h_variable_xsecs_preliminary_be
+    python run_mcmc.py --scenario free_h_beb
+    python run_mcmc.py --scenario free_h_preliminary_be
     python run_mcmc.py --nwalkers 64 --nsteps 1000 --nburn 300
     python run_mcmc.py --output my_chain.npz
 
@@ -72,8 +71,11 @@ from fitting import (
 #                       when writing the .ini (break rigidity is a scale param,
 #                       better sampled in log)
 #   h                 – halo half-height [kpc]
-#   fudge_be7/9/10    – multiplicative corrections on the Be isotope production
-#                       cross-sections, applied inside crams (written to the .ini)
+#   fudge_be          – single multiplicative correction on the Be production
+#                       cross-sections, applied equally to Be7/Be9/Be10; the
+#                       runner expands it into fudge_be7/9/10 in the .ini
+#   fudge_be7/9/10    – per-isotope multiplicative corrections on the Be
+#                       production cross-sections (written to the .ini directly)
 PARAMETERS: list[Parameter] = [
     # --- free parameters (initial values = best-fit point) ---
     Parameter("qh",      4.14e-2,   1e-2,  2e-1,  active=True),   # H injection abundance
@@ -136,9 +138,8 @@ N_BURN    = 300    # ~3.5x tau (tau_max ~56 from pilot); walkers start at the be
 N_STEPS   = 4000   # ~53x tau -> ~5000 independent samples
 
 VARIABLE_H_BE_SCENARIOS = (
-    "variable_h_beb",
-    "variable_h_preliminary_be",
-    "variable_h_variable_xsecs_preliminary_be",
+    "free_h_beb",
+    "free_h_preliminary_be",
 )
 SCENARIOS = ("baseline", *VARIABLE_H_BE_SCENARIOS)
 BE_FUDGE_PRIORS = {
@@ -156,6 +157,14 @@ def _activate_parameter(params: list[Parameter], name: str) -> None:
     raise KeyError(f"no '{name}' parameter found")
 
 
+def _be_fudge_parameter() -> Parameter:
+    # Single multiplicative fudge applied equally to Be7/Be9/Be10 production.
+    # runner.to_ini_params expands fudge_be into fudge_be7/9/10 in the .ini.
+    return Parameter("fudge_be", 1.0, 0.2, 2.0,
+                     active=True, prior_kind="gaussian",
+                     prior_mu=1.0, prior_sigma=0.2)
+
+
 def _be_fudge_parameters() -> list[Parameter]:
     # to_crams=True: written to the .ini as fudge_be7/9/10 and applied inside
     # crams to the Be production cross-sections, so the total Be flux stays the
@@ -168,41 +177,28 @@ def _be_fudge_parameters() -> list[Parameter]:
     ]
 
 
-def _published_be_ratio_datasets() -> list[Dataset]:
+def _preliminary_be_isotope_flux_datasets(
+    filename: str = "AMS-02_preliminary_Be_isotopes_ECRS.csv",
+) -> list[Dataset]:
     return [
-        Dataset("AMS-02_Be_B_rigidity.txt", "Be", "B",
-                R_min=5.0, R_max=RMAX, weight=1.0),
-        Dataset("AMS-02_Be_C_rigidity.txt", "Be", "C",
-                R_min=5.0, R_max=RMAX, weight=1.0),
+        Dataset(filename, isotope,
+                R_min=5.0, R_max=RMAX, weight=1.0,
+                source="preliminary_csv", csv_column=f"{isotope}_flux_R2p7",
+                model_power=2.7)
+        for isotope in ("Be7", "Be9", "Be10")
     ]
 
 
-def _total_be_flux_dataset() -> Dataset:
-    return Dataset("AMS-02_Be_rigidity.txt", "Be", "",
-                   R_min=5.0, R_max=RMAX, weight=1.0)
-
-
-def _preliminary_be_isotope_flux_datasets() -> list[Dataset]:
+def _preliminary_be_ratio_datasets() -> list[Dataset]:
+    # Both isotope ratios available in AMS-02_preliminary_Be_ratios.csv.
     return [
-        Dataset("AMS-02_preliminary_Be_isotopes_ECRS.csv", "Be7",
+        Dataset("AMS-02_preliminary_Be_ratios.csv", "Be9", "Be7",
                 R_min=5.0, R_max=RMAX, weight=1.0,
-                source="preliminary_csv", csv_column="Be7_flux_R2p7",
-                model_power=2.7),
-        Dataset("AMS-02_preliminary_Be_isotopes_ECRS.csv", "Be9",
+                source="preliminary_csv", csv_column="Be9_over_Be7"),
+        Dataset("AMS-02_preliminary_Be_ratios.csv", "Be10", "Be9",
                 R_min=5.0, R_max=RMAX, weight=1.0,
-                source="preliminary_csv", csv_column="Be9_flux_R2p7",
-                model_power=2.7),
-        Dataset("AMS-02_preliminary_Be_isotopes_ECRS.csv", "Be10",
-                R_min=5.0, R_max=RMAX, weight=1.0,
-                source="preliminary_csv", csv_column="Be10_flux_R2p7",
-                model_power=2.7),
+                source="preliminary_csv", csv_column="Be10_over_Be9"),
     ]
-
-
-def _preliminary_be10_be9_dataset() -> Dataset:
-    return Dataset("AMS-02_preliminary_Be_ratios.csv", "Be10", "Be9",
-                   R_min=5.0, R_max=RMAX, weight=1.0,
-                   source="preliminary_csv", csv_column="Be10_over_Be9")
 
 
 def make_parameters(scenario: str = "baseline") -> list[Parameter]:
@@ -212,7 +208,9 @@ def make_parameters(scenario: str = "baseline") -> list[Parameter]:
         return params
     if scenario in VARIABLE_H_BE_SCENARIOS:
         _activate_parameter(params, "h")
-        if scenario == "variable_h_variable_xsecs_preliminary_be":
+        if scenario == "free_h_beb":
+            params.append(_be_fudge_parameter())
+        elif scenario == "free_h_preliminary_be":
             params.extend(_be_fudge_parameters())
         return params
     raise ValueError(f"unknown scenario '{scenario}'")
@@ -224,18 +222,18 @@ def make_datasets(scenario: str = "baseline") -> list[Dataset]:
     if scenario == "baseline":
         return datasets
     if scenario in VARIABLE_H_BE_SCENARIOS:
-        if scenario == "variable_h_variable_xsecs_preliminary_be":
-            # Total Be flux + preliminary Be7/Be9/Be10 fluxes + down-weighted Be/B
-            datasets.append(_total_be_flux_dataset())
-            datasets.extend(_preliminary_be_isotope_flux_datasets())
+        if scenario == "free_h_preliminary_be":
+            # Fully preliminary: Be7/Be9/Be10 fluxes + both isotope ratios
+            # (Be9/Be7, Be10/Be9), no Be/B, three per-isotope Be production fudges.
+            datasets.extend(_preliminary_be_isotope_flux_datasets(
+                "AMS-02_preliminary_Be_isotopes.csv"))
+            datasets.extend(_preliminary_be_ratio_datasets())
+            return datasets
+        if scenario == "free_h_beb":
+            # Minimal step: free halo h + published Be/B only, one common Be fudge.
             datasets.append(Dataset("AMS-02_Be_B_rigidity.txt", "Be", "B",
-                                    R_min=5.0, R_max=RMAX, weight=0.25))
+                                    R_min=5.0, R_max=RMAX, weight=1.0))
             return datasets
-        datasets.extend(_published_be_ratio_datasets())
-        if scenario == "variable_h_beb":
-            return datasets
-        datasets.append(_preliminary_be10_be9_dataset())
-        return datasets
     raise ValueError(f"unknown scenario '{scenario}'")
 
 
@@ -302,15 +300,12 @@ def _parse_args(argv=None):
     )
     p.add_argument("--scenario", default="baseline", choices=SCENARIOS,
                    help="fit scenario: baseline = current published-data, fixed-h fit; "
-                        "variable_h_beb = free halo h plus published Be/B and "
-                        "Be/C, without preliminary data; "
-                        "variable_h_preliminary_be = same plus preliminary "
-                        "Be10/Be9 above 5 GV; "
-                        "variable_h_variable_xsecs_preliminary_be = free halo h "
-                        "with total Be flux plus preliminary Be7/Be9 fluxes and "
-                        "Be10/Be9 (no published Be/B, Be/C ratios), and "
-                        "likelihood-only Be isotope renormalization factors with "
-                        "10%% Gaussian priors")
+                        "free_h_beb = free halo h plus published Be/B and one "
+                        "common Be production fudge, without preliminary data; "
+                        "free_h_preliminary_be = free halo h with preliminary "
+                        "Be7/Be9/Be10 fluxes and both preliminary isotope ratios "
+                        "(Be9/Be7, Be10/Be9), no Be/B, and three per-isotope Be "
+                        "production fudge factors")
     p.add_argument("--nwalkers",  type=int, default=N_WALKERS, help="number of emcee walkers")
     p.add_argument("--nburn",     type=int, default=N_BURN,    help="burn-in steps (discarded)")
     p.add_argument("--nsteps",    type=int, default=N_STEPS,   help="production steps")

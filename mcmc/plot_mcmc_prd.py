@@ -13,7 +13,7 @@ and ST99 fragmentation models.
 Usage
 -----
     python plot_mcmc_prd.py
-    python plot_mcmc_prd.py --scenario variable_h_beb
+    python plot_mcmc_prd.py --scenario free_h_beb
     python plot_mcmc_prd.py --scenario variable_h_preliminary_be
     python plot_mcmc_prd.py --scenario variable_h_variable_xsecs_preliminary_be
     python plot_mcmc_prd.py --output figs/mcmc_evoli2026_slopes.pdf
@@ -111,7 +111,7 @@ CONTOUR_INTERVALS = [
 
 SCENARIOS = (
     "baseline",
-    "variable_h_beb",
+    "free_h_beb",
     "variable_h_preliminary_be",
     "variable_h_variable_xsecs_preliminary_be",
 )

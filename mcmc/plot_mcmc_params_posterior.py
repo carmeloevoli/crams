@@ -26,12 +26,22 @@ COLORS = {
     "H":  "#0072B2",
     "He": "#D55E00",
     "C":  "#8D5524",
+    "Be7":  "#009E73",
+    "Be9":  "#E69F00",
+    "Be10": "#CC79A7",
 }
 
 SLOPE_POSTERIORS = [
     ("hslope",  r"$\gamma_\mathrm{H}$",       COLORS["H"]),
     ("heslope", r"$\gamma_\mathrm{He}$",      COLORS["He"]),
     ("slope",   r"$\gamma_{Z\geq3}$",         COLORS["C"]),
+]
+
+# Per-isotope Be production fudge factors (free_h_preliminary_be scenario only).
+BE_FUDGE_POSTERIORS = [
+    ("fudge_be7",  r"$f_{^{7}\mathrm{Be}}$",  COLORS["Be7"]),
+    ("fudge_be9",  r"$f_{^{9}\mathrm{Be}}$",  COLORS["Be9"]),
+    ("fudge_be10", r"$f_{^{10}\mathrm{Be}}$", COLORS["Be10"]),
 ]
 
 
@@ -95,6 +105,38 @@ def _plot_slope_posteriors(chain: np.ndarray, param_names: list[str]) -> plt.Fig
     return fig
 
 
+def _plot_be_fudge_posteriors(chain: np.ndarray, param_names: list[str]) -> plt.Figure | None:
+    names = [name for name, _, _ in BE_FUDGE_POSTERIORS]
+    columns = _param_columns(param_names, names, "Be fudge posterior plot")
+    if columns is None:
+        return None
+
+    fig, ax = plt.subplots(figsize=(12.5, 10.5))
+    for name, label, color in BE_FUDGE_POSTERIORS:
+        values = _finite_column(chain, columns[name])
+        if len(values) == 0:
+            print(f"Skipping {label}: no finite samples")
+            continue
+        lo, median, hi = np.nanpercentile(values, [16, 50, 84])
+        ax.hist(
+            values,
+            bins=POSTERIOR_BINS,
+            density=True,
+            histtype="step",
+            linewidth=2.0,
+            color=color,
+            label=rf"{label}: {median:.3f}$^{{+{hi - median:.3f}}}_{{-{median - lo:.3f}}}$",
+        )
+        ax.axvline(median, color=color, linestyle="--", linewidth=1.2, alpha=0.85)
+
+    ax.axvline(1.0, color="k", linewidth=0.8, alpha=0.6, zorder=0)
+    ax.set_xlabel(r"Be production fudge factor")
+    ax.set_ylabel("Posterior density")
+    ax.legend()
+    fig.tight_layout()
+    return fig
+
+
 def _plot_halo_size_posterior(chain: np.ndarray, param_names: list[str]) -> plt.Figure | None:
     columns = _param_columns(param_names, ["h"], "Halo Size posterior plot")
     if columns is None:
@@ -145,27 +187,36 @@ def _credible_count_levels(counts: np.ndarray, fractions: tuple[float, ...]) -> 
     return sorted({level for level in levels if 0.0 < level < max_count})
 
 
-def _plot_d0h_delta_posterior(chain: np.ndarray, param_names: list[str]) -> plt.Figure | None:
-    columns = _param_columns(param_names, ["d0_h", "delta"], "D0/H vs delta posterior plot")
+def _plot_2d_posterior(
+    chain: np.ndarray,
+    param_names: list[str],
+    x_name: str,
+    y_name: str,
+    x_label: str,
+    y_label: str,
+    plot_name: str,
+    cmap: str = "Blues",
+) -> plt.Figure | None:
+    """2D posterior (mass-per-bin heatmap + credible contours) for two parameters."""
+    columns = _param_columns(param_names, [x_name, y_name], plot_name)
     if columns is None:
         return None
 
-    d0_h = chain[:, columns["d0_h"]]
-    delta = chain[:, columns["delta"]]
-    finite = np.isfinite(d0_h) & np.isfinite(delta)
-    d0_h, delta = d0_h[finite], delta[finite]
-    if len(d0_h) == 0:
-        print("Skipping D0/H vs delta posterior plot: no finite samples")
+    x = chain[:, columns[x_name]]
+    y = chain[:, columns[y_name]]
+    finite = np.isfinite(x) & np.isfinite(y)
+    x, y = x[finite], y[finite]
+    if len(x) == 0:
+        print(f"Skipping {plot_name}: no finite samples")
         return None
 
-    counts, x_edges, y_edges = np.histogram2d(d0_h, delta, bins=POSTERIOR_BINS)
-    posterior_mass = counts / np.sum(counts)
-    posterior_mass_percent = 100.0 * posterior_mass
+    counts, x_edges, y_edges = np.histogram2d(x, y, bins=POSTERIOR_BINS)
+    posterior_mass_percent = 100.0 * counts / np.sum(counts)
     x_centers = 0.5 * (x_edges[:-1] + x_edges[1:])
     y_centers = 0.5 * (y_edges[:-1] + y_edges[1:])
 
     fig, ax = plt.subplots(figsize=(12.5, 10.5))
-    mesh = ax.pcolormesh(x_edges, y_edges, posterior_mass_percent.T, cmap="Blues", shading="auto")
+    mesh = ax.pcolormesh(x_edges, y_edges, posterior_mass_percent.T, cmap=cmap, shading="auto")
     cbar = fig.colorbar(mesh, ax=ax)
     cbar.set_label("Posterior mass per bin")
     cbar.ax.yaxis.set_major_formatter(PercentFormatter(xmax=100.0))
@@ -175,12 +226,40 @@ def _plot_d0h_delta_posterior(chain: np.ndarray, param_names: list[str]) -> plt.
         ax.contour(x_centers, y_centers, counts.T, levels=levels,
                    colors="black", linewidths=1.1, alpha=0.75)
 
-    ax.axvline(np.nanmedian(d0_h), color="tab:red", linestyle="--", linewidth=1.1)
-    ax.axhline(np.nanmedian(delta), color="tab:red", linestyle="--", linewidth=1.1)
-    ax.set_xlabel(r"$D_0/H$ [$10^{28}\,\mathrm{cm^2\,s^{-1}\,kpc^{-1}}$]")
-    ax.set_ylabel(r"$\delta$")
+    ax.axvline(np.nanmedian(x), color="tab:red", linestyle="--", linewidth=1.1)
+    ax.axhline(np.nanmedian(y), color="tab:red", linestyle="--", linewidth=1.1)
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
     fig.tight_layout()
     return fig
+
+
+def _plot_d0h_delta_posterior(chain: np.ndarray, param_names: list[str]) -> plt.Figure | None:
+    return _plot_2d_posterior(
+        chain, param_names, "d0_h", "delta",
+        r"$D_0/H$ [$10^{28}\,\mathrm{cm^2\,s^{-1}\,kpc^{-1}}$]", r"$\delta$",
+        "D0/H vs delta posterior plot",
+    )
+
+
+def _plot_h_fudge_be_posterior(chain: np.ndarray, param_names: list[str]) -> plt.Figure | None:
+    # Halo size H vs the Be production fudge: the two trade off because both set
+    # the predicted Be10/Be9 clock, so this exposes their degeneracy. Use the
+    # per-isotope fudge_be10 when available (free_h_preliminary_be); fall back to
+    # the single common fudge_be (free_h_beb), which scales all isotopes equally.
+    if "fudge_be10" in param_names:
+        fudge, label = "fudge_be10", r"$f_{^{10}\mathrm{Be}}$"
+    elif "fudge_be" in param_names:
+        fudge, label = "fudge_be", r"$f_\mathrm{Be}$"
+    else:
+        print("Skipping H vs Be fudge posterior plot: no Be fudge parameter in chain")
+        return None
+    return _plot_2d_posterior(
+        chain, param_names, "h", fudge,
+        r"Halo Size $H$ [kpc]", label,
+        f"H vs {fudge} posterior plot",
+        cmap="Greens",
+    )
 
 
 def main(argv=None) -> None:
@@ -212,8 +291,10 @@ def main(argv=None) -> None:
 
     plots = [
         ("slopes", _plot_slope_posteriors(chain, param_names)),
+        ("be_fudges", _plot_be_fudge_posteriors(chain, param_names)),
         ("halo_size", _plot_halo_size_posterior(chain, param_names)),
         ("d0h_delta", _plot_d0h_delta_posterior(chain, param_names)),
+        ("h_fudge_be", _plot_h_fudge_be_posterior(chain, param_names)),
     ]
     for tag, fig in plots:
         if fig is None:
