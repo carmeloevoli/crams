@@ -14,16 +14,16 @@ Usage
 -----
     python plot_mcmc_prd.py
     python plot_mcmc_prd.py --scenario free_h_beb
-    python plot_mcmc_prd.py --scenario variable_h_preliminary_be
-    python plot_mcmc_prd.py --scenario variable_h_variable_xsecs_preliminary_be
-    python plot_mcmc_prd.py --output figs/mcmc_evoli2026_slopes.pdf
-    python plot_mcmc_prd.py --violin-output figs/mcmc_evoli2026_slopes_violin.pdf
-    python plot_mcmc_prd.py --d0h-delta-output figs/mcmc_evoli2026_d0h_delta.pdf
-    python plot_mcmc_prd.py --halo-output figs/mcmc_evoli2026_halo_size.pdf
-    python plot_mcmc_prd.py --be-nuisance-output figs/mcmc_evoli2026_Be7_Be9_nuisance.pdf
-    python plot_mcmc_prd.py --be-isotopes-output figs/mcmc_evoli2026_Be7_Be9_fluxes.pdf
-    python plot_mcmc_prd.py --h-he-output figs/mcmc_evoli2026_observables.pdf
-    python plot_mcmc_prd.py --be10-be9-output figs/mcmc_evoli2026_Be10_Be9.pdf
+    python plot_mcmc_prd.py --scenario free_h_preliminary_be
+    python plot_mcmc_prd.py --output prd_figs/mcmc_evoli2026_slopes.pdf
+    python plot_mcmc_prd.py --violin-output prd_figs/mcmc_evoli2026_slopes_violin.pdf
+    python plot_mcmc_prd.py --d0h-delta-output prd_figs/mcmc_evoli2026_d0h_delta.pdf
+    python plot_mcmc_prd.py --halo-output prd_figs/mcmc_evoli2026_halo_size.pdf
+    python plot_mcmc_prd.py --h-fudge-be10-output prd_figs/mcmc_evoli2026_H_fudge_Be10.pdf
+    python plot_mcmc_prd.py --be-nuisance-output prd_figs/mcmc_evoli2026_Be7_Be9_nuisance.pdf
+    python plot_mcmc_prd.py --be-isotopes-output prd_figs/mcmc_evoli2026_Be7_Be9_fluxes.pdf
+    python plot_mcmc_prd.py --h-he-output prd_figs/mcmc_evoli2026_observables.pdf
+    python plot_mcmc_prd.py --be10-be9-output prd_figs/mcmc_evoli2026_Be10_Be9.pdf
 """
 from __future__ import annotations
 
@@ -48,20 +48,27 @@ BE_ISOTOPES_CSV = PRELIMINARY_DIR / "AMS-02_preliminary_Be_isotopes_ECRS.csv"
 # Keep the R_GV-binned table here until that figure is reworked for Ek/n.
 BE_RATIOS_CSV = PRELIMINARY_DIR / "AMS-02_preliminary_Be_ratios.csv"
 DEFAULT_CHAIN_DIR = MCMC_DIR / "mcmc_chains"
-DEFAULT_OUTPUT = MCMC_DIR / "figs" / "mcmc_evoli2026_slopes.pdf"
-DEFAULT_VIOLIN_OUTPUT = MCMC_DIR / "figs" / "mcmc_evoli2026_slopes_violin.pdf"
-DEFAULT_D0H_DELTA_OUTPUT = MCMC_DIR / "figs" / "mcmc_evoli2026_d0h_delta.pdf"
-DEFAULT_HALO_OUTPUT = MCMC_DIR / "figs" / "mcmc_evoli2026_halo_size.pdf"
-DEFAULT_BE_NUISANCE_OUTPUT = MCMC_DIR / "figs" / "mcmc_evoli2026_Be7_Be9_nuisance.pdf"
-DEFAULT_BE_ISOTOPES_OUTPUT = MCMC_DIR / "figs" / "mcmc_evoli2026_Be7_Be9_fluxes.pdf"
-DEFAULT_H_HE_OUTPUT = MCMC_DIR / "figs" / "mcmc_evoli2026_observables.pdf"
-DEFAULT_BE10_BE9_OUTPUT = MCMC_DIR / "figs" / "mcmc_evoli2026_Be10_Be9.pdf"
+DEFAULT_OUTPUT = MCMC_DIR / "prd_figs" / "mcmc_evoli2026_slopes.pdf"
+DEFAULT_VIOLIN_OUTPUT = MCMC_DIR / "prd_figs" / "mcmc_evoli2026_slopes_violin.pdf"
+DEFAULT_D0H_DELTA_OUTPUT = MCMC_DIR / "prd_figs" / "mcmc_evoli2026_d0h_delta.pdf"
+DEFAULT_HALO_OUTPUT = MCMC_DIR / "prd_figs" / "mcmc_evoli2026_halo_size.pdf"
+DEFAULT_H_FUDGE_BE10_OUTPUT = MCMC_DIR / "prd_figs" / "mcmc_evoli2026_H_fudge_Be10.pdf"
+DEFAULT_BE_NUISANCE_OUTPUT = MCMC_DIR / "prd_figs" / "mcmc_evoli2026_Be7_Be9_nuisance.pdf"
+DEFAULT_BE_ISOTOPES_OUTPUT = MCMC_DIR / "prd_figs" / "mcmc_evoli2026_Be7_Be9_fluxes.pdf"
+DEFAULT_H_HE_OUTPUT = MCMC_DIR / "prd_figs" / "mcmc_evoli2026_observables.pdf"
+DEFAULT_BE10_BE9_OUTPUT = MCMC_DIR / "prd_figs" / "mcmc_evoli2026_Be10_Be9.pdf"
 VIOLIN_YLIM = (4.30, 4.43)
 VIOLIN_BINS = 180
 D0H_DELTA_XLIM = (0.30, 0.58)
 D0H_DELTA_YLIM = (0.50, 0.60)
 D0H_DELTA_BINS = 140
+H_FUDGE_BE10_BINS = 140
 POWER = 2.7
+# Observable panels are drawn down to PLOT_R_MIN; the band [PLOT_R_MIN,
+# NOFIT_R_MAX] lies below the fit range (solar-modulation dominated, not used to
+# constrain the posterior) and is shaded to flag it as extrapolation.
+PLOT_R_MIN = 2.0
+NOFIT_R_MAX = 5.0
 BE_ISOTOPE_R_MIN = 5.0
 BE_ISOTOPE_R_MAX = 45.0
 PREDICTION_INTERVAL = ("95.45%", 2.2750131948, 97.7249868052)
@@ -112,8 +119,7 @@ CONTOUR_INTERVALS = [
 SCENARIOS = (
     "baseline",
     "free_h_beb",
-    "variable_h_preliminary_be",
-    "variable_h_variable_xsecs_preliminary_be",
+    "free_h_preliminary_be",
 )
 
 
@@ -147,9 +153,10 @@ class ObservablePanel:
 
     @property
     def y_label(self) -> str:
-        if self.is_ratio:
-            return self.label
-        return r"$R^{2.7} I\ [\mathrm{GV^{1.7}\ m^{-2}\ s^{-1}\ sr^{-1}}]$"
+        # Absolute-flux panels (H, He, C, O, Fe, ...) label the axis with the
+        # species symbol only; the R^2.7 scaling and units are given in the
+        # figure caption. Ratio panels already carry their own label.
+        return self.label
 
     @property
     def tag(self) -> str:
@@ -159,8 +166,11 @@ class ObservablePanel:
 OBSERVABLE_PANELS = [
     ObservablePanel("H", "AMS-02_H_rigidity.txt", r"$\mathrm{H}$", 4.0, 1500.0),
     ObservablePanel("He", "AMS-02_He_rigidity.txt", r"$\mathrm{He}$", 4.0, 2500.0),
+    ObservablePanel("H", "AMS-02_H_He_rigidity.txt", r"$\mathrm{H}/\mathrm{He}$",
+                    4.0, 1400.0, denominator="He"),
     ObservablePanel("C", "AMS-02_C_rigidity.txt", r"$\mathrm{C}$", 4.0, 2500.0),
     ObservablePanel("O", "AMS-02_O_rigidity.txt", r"$\mathrm{O}$", 4.0, 2500.0),
+    ObservablePanel("Fe", "AMS-02_Fe_rigidity.txt", r"$\mathrm{Fe}$", 4.0, 2000.0),
     ObservablePanel("B", "AMS-02_B_C_rigidity.txt", r"$\mathrm{B}/\mathrm{C}$",
                     4.0, 2500.0, denominator="C"),
     ObservablePanel("B", "AMS-02_B_O_rigidity.txt", r"$\mathrm{B}/\mathrm{O}$",
@@ -373,6 +383,43 @@ def _posterior_2d_density(
     return x_centers, y_centers, density
 
 
+def _finite_param_pair(
+    chain: ChainPosterior,
+    x_param: str,
+    y_param: str,
+) -> tuple[np.ndarray, np.ndarray]:
+    if x_param not in chain.param_names:
+        raise KeyError(f"{chain.path} has no parameter {x_param!r}")
+    if y_param not in chain.param_names:
+        raise KeyError(f"{chain.path} has no parameter {y_param!r}")
+    x = chain.chain[:, chain.param_names.index(x_param)]
+    y = chain.chain[:, chain.param_names.index(y_param)]
+    finite = np.isfinite(x) & np.isfinite(y)
+    return x[finite], y[finite]
+
+
+def _shared_range(
+    values: list[np.ndarray],
+    pad_fraction: float = 0.06,
+    include: tuple[float, ...] = (),
+) -> tuple[float, float]:
+    finite = [v[np.isfinite(v)] for v in values if len(v)]
+    extras = np.asarray(include, dtype=float)
+    extras = extras[np.isfinite(extras)]
+    if len(extras):
+        finite.append(extras)
+    if not finite:
+        raise ValueError("cannot build plot range from empty values")
+
+    all_values = np.concatenate(finite)
+    lo, hi = float(np.min(all_values)), float(np.max(all_values))
+    if lo == hi:
+        pad = max(abs(lo) * 1e-3, 1e-3)
+    else:
+        pad = pad_fraction * (hi - lo)
+    return lo - pad, hi + pad
+
+
 def _median_fit_params(chain: ChainPosterior, halo_size: float) -> dict[str, float]:
     medians = np.nanmedian(chain.chain, axis=0)
     params = dict(zip(chain.param_names, medians))
@@ -468,6 +515,7 @@ def _strip_known_output_tag(stem: str) -> str:
         "slopes",
         "d0h_delta",
         "halo_size",
+        "H_fudge_Be10",
         "Be7_Be9_nuisance",
         "Be7_Be9_fluxes",
         "Be10_Be9",
@@ -486,10 +534,11 @@ def _strip_known_output_tag(stem: str) -> str:
 def _tagged_output_path(output: Path, scenario: str, tag: str) -> Path:
     suffix = output.suffix or ".pdf"
     stem = _strip_known_output_tag(output.stem)
-    if scenario != "baseline":
-        scenario_marker = f"_{scenario}"
-        if not stem.endswith(scenario_marker):
-            stem = f"{stem}{scenario_marker}"
+    # Tag every scenario (baseline included) so the model/scenario is always
+    # explicit in the filename.
+    scenario_marker = f"_{scenario}"
+    if not stem.endswith(scenario_marker):
+        stem = f"{stem}{scenario_marker}"
     return output.with_name(f"{stem}_{tag}{suffix}")
 
 
@@ -543,6 +592,12 @@ def _median_residuals(
     return out
 
 
+def _shade_nofit_band(ax, label: str | None = None) -> None:
+    """Shade the low-rigidity band that lies below the fit range."""
+    ax.axvspan(PLOT_R_MIN, NOFIT_R_MAX, color="0.85", alpha=0.55, linewidth=0,
+               zorder=0, label=label)
+
+
 def plot_slope_comparison(
     chains: list[ChainPosterior],
     output: Path,
@@ -587,7 +642,7 @@ def plot_slope_comparison(
         for key in ("w93", "st99")
     ]
     slope_legend = ax.legend(handles=slope_handles, frameon=False, loc="upper left",
-                             fontsize=29)
+                             fontsize=30)
     ax.add_artist(slope_legend)
     ax.legend(handles=model_handles, frameon=False, loc="upper right", fontsize=25)
 
@@ -659,12 +714,118 @@ def plot_d0h_delta_comparison(
                              loc="upper right", fontsize=25)
     ax.add_artist(model_legend)
     ax.legend(handles=interval_handles, frameon=False, loc="lower left",
-              fontsize=22)
+              fontsize=24)
 
     ax.set_xlim(*D0H_DELTA_XLIM)
     ax.set_ylim(*D0H_DELTA_YLIM)
     ax.set_xlabel(r"$D_0/H$ [$10^{28}\,\mathrm{cm^2\,s^{-1}\,kpc^{-1}}$]")
     ax.set_ylabel(r"$\delta$")
+    fig.tight_layout()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output, bbox_inches="tight", dpi=300)
+    plt.close(fig)
+    print(f"Saved: {output.resolve()}")
+
+
+def _be10_fudge_param(chain: ChainPosterior) -> str | None:
+    # free_h_preliminary_be samples per-isotope nuisance factors, while
+    # free_h_beb samples one common Be factor that runner.py expands to
+    # fudge_be7=fudge_be9=fudge_be10.
+    if "fudge_be10" in chain.param_names:
+        return "fudge_be10"
+    if "fudge_be" in chain.param_names:
+        return "fudge_be"
+    return None
+
+
+def plot_h_fudge_be10_comparison(
+    chains: list[ChainPosterior],
+    output: Path,
+) -> None:
+    """Plot overlaid W93/ST99 contours in H versus the Be10 production factor."""
+    entries = []
+    for chain in chains:
+        fudge_param = _be10_fudge_param(chain)
+        if "h" not in chain.param_names or fudge_param is None:
+            continue
+        h, fudge = _finite_param_pair(chain, "h", fudge_param)
+        if len(h):
+            entries.append((chain, fudge_param, h, fudge))
+
+    if not entries:
+        print("Skipping H-Be10 fudge posterior: H or Be fudge is fixed in this scenario")
+        return
+
+    _apply_style()
+    fig, ax = plt.subplots(figsize=(11, 8.5))
+    fractions = [fraction for _, fraction, _ in CONTOUR_INTERVALS]
+    x_range = _shared_range([h for _, _, h, _ in entries])
+    y_range = _shared_range([fudge for _, _, _, fudge in entries], include=(1.0,))
+    fudge_params = {fudge_param for _, fudge_param, _, _ in entries}
+    y_span = y_range[1] - y_range[0]
+    if 0.0 <= y_range[1] - 1.0 < 0.14 * y_span:
+        y_range = (y_range[0], y_range[1] + 0.16 * y_span)
+
+    ax.axhline(1.0, color="0.35", linestyle=":", linewidth=2.0, zorder=0)
+
+    for chain, fudge_param, h, fudge in entries:
+        x_centers, y_centers, density = _posterior_2d_density(
+            h, fudge, x_range, y_range, H_FUDGE_BE10_BINS)
+        levels = _credible_density_levels(density, fractions)
+        if not levels:
+            print(f"Skipping H-{fudge_param} contours for {chain.label}: no finite density")
+            continue
+
+        style = MODEL_STYLES[chain.model_key]
+        style_by_level = {
+            level: linestyle
+            for level, (_, _, linestyle) in zip(levels, reversed(CONTOUR_INTERVALS))
+        }
+        for level in levels:
+            ax.contour(
+                x_centers,
+                y_centers,
+                density.T,
+                levels=[level],
+                colors=[style["color"]],
+                linestyles=[style_by_level[level]],
+                linewidths=3.0,
+            )
+
+        h_med = float(np.nanmedian(h))
+        fudge_med = float(np.nanmedian(fudge))
+        ax.plot(h_med, fudge_med, marker="o", markersize=9.0,
+                color=style["color"], markeredgecolor="white", markeredgewidth=1.2)
+        print(f"{chain.label:4s} H/{fudge_param} median: {h_med:.3f}, {fudge_med:.3f}")
+
+    model_keys = []
+    for chain, _, _, _ in entries:
+        if chain.model_key not in model_keys:
+            model_keys.append(chain.model_key)
+    model_handles = [
+        Line2D([0], [0], color=MODEL_STYLES[key]["color"], lw=4.0,
+               label=MODEL_STYLES[key]["label"])
+        for key in model_keys
+    ]
+    interval_handles = [
+        Line2D([0], [0], color="0.25", lw=3.0, linestyle=linestyle, label=label)
+        for label, _, linestyle in CONTOUR_INTERVALS
+    ]
+    interval_handles.append(Line2D([0], [0], color="0.35", lw=2.0,
+                                   linestyle=":", label="nominal"))
+    model_legend = ax.legend(handles=model_handles, frameon=False,
+                             loc="upper right", fontsize=25)
+    ax.add_artist(model_legend)
+    ax.legend(handles=interval_handles, frameon=False, loc="lower left",
+              fontsize=22)
+
+    ax.set_xlim(*x_range)
+    ax.set_ylim(*y_range)
+    ax.set_xlabel(r"$H$ [kpc]")
+    if fudge_params == {"fudge_be"}:
+        ax.set_ylabel(r"$f_\mathrm{Be}=f_{^{10}\mathrm{Be}}$")
+    else:
+        ax.set_ylabel(r"$f_{^{10}\mathrm{Be}}$")
     fig.tight_layout()
     output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output, bbox_inches="tight", dpi=300)
@@ -735,7 +896,7 @@ def plot_halo_size_posterior(
     median_handle = Line2D([0], [0], color="0.25", lw=4.0, linestyle=":",
                            label="median")
     ax.legend(handles=[*model_handles, median_handle], frameon=False,
-              loc="upper right", fontsize=20)
+              loc="upper right", fontsize=24)
     for i, (color, text) in enumerate(summary_lines):
         ax.text(
             0.04,
@@ -987,7 +1148,9 @@ def plot_h_he_flux_posteriors(
         grid = fig.add_gridspec(2, 1, height_ratios=(3.0, 1.0), hspace=0.05)
         ax = fig.add_subplot(grid[0, 0])
         ax_res = fig.add_subplot(grid[1, 0], sharex=ax)
-        x, y, err_lo, err_hi = _flux_data(panel.filename, panel.r_min, panel.r_max)
+        _shade_nofit_band(ax, label=rf"below fit ($R<{NOFIT_R_MAX:g}$ GV)")
+        _shade_nofit_band(ax_res)
+        x, y, err_lo, err_hi = _flux_data(panel.filename, PLOT_R_MIN, panel.r_max)
         scale = x**panel.power
 
         ax.errorbar(
@@ -1009,7 +1172,7 @@ def plot_h_he_flux_posteriors(
 
             if sample_spectra:
                 r_model, _ = _model_observable(sample_spectra[0], panel)
-                mask = (r_model >= panel.r_min) & (r_model <= panel.r_max)
+                mask = (r_model >= PLOT_R_MIN) & (r_model <= panel.r_max)
                 band = np.array([
                     _model_observable(s, panel)[1][mask]
                     for s in sample_spectra
@@ -1026,7 +1189,7 @@ def plot_h_he_flux_posteriors(
                 )
 
             r_med, median_observable = _model_observable(median_spectra, panel)
-            mask = (r_med >= panel.r_min) & (r_med <= panel.r_max)
+            mask = (r_med >= PLOT_R_MIN) & (r_med <= panel.r_max)
             ax.plot(
                 r_med[mask],
                 r_med[mask] ** panel.power * median_observable[mask],
@@ -1050,7 +1213,7 @@ def plot_h_he_flux_posteriors(
 
         ax.set_xscale("log")
         ax_res.set_xscale("log")
-        ax.set_xlim(panel.r_min, panel.r_max)
+        ax.set_xlim(PLOT_R_MIN, panel.r_max)
         ax.set_ylabel(panel.y_label)
         ax.tick_params(labelbottom=False)
         ax_res.axhline(0.0, color="0.35", linestyle=":", linewidth=1.3)
@@ -1058,7 +1221,7 @@ def plot_h_he_flux_posteriors(
         ax_res.set_xlabel(r"$R$ [GV]")
         ax_res.set_ylabel(r"$\Delta/\sigma$")
 
-        ax.legend(frameon=False, fontsize=15, loc="best")
+        ax.legend(frameon=False, fontsize=18, loc="best")
         out = _tagged_output_path(output, scenario, panel.tag)
         out.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(out, bbox_inches="tight", dpi=300)
@@ -1158,7 +1321,7 @@ def plot_be10_be9_posterior(
     ax_res.set_ylim(-5.0, 5.0)
     ax_res.set_xlabel(r"$R$ [GV]")
     ax_res.set_ylabel(r"$\Delta/\sigma$")
-    ax.legend(frameon=False, fontsize=15, loc="best")
+    ax.legend(frameon=False, fontsize=18, loc="best")
 
     output.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(output, bbox_inches="tight", dpi=300)
@@ -1252,6 +1415,8 @@ def _parse_args(argv=None):
                    help="output PDF for the D0/H versus delta contour figure")
     p.add_argument("--halo-output", type=Path, default=DEFAULT_HALO_OUTPUT,
                    help="output PDF for the halo-size posterior figure")
+    p.add_argument("--h-fudge-be10-output", type=Path, default=DEFAULT_H_FUDGE_BE10_OUTPUT,
+                   help="output PDF for the H versus Be10 fudge-factor posterior figure")
     p.add_argument("--be-nuisance-output", type=Path, default=DEFAULT_BE_NUISANCE_OUTPUT,
                    help="output PDF for the Be7/Be9 nuisance-factor posterior figure")
     p.add_argument("--be-isotopes-output", type=Path, default=DEFAULT_BE_ISOTOPES_OUTPUT,
@@ -1305,6 +1470,8 @@ def main(argv=None) -> None:
         chains, _tagged_output_path(args.d0h_delta_output, scenario, "d0h_delta"))
     plot_halo_size_posterior(
         chains, _tagged_output_path(args.halo_output, scenario, "halo_size"), args.bins)
+    plot_h_fudge_be10_comparison(
+        chains, _tagged_output_path(args.h_fudge_be10_output, scenario, "H_fudge_Be10"))
     plot_be_nuisance_posterior(
         chains,
         _tagged_output_path(args.be_nuisance_output, scenario, "Be7_Be9_nuisance"),
