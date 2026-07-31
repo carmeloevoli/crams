@@ -19,4 +19,20 @@
 #include "crams/utils/logging.h"
 #include "crams/utils/utilities.h"
 
+namespace CRAMS {
+
+class Runner {
+ private:
+  std::unique_ptr<InXsecGlauber> inelasticXsecs;
+  std::unique_ptr<NucFragXsec> nucfragXsecs;
+  FluxSolver solver;
+
+ public:
+  Runner(FluxSolver solver, InelasticModel inelasticModel, FragmentationModel fragmentationModel);
+  ~Runner() = default;
+//   compute(init)
+};
+
+}  // namespace CRAMS
+
 #endif  // CRAMS_H_
