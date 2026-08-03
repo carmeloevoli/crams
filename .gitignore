@@ -9,3 +9,9 @@ external/plog/
 mcmc/*.ini
 mcmc/figs
 mcmc/*.npz
+venv/
+crams.egg-info/
+
+# swig-generated files
+extension/crams_wrap.cxx
+extension/crams.py
