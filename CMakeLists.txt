@@ -40,6 +40,7 @@ set( CRAMS_SRCS
      src/particlesolver.cpp
      src/physics/primary.cpp
      src/secondary.cpp
+     src/runner.cpp
      "${git_revision_cpp}"
 )
 
