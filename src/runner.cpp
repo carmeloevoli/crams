@@ -7,10 +7,8 @@
 #include <string>
 #include <vector>
 
-CRAMS::Runner::Runner(InelasticModel im, FragmentationModel fm) {
-  inelasticModel = im;
-  fragmentationModel = fm;
-
+CRAMS::Runner::Runner(InelasticModel inelasticModel, FragmentationModel fragmentationModel, ParticleList injection)
+    : inelasticModel{inelasticModel}, fragmentationModel{fragmentationModel}, injection{injection} {
   switch (inelasticModel) {
     case CRAMS::InelasticModel::Tripathi99:
       inelasticXsecs = std::make_unique<CRAMS::InXsecTripathi99>();
@@ -48,7 +46,30 @@ CRAMS::Runner::Runner(InelasticModel im, FragmentationModel fm) {
   }
 }
 
-CRAMS::Particles CRAMS::Runner::compute(ParticleList injection, Input input, bool dumpToFile, bool verbose) {
+void CRAMS::Runner::setInjectionParams(std::vector<double> abundances, std::vector<double> slopes) {
+  auto Zmin = injection.lightest().getZ();
+  auto Zmax = injection.heaviest().getZ();
+
+  for (std::size_t abIdx = 0; abIdx < abundances.size(); ++abIdx) {
+    injection.setAbundanceChargeGroup(Zmin + abIdx, abundances[abIdx]);
+  }
+
+  auto allSlopesSpecified = slopes.size() >= (Zmax - Zmin + 1);
+  auto endSlopeIdx = allSlopesSpecified ? slopes.size() : slopes.size() - 1;
+  for (std::size_t slopeIdx = 0; slopeIdx < endSlopeIdx; ++slopeIdx) {
+    injection.setSlopeChargeGroup(Zmin + slopeIdx, slopes[slopeIdx]);
+  }
+  if (!allSlopesSpecified) {
+    injection.setSlopeNuclei(Zmin + endSlopeIdx, slopes.back());
+  }
+}
+
+CRAMS::Particles CRAMS::Runner::compute(Input input, bool dumpToFile, bool verbose, bool ignoreInputInitParams) {
+  if (!ignoreInputInitParams &&
+      ((input.inelasticModel() != inelasticModel) || (input.fragmentationModel() != fragmentationModel))) {
+    throw std::runtime_error("compute method called on input with mismatching inelastic and/or fragmentation model");
+  }
+
   Particles result;
   auto list = injection.getList();
   result.reserve(list.size());

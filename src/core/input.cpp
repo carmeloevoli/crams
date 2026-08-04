@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
+#include <sstream> 
 
 #include "crams/utils/utilities.h"
 
@@ -194,29 +195,36 @@ void Input::setSimname(const std::string& inifilename) {
   eraseExtension(m_simname, ".ini");
 }
 
-void Input::print() const {
-  LOGD << "H      [kpc]        : " << std::setprecision(4) << m_H / CGS::kpc;
-  LOGD << "mu     [mg/cm2]     : " << std::setprecision(4) << m_mu / (CGS::mgram / CGS::cm2);
-  LOGD << "v_A    [km/s]       : " << std::setprecision(4) << m_v_A / (CGS::km / CGS::sec);
-  LOGD << "D_0    [1e28 cm2/s] : " << std::setprecision(4) << m_D_0 / (1e28 * CGS::cm2 / CGS::sec);
-  LOGD << "delta  []           : " << std::setprecision(4) << m_delta;
-  LOGD << "ddelta []           : " << std::setprecision(4) << m_ddelta;
+std::string Input::describe() const {
+  std::stringstream out;
+  out << "H      [kpc]        : " << std::setprecision(4) << m_H / CGS::kpc << std::endl;
+  out << "mu     [mg/cm2]     : " << std::setprecision(4) << m_mu / (CGS::mgram / CGS::cm2) << std::endl;
+  out << "v_A    [km/s]       : " << std::setprecision(4) << m_v_A / (CGS::km / CGS::sec) << std::endl;
+  out << "D_0    [1e28 cm2/s] : " << std::setprecision(4) << m_D_0 / (1e28 * CGS::cm2 / CGS::sec) << std::endl;
+  out << "delta  []           : " << std::setprecision(4) << m_delta << std::endl;
+  out << "ddelta []           : " << std::setprecision(4) << m_ddelta << std::endl;
   if (m_X_s > 0.)
-    LOGD << "X_s    [g/cm2]      : " << m_X_s / (CGS::gram / CGS::cm2);
+    out << "X_s    [g/cm2]      : " << m_X_s / (CGS::gram / CGS::cm2) << std::endl;
   else
-    LOGD << "X_s    [g/cm2]      : none";
-  LOGD << "R_b    [GV]         : " << m_R_b / CGS::GeV;
-  LOGD << "s      []           : " << m_smoothness;
-  LOGD << "phi    [GeV]        : " << m_modulationPotential / CGS::GeV;
+    out << "X_s    [g/cm2]      : none" << std::endl;
+  out << "R_b    [GV]         : " << m_R_b / CGS::GeV << std::endl;
+  out << "s      []           : " << m_smoothness << std::endl;
+  out << "phi    [GeV]        : " << m_modulationPotential / CGS::GeV << std::endl;
   if (m_fudgeBe7 != 1. || m_fudgeBe9 != 1. || m_fudgeBe10 != 1.)
-    LOGD << "fudge Be7/9/10      : " << m_fudgeBe7 << " / " << m_fudgeBe9 << " / " << m_fudgeBe10;
-  LOGD << "E_min  [GeV]        : " << m_TSimMin / CGS::GeV;
-  LOGD << "E_max  [GeV]        : " << m_TSimMax / CGS::GeV;
-  LOGD << "E_size []           : " << m_TSimSize;
-  LOGD << "doSecondary         : " << std::boolalpha << m_doSecondary;
-  LOGD << "flux solver         : " << fluxSolverName();
-  LOGD << "inelastic model     : " << inelasticModelName();
-  LOGD << "fragmentation model : " << fragmentationModelName();
+    out << "fudge Be7/9/10      : " << m_fudgeBe7 << " / " << m_fudgeBe9 << " / " << m_fudgeBe10 << std::endl;
+  out << "E_min  [GeV]        : " << m_TSimMin / CGS::GeV << std::endl;
+  out << "E_max  [GeV]        : " << m_TSimMax / CGS::GeV << std::endl;
+  out << "E_size []           : " << m_TSimSize << std::endl;
+  out << "doSecondary         : " << std::boolalpha << m_doSecondary << std::endl;
+  out << "flux solver         : " << fluxSolverName() << std::endl;
+  out << "inelastic model     : " << inelasticModelName() << std::endl;
+  out << "fragmentation model : " << fragmentationModelName() << std::endl;
+
+  return out.str();
+}
+
+void Input::print() const {
+  LOGD << describe();
 }
 
 }  // namespace CRAMS

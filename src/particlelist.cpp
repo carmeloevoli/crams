@@ -215,6 +215,8 @@ void ParticleList::readParamsFromFile(const std::string& filename) {
     if (!(iss >> key >> value)) continue;
     setParam(key, value);
   }
+
+  infile.close();
 }
 
 void ParticleList::loadNucleilist(const std::string& filename) {

@@ -37,8 +37,8 @@ int main(int argc, char* argv[]) {
       LOGI << "no input file provided, using default parameters";
     }
 
-    CRAMS::Runner runner(input.inelasticModel(), input.fragmentationModel());
-    runner.compute(injection, input, true, !quiet);
+    CRAMS::Runner runner(input.inelasticModel(), input.fragmentationModel(), injection);
+    runner.compute(input, true, !quiet);
 
   } catch (const std::exception& e) {
     LOGE << "exception caught with message: " << e.what();

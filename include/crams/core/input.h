@@ -32,9 +32,23 @@ enum class FragmentationModel {
 
 class Input {
  public:
-  Input() = default;
+  Input(double H_kpc = 7., double mu_mg_per_cm2 = 2.3, double v_A_km_sec = 4.40940, double R_b_GeV = 290.,
+        double delta = 5.65132e-01, double ddelta = 0.22, double smoothness = 0.1, double D_0_cm2_sec = 2.48255e28,
+        double X_s = -1., double modulationPotential = 4.87754e-01)
+      : m_H{H_kpc * CGS::kpc},
+        m_mu{mu_mg_per_cm2 * CGS::mgram / CGS::cm2},
+        m_v_A{v_A_km_sec * CGS::km / CGS::sec},
+        m_R_b{R_b_GeV * CGS::GeV},
+        m_delta{delta},
+        m_ddelta{ddelta},
+        m_smoothness{smoothness},
+        m_D_0{D_0_cm2_sec * CGS::cm2 / CGS::sec},
+        m_X_s{X_s},
+        m_modulationPotential{modulationPotential * CGS::GeV} {}
+
   ~Input() = default;
 
+  std::string describe() const;
   void print() const;
   void readParamsFromFile(const std::string& filename);
   void setParam(const std::string& key, double value);
@@ -73,26 +87,30 @@ class Input {
   const std::string& simname() const { return m_simname; }
 
  private:
+  // main physics params
+  double m_H;
+  double m_mu;
+  double m_v_A;
+  double m_R_b;
+  double m_delta;
+  double m_ddelta;
+  double m_smoothness;
+  double m_D_0;
+  double m_X_s;
+  double m_modulationPotential;
+
+  // computation grid
   double m_TSimMin = 0.1 * CGS::GeV;
   double m_TSimMax = 100. * CGS::TeV;
   size_t m_TSimSize = 300;
 
+  // output grid
   double m_ROutputMin = 1. * CGS::GeV;
   double m_ROutputMax = 10. * CGS::TeV;
   size_t m_ROutputSize = 100;
 
   bool m_doSecondary = true;
 
-  double m_H = 7. * CGS::kpc;
-  double m_mu = 2.3 * CGS::mgram / CGS::cm2;
-  double m_v_A = 4.40940 * CGS::km / CGS::sec;
-  double m_R_b = 290. * CGS::GeV;
-  double m_delta = 5.65132e-01;
-  double m_ddelta = 0.22;
-  double m_smoothness = 0.1;
-  double m_D_0 = 2.48255e28 * CGS::cm2 / CGS::sec;
-  double m_X_s = -1.;
-  double m_modulationPotential = 4.87754e-01 * CGS::GeV;
   // Multiplicative fudge on the Be isotope production cross-sections (1 = off).
   // Applied to the secondary source term in Particle::buildSecondarySource.
   double m_fudgeBe7 = 1.;

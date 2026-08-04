@@ -1,4 +1,5 @@
 %module crams
+%include "std_string.i"
 
 %{
 #include "crams/runner.h"

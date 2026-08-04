@@ -22,10 +22,13 @@ class Runner {
   std::unique_ptr<InelasticXsec> inelasticXsecs;
   std::unique_ptr<NucFragXsec> nucfragXsecs;
 
+  ParticleList injection;
+
  public:
-  Runner(InelasticModel im, FragmentationModel fm);
+  Runner(InelasticModel inelasticModel, FragmentationModel fragmentationModel, ParticleList injection);
   ~Runner() = default;
-  Particles compute(ParticleList injection, Input input, bool dumpToFile, bool verbose);
+  void setInjectionParams(std::vector<double> abundances, std::vector<double> slopes);
+  Particles compute(Input input, bool dumpToFile = false, bool verbose = false, bool ignoreInputInitParams = false);
 };
 
 }  // namespace CRAMS
