@@ -28,7 +28,7 @@ class Runner {
   Runner(InelasticModel inelasticModel, FragmentationModel fragmentationModel, ParticleList injection);
   ~Runner() = default;
   void setInjectionParams(std::vector<double> abundances, std::vector<double> slopes);
-  Particles compute(Input input, bool dumpToFile = false, bool verbose = false, bool ignoreInputInitParams = false);
+  RigiditySpectra compute(Input input, bool dumpToFile = false, bool verbose = false, bool ignoreInputInitParams = false);
 };
 
 }  // namespace CRAMS

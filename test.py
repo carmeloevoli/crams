@@ -13,5 +13,6 @@ runner = Runner(InelasticModel_Glauber, FragmentationModel_Fluka4Dragon, Particl
 
 params = Input(H_kpc=3)
 print(params.describe())
+result = runner.compute(params, dumpToFile=False, verbose=True, ignoreInputInitParams=True)
 
-runner.compute(params, dumpToFile=True, verbose=True, ignoreInputInitParams=True)
+print(result)

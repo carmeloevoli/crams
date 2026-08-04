@@ -64,7 +64,7 @@ void CRAMS::Runner::setInjectionParams(std::vector<double> abundances, std::vect
   }
 }
 
-CRAMS::Particles CRAMS::Runner::compute(Input input, bool dumpToFile, bool verbose, bool ignoreInputInitParams) {
+CRAMS::RigiditySpectra CRAMS::Runner::compute(Input input, bool dumpToFile, bool verbose, bool ignoreInputInitParams) {
   if (!ignoreInputInitParams &&
       ((input.inelasticModel() != inelasticModel) || (input.fragmentationModel() != fragmentationModel))) {
     throw std::runtime_error("compute method called on input with mismatching inelastic and/or fragmentation model");
@@ -91,13 +91,13 @@ CRAMS::Particles CRAMS::Runner::compute(Input input, bool dumpToFile, bool verbo
     if (!particle.getPid().isTertiary()) particle.buildSecondarySource(input, result, *nucfragXsecs);
     if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(result);
     //  if (input.X_s() > 0.) particle.buildGrammageAtSource(input, result, *nucfragXsecs);
-    if (verbose) particle.dump();
+    if (verbose && dumpToFile) particle.dump();
     particle.computeIntensity(input);
     particle.reset();
   }
 
+  OutputManager outputManager(result, input);
   if (dumpToFile) {
-    OutputManager outputManager(result, input);
     outputManager.dumpSpectraRigidity();
     outputManager.dumpIsotopes();  // cheap (2 columns); needed by the MCMC Be10/Be9 posterior
     if (verbose) {
@@ -105,5 +105,5 @@ CRAMS::Particles CRAMS::Runner::compute(Input input, bool dumpToFile, bool verbo
     }
   }
 
-  return result;
+  return outputManager.rigiditySpectra();
 }
