@@ -6,6 +6,10 @@
 
 #include "crams/core/pid.h"
 
+#ifndef DATA_DIR
+#define DATA_DIR "./data"
+#endif
+
 namespace CRAMS {
 namespace Utilities {
 

@@ -89,6 +89,46 @@ directory created in the current working directory:
 ➡️ **For the meaning, units, and default of every parameter, see the fully
 commented [`examples/crams.ini`](examples/crams.ini).**
 
+## Python steering
+
+CRAMS can be embedded into Python via SWIG-generated interface. To do this, run
+
+```bash
+swig -c++ -python -Iinclude extension/crams.i
+pip install .
+```
+
+Then, from Python interpreter you can use
+
+```python
+from crams import CramsRunner
+
+runner = CramsRunner(
+    inelastic_model="glauber",
+    fragmentation_model="fluka4dragon",
+    verbose=True,
+)
+
+propagation = PropagationParams(
+    H_kpc=4.0,
+    ...
+)
+injection = InjectionParams(
+    abundances=[...],
+    slopes=[4.4, 4.35, 4.3],
+)
+rigidity_spectra = runner.compute(propagation, injection)
+```
+
+Python extension can be validated for consistency with the main executable via
+
+```shell
+python tests/test_python.py
+```
+
+**TODO**: configure and build extension Python via CMake under optional flag;
+integrate testing into the same system
+
 ## Data tables
 
 CRAMS ships the nuclear cross-section grids and the nuclei list it needs in

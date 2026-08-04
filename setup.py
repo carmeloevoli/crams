@@ -1,9 +1,6 @@
-# run SWIG first with
-# > swig -c++ -python -Iinclude extension/crams.i
 # TODO: make platform-independent and integrate with CMake
 
 from setuptools import Extension, setup
-
 
 swig_extension = Extension(
     "crams._crams",

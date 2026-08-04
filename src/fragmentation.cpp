@@ -132,28 +132,28 @@ constexpr double kFragTmax = 1e5 * CGS::GeV;
 constexpr size_t kFragTsize = 112;
 
 NucFragFluka4Dragon::NucFragFluka4Dragon()
-    : NucFragFromTable("Fluka4Dragon", "data/crams_fragmentation_fluka4dragon.csv", kFragTmin, kFragTmax, kFragTsize) {}
+    : NucFragFromTable("Fluka4Dragon", DATA_DIR "crams_fragmentation_fluka4dragon.csv", kFragTmin, kFragTmax, kFragTsize) {}
 
 NucFragUsineGalprop17Opt12::NucFragUsineGalprop17Opt12()
-    : NucFragFromTable("USINE_GALPROP17_OPT12", "data/crams_fragmentation_usine_galprop17_opt12.csv", kFragTmin,
+    : NucFragFromTable("USINE_GALPROP17_OPT12", DATA_DIR "crams_fragmentation_usine_galprop17_opt12.csv", kFragTmin,
                        kFragTmax, kFragTsize) {}
 
 NucFragUsineGalprop17Opt22::NucFragUsineGalprop17Opt22()
-    : NucFragFromTable("USINE_GALPROP17_OPT22", "data/crams_fragmentation_usine_galprop17_opt22.csv", kFragTmin,
+    : NucFragFromTable("USINE_GALPROP17_OPT22", DATA_DIR "crams_fragmentation_usine_galprop17_opt22.csv", kFragTmin,
                        kFragTmax, kFragTsize) {}
 
 NucFragUsineWebber03Coste12::NucFragUsineWebber03Coste12()
-    : NucFragFromTable("USINE_WEBBER03_COSTE12", "data/crams_fragmentation_usine_webber03+coste12.csv", kFragTmin,
+    : NucFragFromTable("USINE_WEBBER03_COSTE12", DATA_DIR "crams_fragmentation_usine_webber03+coste12.csv", kFragTmin,
                        kFragTmax, kFragTsize) {}
 
 NucFragEvoli2019::NucFragEvoli2019()
-    : NucFragFromTable("Evoli2019", "data/crams_fragmentation_evoli2019.csv", kFragTmin, kFragTmax, kFragTsize) {}
+    : NucFragFromTable("Evoli2019", DATA_DIR "crams_fragmentation_evoli2019.csv", kFragTmin, kFragTmax, kFragTsize) {}
 
 NucFragEvoli2026W93::NucFragEvoli2026W93()
-    : NucFragFromTable("Evoli2026W93", "data/crams_fragmentation_evoli2026_w93.csv", kFragTmin, kFragTmax, kFragTsize) {}
+    : NucFragFromTable("Evoli2026W93", DATA_DIR "crams_fragmentation_evoli2026_w93.csv", kFragTmin, kFragTmax, kFragTsize) {}
 
 NucFragEvoli2026St99::NucFragEvoli2026St99()
-    : NucFragFromTable("Evoli2026St99", "data/crams_fragmentation_evoli2026_st99.csv", kFragTmin, kFragTmax,
+    : NucFragFromTable("Evoli2026St99", DATA_DIR "crams_fragmentation_evoli2026_st99.csv", kFragTmin, kFragTmax,
                        kFragTsize) {}
 
 }  // namespace CRAMS

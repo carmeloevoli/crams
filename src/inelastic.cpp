@@ -137,14 +137,14 @@ constexpr double kInelasticTmax = 1e5 * CGS::GeV;
 constexpr size_t kInelasticTsize = 448;
 
 InXsecTripathi99::InXsecTripathi99()
-    : InXsecFromTable("Tripathi1999", "data/crams_inelastic_tripathi99.csv", kInelasticTmin, kInelasticTmax,
+    : InXsecFromTable("Tripathi1999", DATA_DIR "crams_inelastic_tripathi99.csv", kInelasticTmin, kInelasticTmax,
                       kInelasticTsize) {}
 
 InXsecGlauber::InXsecGlauber()
-    : InXsecFromTable("Glauber", "data/crams_inelastic_glauber.csv", kInelasticTmin, kInelasticTmax, kInelasticTsize) {}
+    : InXsecFromTable("Glauber", DATA_DIR "crams_inelastic_glauber.csv", kInelasticTmin, kInelasticTmax, kInelasticTsize) {}
 
 InXsecCrosec::InXsecCrosec()
-    : InXsecFromTable("CROSEC", "data/crams_inelastic_crosec.csv", kInelasticTmin, kInelasticTmax, kInelasticTsize) {}
+    : InXsecFromTable("CROSEC", DATA_DIR "crams_inelastic_crosec.csv", kInelasticTmin, kInelasticTmax, kInelasticTsize) {}
 
 double InelasticXsecST98::getXsecOnHtarget(const PID& projectile, const double& T) const {
   if (projectile.getZ() == 1 && projectile.getA() == 1) return sigma_pp(T);

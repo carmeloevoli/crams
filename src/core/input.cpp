@@ -6,7 +6,6 @@
 #include <iomanip>
 #include <sstream>
 #include <stdexcept>
-#include <sstream> 
 
 #include "crams/utils/utilities.h"
 
@@ -18,15 +17,6 @@ void eraseExtension(std::string& s, const std::string& ext) {
     s.erase(pos);
   else
     throw std::runtime_error("Input filename must end with '" + ext + "'");
-}
-
-CRAMS::FluxSolver parseFluxSolver(const std::string& value) {
-  const auto solver = CRAMS::Utilities::simplifyKey(value);
-  if (solver == "analytical") return CRAMS::FluxSolver::Analytical;
-  if (solver == "cranknicolson") return CRAMS::FluxSolver::CrankNicolson;
-  if (solver == "exponential") return CRAMS::FluxSolver::Exponential;
-
-  throw std::runtime_error("Input: unknown flux solver '" + value + "'");
 }
 
 std::string fluxSolverName(CRAMS::FluxSolver solver) {
@@ -42,15 +32,6 @@ std::string fluxSolverName(CRAMS::FluxSolver solver) {
   return "unknown";
 }
 
-CRAMS::InelasticModel parseInelasticModel(const std::string& value) {
-  const auto model = CRAMS::Utilities::simplifyKey(value);
-  if (model == "tripathi99" || model == "tripathi1999") return CRAMS::InelasticModel::Tripathi99;
-  if (model == "glauber") return CRAMS::InelasticModel::Glauber;
-  if (model == "crosec") return CRAMS::InelasticModel::Crosec;
-
-  throw std::runtime_error("Input: unknown inelastic model '" + value + "'");
-}
-
 std::string inelasticModelName(CRAMS::InelasticModel model) {
   switch (model) {
     case CRAMS::InelasticModel::Tripathi99:
@@ -62,19 +43,6 @@ std::string inelasticModelName(CRAMS::InelasticModel model) {
   }
 
   return "unknown";
-}
-
-CRAMS::FragmentationModel parseFragmentationModel(const std::string& value) {
-  const auto model = CRAMS::Utilities::simplifyKey(value);
-  if (model == "fluka4dragon") return CRAMS::FragmentationModel::Fluka4Dragon;
-  if (model == "usinegalprop17opt12") return CRAMS::FragmentationModel::UsineGalprop17Opt12;
-  if (model == "usinegalprop17opt22") return CRAMS::FragmentationModel::UsineGalprop17Opt22;
-  if (model == "usinewebber03coste12") return CRAMS::FragmentationModel::UsineWebber03Coste12;
-  if (model == "evoli2019") return CRAMS::FragmentationModel::Evoli2019;
-  if (model == "evoli2026w93") return CRAMS::FragmentationModel::Evoli2026W93;
-  if (model == "evoli2026st99") return CRAMS::FragmentationModel::Evoli2026St99;
-
-  throw std::runtime_error("Input: unknown fragmentation model '" + value + "'");
 }
 
 std::string fragmentationModelName(CRAMS::FragmentationModel model) {
@@ -101,6 +69,37 @@ std::string fragmentationModelName(CRAMS::FragmentationModel model) {
 }  // namespace
 
 namespace CRAMS {
+
+FluxSolver parseFluxSolver(const std::string& value) {
+  const auto solver = CRAMS::Utilities::simplifyKey(value);
+  if (solver == "analytical") return CRAMS::FluxSolver::Analytical;
+  if (solver == "cranknicolson") return CRAMS::FluxSolver::CrankNicolson;
+  if (solver == "exponential") return CRAMS::FluxSolver::Exponential;
+
+  throw std::runtime_error("Input: unknown flux solver '" + value + "'");
+}
+
+InelasticModel parseInelasticModel(const std::string& value) {
+  const auto model = CRAMS::Utilities::simplifyKey(value);
+  if (model == "tripathi99" || model == "tripathi1999") return CRAMS::InelasticModel::Tripathi99;
+  if (model == "glauber") return CRAMS::InelasticModel::Glauber;
+  if (model == "crosec") return CRAMS::InelasticModel::Crosec;
+
+  throw std::runtime_error("Input: unknown inelastic model '" + value + "'");
+}
+
+FragmentationModel parseFragmentationModel(const std::string& value) {
+  const auto model = CRAMS::Utilities::simplifyKey(value);
+  if (model == "fluka4dragon") return CRAMS::FragmentationModel::Fluka4Dragon;
+  if (model == "usinegalprop17opt12") return CRAMS::FragmentationModel::UsineGalprop17Opt12;
+  if (model == "usinegalprop17opt22") return CRAMS::FragmentationModel::UsineGalprop17Opt22;
+  if (model == "usinewebber03coste12") return CRAMS::FragmentationModel::UsineWebber03Coste12;
+  if (model == "evoli2019") return CRAMS::FragmentationModel::Evoli2019;
+  if (model == "evoli2026w93") return CRAMS::FragmentationModel::Evoli2026W93;
+  if (model == "evoli2026st99") return CRAMS::FragmentationModel::Evoli2026St99;
+
+  throw std::runtime_error("Input: unknown fragmentation model '" + value + "'");
+}
 
 std::string Input::fluxSolverName() const { return ::fluxSolverName(m_fluxSolver); }
 
@@ -223,8 +222,6 @@ std::string Input::describe() const {
   return out.str();
 }
 
-void Input::print() const {
-  LOGD << describe();
-}
+void Input::print() const { LOGD << describe(); }
 
 }  // namespace CRAMS

@@ -13,7 +13,8 @@
 
 namespace {
 
-const char kNucleilistFilename[] = "data/crams_nucleilist.csv";
+
+const char kNucleilistFilename[] = DATA_DIR "crams_nucleilist.csv";
 
 struct AbundanceSetting {
   const char* key;

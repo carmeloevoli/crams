@@ -11,6 +11,7 @@ mcmc/figs
 mcmc/*.npz
 venv/
 crams.egg-info/
+output/
 
 # swig-generated files
 extension/crams_wrap.cxx

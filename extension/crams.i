@@ -7,8 +7,8 @@
 #include "crams/runner.h"
 %}
 
-%template(RigiditySpectraRow) std::vector<double>;
-%template(RigiditySpectra) std::vector<std::vector<double>>;
+%template(Vector) std::vector<double>;
+%template(Vector2D) std::vector<std::vector<double>>;
 
 %include "crams/utils/git_revision.h"
 

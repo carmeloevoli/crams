@@ -14,6 +14,7 @@ set(CMAKE_CXX_FLAGS "-O3 -ftree-vectorize -march=native -Wall -Wextra -Wpedantic
 set(CRAMS_EXTRA_INCLUDES)
 set(CRAMS_EXTRA_LIBRARIES)
 
+
 include_directories( include/ )
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/external/plog/include/plog/Log.h")
   message(FATAL_ERROR "plog not found. Run: cd external && sh get_plog.sh")
@@ -64,6 +65,9 @@ file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/output)
 # make library
 include_directories(include ${CRAMS_EXTRA_INCLUDES})
 add_library(crams_core ${CRAMS_SRCS})
+target_compile_definitions(crams_core PRIVATE 
+     DATA_DIR="${PROJECT_BINARY_DIR}/data/"
+)
 
 # make executables
 add_executable(crams apps/main.cpp)
