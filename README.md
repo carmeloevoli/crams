@@ -101,7 +101,7 @@ pip install .
 Then, from Python interpreter you can use
 
 ```python
-from crams import CramsRunner
+from crams import CramsRunner, PropagationParams, InjectionParams
 
 runner = CramsRunner(
     inelastic_model="glauber",
