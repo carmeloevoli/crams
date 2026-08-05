@@ -17,48 +17,17 @@ from crams.crams import (
     parseInelasticModel,
 )
 
-ABUNDANCE_KEYS = (
-    "qh",
-    "qhe",
-    "qli",
-    "qbe",
-    "qb",
-    "qc",
-    "qn",
-    "qo",
-    "qf",
-    "qne",
-    "qna",
-    "qmg",
-    "qal",
-    "qsi",
-    "qp",
-    "qs",
-    "qcl",
-    "qar",
-    "qk",
-    "qca",
-    "qsc",
-    "qti",
-    "qv",
-    "qcr",
-    "qmn",
-    "qfe",
-    "qco",
-    "qni",
-)
-
 
 @dataclass
 class PropagationParams:
-    H_kpc: float
-    v_A_km_sec: float
-    R_b_GV: float
-    delta: float
-    ddelta: float
-    D_0_cm2_sec: float
-    X_src: float
-    phi: float
+    H_kpc: float = 7.0
+    v_A_km_sec: float = 4.40940
+    R_b_GV: float = 290.0
+    delta: float = 0.56132
+    ddelta: float = 0.22
+    D_0_cm2_sec: float = 2.48255e28
+    X_src: float = -1.0
+    phi: float = 4.87754e-01
 
     @staticmethod
     def from_ini_params(params: dict[str, float]):
@@ -86,15 +55,93 @@ class PropagationParams:
         )
 
 
+ELEMENT_NAMES = (
+    "H",
+    "He",
+    "Li",
+    "Be",
+    "B",
+    "C",
+    "N",
+    "O",
+    "F",
+    "Ne",
+    "Na",
+    "Mg",
+    "Al",
+    "Si",
+    "P",
+    "S",
+    "Cl",
+    "Ar",
+    "K",
+    "Ca",
+    "Sc",
+    "Ti",
+    "V",
+    "Cr",
+    "Mn",
+    "Fe",
+    "Co",
+    "Ni",
+)
+
+ABUNDANCE_INI_KEYS = ("q" + element.lower() for element in ELEMENT_NAMES)
+
+
 @dataclass
 class InjectionParams:
     abundances: Sequence[float]
     slopes: Sequence[float]
 
+    def __post_init__(self) -> None:
+        if len(self.abundances) > len(ELEMENT_NAMES):
+            raise ValueError(f"Too many abundances specified, expected exactly {len(ELEMENT_NAMES)}")
+        if len(self.abundances) < len(ELEMENT_NAMES):
+            raise ValueError(f"Too few abundances specified, expected exactly {len(ELEMENT_NAMES)}")
+        if len(self.slopes) > len(ELEMENT_NAMES):
+            raise ValueError(f"Too many slopes specified, expected at most {len(ELEMENT_NAMES)}")
+
+    @staticmethod
+    def default() -> "InjectionParams":
+        return InjectionParams(
+            abundances=[
+                5.06605e-02,
+                2.54369e-02,
+                0.0,
+                0.0,
+                0.0,
+                3.98879e-03,
+                3.36117e-04,
+                7.15129e-03,
+                0.0,
+                1.34031e-03,
+                0.5e-04,
+                2.38948e-03,
+                2.7e-04,
+                2.77911e-03,
+                1.0e-04,
+                4.87000e-04,
+                0.0,
+                3.0e-04,
+                0.0,
+                4.0e-04,
+                0.0,
+                0.0,
+                0.0,
+                2.5e-04,
+                0.0,
+                6.80000e-03,
+                0.0,
+                4.0e-04,
+            ],
+            slopes=[4.4, 4.35, 4.3],
+        )
+
     @staticmethod
     def from_ini_params(params: dict[str, float]):
         return InjectionParams(
-            abundances=[params[key] for key in ABUNDANCE_KEYS],
+            abundances=[params[key] for key in ABUNDANCE_INI_KEYS],
             slopes=[params["hslope"], params["heslope"], params["slope"]],
         )
 
@@ -121,6 +168,11 @@ class CramsRunner:
         propagation: PropagationParams | Input,
         injection: InjectionParams | None,  # None = use stored injection; mainly for tests
     ) -> np.ndarray:
+        """
+        Main computation method. Returns table as a table of (n_points, n_elements + 1),
+        the first column gives rigidities, the last n_elements – elemental fluxes, summed
+        over izotopes. The rigidity is in GV, the spectra are in 1 / GeV m^2 sec
+        """
         if self._file_output:
             Path("output").mkdir(exist_ok=True)  # hard-coded CRAMS output path
 
