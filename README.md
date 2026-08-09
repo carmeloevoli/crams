@@ -109,14 +109,8 @@ runner = CramsRunner(
     verbose=True,
 )
 
-propagation = PropagationParams(
-    H_kpc=4.0,
-    ...
-)
-injection = InjectionParams(
-    abundances=[...],
-    slopes=[4.4, 4.35, 4.3],
-)
+propagation = PropagationParams()
+injection = InjectionParams.default()
 rigidity_spectra = runner.compute(propagation, injection)
 ```
 

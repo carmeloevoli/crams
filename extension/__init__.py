@@ -160,6 +160,8 @@ class CramsRunner:
             fragmentationModel=parseFragmentationModel(fragmentation_model),
             injection=_preloaded_injection if _preloaded_injection is not None else ParticleList(),
         )
+        self._inelastic_model = inelastic_model
+        self._fragmentation_model = fragmentation_model
         self._verbose = verbose
         self._file_output = file_output
 
