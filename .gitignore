@@ -16,3 +16,7 @@ output/
 # swig-generated files
 extension/crams_wrap.cxx
 extension/crams.py
+
+bestfit.ini
+mcmc/kiss_tables
+figs
