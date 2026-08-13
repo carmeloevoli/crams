@@ -89,7 +89,7 @@ CRAMS::RigiditySpectra CRAMS::Runner::compute(Input input, bool dumpToFile, bool
     particle.buildPrimarySource(input);
     particle.buildInelasticXsecs(*inelasticXsecs);
     if (!particle.getPid().isTertiary()) particle.buildSecondarySource(input, result, *nucfragXsecs);
-    if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(result);
+    if (particle.getPid() == CRAMS::H1_ter) particle.buildTertiarySource(input, result);
     //  if (input.X_s() > 0.) particle.buildGrammageAtSource(input, result, *nucfragXsecs);
     if (verbose && dumpToFile) particle.dump();
     particle.computeIntensity(input);

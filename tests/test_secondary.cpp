@@ -103,6 +103,16 @@ void test_get_power_law_exact() {
   }
 }
 
+void test_log_lerp_between_zeros() {
+  const auto T = logGrid(1. * CRAMS::CGS::GeV, 100. * CRAMS::CGS::GeV, 20);
+  std::vector<double> Q;
+  std::fill(Q.begin(), Q.end(), 0.0);
+  CRAMS::SecondarySource S(CRAMS::H1, T, Q);
+
+  CHECK(approx(S.get(T[3]), 0.0, 1e-12));                    // on grid
+  CHECK(approx(S.get(1.03 * CRAMS::CGS::GeV), 0.0, 1e-12));  // off grid
+}
+
 void test_get_matches_exact_at_near_knot() {
   // Spot-check a simple 3-point power-law grid at the geometric midpoint of [1,10] GeV
   CRAMS::SecondarySource S(CRAMS::H1, T3, Q3);

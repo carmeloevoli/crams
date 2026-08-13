@@ -56,8 +56,16 @@ template <typename T>
 T LinearInterpolatorLog(const std::vector<T>& x, const std::vector<T>& y, T x_new) {
   if (x_new < x.front() || x_new > x.back()) throw std::invalid_argument("x_new out of range in LinearInterpolatorLog");
   const size_t i = getLowerIndex(x, x_new);
+
+  const double lgY1 = std::log(y[i]);
+  const double lgY2 = std::log(y[i + 1]);
+
+  // the code below is technically valid for interpolation between y=0.0 -> lgy = -inf points, but when x_new is on the
+  // grid, it runs into inf*0.0 and returns nan; so we explicitly check this case here
+  if (std::isinf(lgY1) || std::isinf(lgY2)) return 0.0;
+
   const double t = (std::log(x_new) - std::log(x[i])) / (std::log(x[i + 1]) - std::log(x[i]));
-  return std::exp(std::log(y[i]) * (1. - t) + std::log(y[i + 1]) * t);
+  return std::exp(lgY1 * (1. - t) + lgY2 * t);
 }
 
 // GSL adaptive integration (QAG) over a finite interval.

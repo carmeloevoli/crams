@@ -70,23 +70,30 @@ NucFragFromTable::NucFragFromTable(std::string modelName, std::string tableFilen
 
 void NucFragFromTable::buildEnergyArray() {
   const double logRatio = std::log(m_T_max / m_T_min) / (m_T_size - 1);
-  for (size_t i = 0; i < m_T_size; ++i) m_T.push_back(m_T_min * std::exp(i * logRatio));
+  for (size_t i = 0; i < m_T_size; ++i) {
+    const double T = m_T_min * std::exp(i * logRatio);
+    m_T.push_back(T);
+    m_logT.push_back(std::log(T));
+  }
 }
 
 double NucFragFromTable::getXsecOnHtarget(const PID& projectile, const PID& fragment, const double& T) const {
   const auto it = m_table.find({projectile, fragment});
   if (it == m_table.end()) return 0.;  // channel not in this model -> no contribution
+
   // Small relative tolerance at the edges: the simulation energy grid can land
   // a hair outside [m_T_min, m_T_max] due to floating-point rounding in the
   // log-spaced grids, which is not a genuine out-of-range request.
   constexpr double edgeTol = 1e-6;
-  if (T < m_T_min * (1. - edgeTol) || T > m_T_max * (1. + edgeTol))
+  if (T < m_T_min * (1. - edgeTol))
     throw std::runtime_error(m_modelName + " fragmentation xsec requested at T = " + std::to_string(T / CGS::GeV) +
-                             " GeV, outside the tabulated range [" + std::to_string(m_T_min / CGS::GeV) + ", " +
-                             std::to_string(m_T_max / CGS::GeV) + "] GeV");
-  // Clamp into the tabulated grid so a boundary point does not trip the interpolator.
-  const double T_clamped = std::min(std::max(T, m_T.front()), m_T.back());
-  return Numeric::LinearInterpolator<double>(m_T, it->second, T_clamped);
+                             " GeV, below the minimum tabulated T = " + std::to_string(m_T_min / CGS::GeV) + " GeV");
+  if (!extrapolateToHighEnergies && T > m_T_max * (1. + edgeTol))
+    throw std::runtime_error(m_modelName + " fragmentation xsec requested at T = " + std::to_string(T / CGS::GeV) +
+                             " GeV, above the maximum tabulated T = " + std::to_string(m_T_min / CGS::GeV) +
+                             " GeV; set extrapolateToHighEnergies to true to enable ~log(T) extrapolation");
+
+  return Numeric::LinearInterpolator<double>(m_logT, it->second, std::log(T), true);
 }
 
 void NucFragFromTable::getXsecOnISM(const PID& projectile, const PID& fragment, const std::vector<double>& T,
@@ -100,12 +107,15 @@ void NucFragFromTable::getXsecOnISM(const PID& projectile, const PID& fragment, 
   const double ismFactor = (1. + CGS::K_He * CGS::f_He) / (1. + CGS::f_He);
   constexpr double edgeTol = 1e-6;
   for (size_t i = 0; i < T.size(); ++i) {
-    if (T[i] < m_T_min * (1. - edgeTol) || T[i] > m_T_max * (1. + edgeTol))
+    if (T[i] < m_T_min * (1. - edgeTol))
       throw std::runtime_error(m_modelName + " fragmentation xsec requested at T = " + std::to_string(T[i] / CGS::GeV) +
-                               " GeV, outside the tabulated range [" + std::to_string(m_T_min / CGS::GeV) + ", " +
-                               std::to_string(m_T_max / CGS::GeV) + "] GeV");
-    const double T_clamped = std::min(std::max(T[i], m_T.front()), m_T.back());
-    out[i] = ismFactor * Numeric::LinearInterpolator<double>(m_T, it->second, T_clamped);
+                               " GeV, below the minimum tabulated T = " + std::to_string(m_T_min / CGS::GeV) + " GeV");
+    if (!extrapolateToHighEnergies && T[i] > m_T_max * (1. + edgeTol))
+      throw std::runtime_error(m_modelName + " fragmentation xsec requested at T = " + std::to_string(T[i] / CGS::GeV) +
+                               " GeV, above the maximum tabulated T = " + std::to_string(m_T_min / CGS::GeV) +
+                               " GeV; set extrapolateToHighEnergies to true to enable ~log(T) extrapolation");
+
+    out[i] = ismFactor * Numeric::LinearInterpolator<double>(m_logT, it->second, std::log(T[i]), true);
   }
 }
 
@@ -132,7 +142,8 @@ constexpr double kFragTmax = 1e5 * CGS::GeV;
 constexpr size_t kFragTsize = 112;
 
 NucFragFluka4Dragon::NucFragFluka4Dragon()
-    : NucFragFromTable("Fluka4Dragon", DATA_DIR "crams_fragmentation_fluka4dragon.csv", kFragTmin, kFragTmax, kFragTsize) {}
+    : NucFragFromTable("Fluka4Dragon", DATA_DIR "crams_fragmentation_fluka4dragon.csv", kFragTmin, kFragTmax,
+                       kFragTsize) {}
 
 NucFragUsineGalprop17Opt12::NucFragUsineGalprop17Opt12()
     : NucFragFromTable("USINE_GALPROP17_OPT12", DATA_DIR "crams_fragmentation_usine_galprop17_opt12.csv", kFragTmin,
@@ -150,7 +161,8 @@ NucFragEvoli2019::NucFragEvoli2019()
     : NucFragFromTable("Evoli2019", DATA_DIR "crams_fragmentation_evoli2019.csv", kFragTmin, kFragTmax, kFragTsize) {}
 
 NucFragEvoli2026W93::NucFragEvoli2026W93()
-    : NucFragFromTable("Evoli2026W93", DATA_DIR "crams_fragmentation_evoli2026_w93.csv", kFragTmin, kFragTmax, kFragTsize) {}
+    : NucFragFromTable("Evoli2026W93", DATA_DIR "crams_fragmentation_evoli2026_w93.csv", kFragTmin, kFragTmax,
+                       kFragTsize) {}
 
 NucFragEvoli2026St99::NucFragEvoli2026St99()
     : NucFragFromTable("Evoli2026St99", DATA_DIR "crams_fragmentation_evoli2026_st99.csv", kFragTmin, kFragTmax,

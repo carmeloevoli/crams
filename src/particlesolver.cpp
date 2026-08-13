@@ -52,7 +52,9 @@ TransportCoefficients transportCoefficientsAt(const CRAMS::Particle& particle, d
   const double source = particle.Q_total(energy);
 
   if (!std::isfinite(lambda1) || !std::isfinite(lambda2) || !std::isfinite(source) || lambda2 <= 0.)
-    throw std::runtime_error("Particle: invalid transport coefficient in numerical solver");
+    throw std::runtime_error(
+        "Particle: invalid transport coefficient in numerical solver: lambda1 = " + std::to_string(lambda1) +
+        "; lambda2 = " + std::to_string(lambda2) + "; source = " + std::to_string(source));
 
   return {lambda1 / lambda2, source / lambda2};
 }
