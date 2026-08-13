@@ -31,11 +31,24 @@ size_t getLowerIndex(const std::vector<T>& v, T x) {
 
 // Linear interpolation in linear-linear space.
 template <typename T>
-T LinearInterpolator(const std::vector<T>& x, const std::vector<T>& y, T x_new) {
-  if (x_new < x.front() || x_new > x.back()) throw std::invalid_argument("x_new out of range in LinearInterpolator");
-  const size_t i = getLowerIndex(x, x_new);
+T LinearInterpolator(const std::vector<T>& x, const std::vector<T>& y, T x_new, bool extrapolate = false) {
+  if (!extrapolate && (x_new < x.front() || x_new > x.back()))
+    throw std::invalid_argument(
+        "x_new out of range in LinearInterpolator; pass extrapolate=true if you want to perform extrapolation for "
+        "out-of-range points");
+
+  size_t i;
+  if (x_new < x.front()) {
+    // low x -> extrapolation using the first two points
+    i = 0;
+  } else if (x_new > x.back()) {
+    // high x -> the last two
+    i = x.size() - 2;
+  } else {
+    i = getLowerIndex(x, x_new);
+  }
   const T t = (x_new - x[i]) / (x[i + 1] - x[i]);
-  return y[i] * (1. - t) + y[i + 1] * t;
+  return y[i] * (T(1) - t) + y[i + 1] * t;
 }
 
 // Linear interpolation in log-log space. Exact for power laws.

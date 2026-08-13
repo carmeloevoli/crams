@@ -89,7 +89,11 @@ InXsecFromTable::InXsecFromTable(std::string modelName, std::string tableFilenam
 
 void InXsecFromTable::buildEnergyArray() {
   const double logRatio = std::log(m_T_max / m_T_min) / (m_T_size - 1);
-  for (size_t i = 0; i < m_T_size; ++i) m_T.push_back(m_T_min * std::exp(i * logRatio));
+  for (size_t i = 0; i < m_T_size; ++i) {
+    const double T = m_T_min * std::exp(i * logRatio);
+    m_T.push_back(T);
+    m_logT.push_back(std::log(T));
+  }
 }
 
 double InXsecFromTable::getXsecOnHtarget(const PID& projectile, const double& T) const {
@@ -100,17 +104,20 @@ double InXsecFromTable::getXsecOnHtarget(const PID& projectile, const double& T)
     const auto it = m_table.find(projectile);
     if (it == m_table.end())
       throw std::runtime_error(m_modelName + " inelastic xsec not found for projectile " + projectile.toString());
+
     // Small relative tolerance at the edges: the simulation energy grid can land
     // a hair outside [m_T_min, m_T_max] due to floating-point rounding in the
     // log-spaced grids, which is not a genuine out-of-range request.
     constexpr double edgeTol = 1e-6;
-    if (T < m_T_min * (1. - edgeTol) || T > m_T_max * (1. + edgeTol))
+    if (T < m_T_min * (1. - edgeTol))
       throw std::runtime_error(m_modelName + " inelastic xsec requested at T = " + std::to_string(T / CGS::GeV) +
-                               " GeV, outside the tabulated range [" + std::to_string(m_T_min / CGS::GeV) + ", " +
-                               std::to_string(m_T_max / CGS::GeV) + "] GeV");
-    // Clamp into the tabulated grid so a boundary point does not trip the interpolator.
-    const double T_clamped = std::min(std::max(T, m_T.front()), m_T.back());
-    sigma = Numeric::LinearInterpolator<double>(m_T, it->second, T_clamped);
+                               " GeV, below the minimum tabulated T = " + std::to_string(m_T_min / CGS::GeV) + " GeV");
+
+    if (!extrapolateToHighEnergies && T > m_T_max * (1. + edgeTol))
+      throw std::runtime_error(m_modelName + " inelastic xsec requested at T = " + std::to_string(T / CGS::GeV) +
+                               " GeV, above the maximum tabulated T = " + std::to_string(m_T_min / CGS::GeV) +
+                               " GeV; set extrapolateToHighEnergies to true to enable ~log(T) extrapolation");
+    sigma = Numeric::LinearInterpolator<double>(m_logT, it->second, std::log(T), true);
   }
   return std::max(sigma, 1e-10 * CGS::mbarn);
 }
@@ -141,10 +148,12 @@ InXsecTripathi99::InXsecTripathi99()
                       kInelasticTsize) {}
 
 InXsecGlauber::InXsecGlauber()
-    : InXsecFromTable("Glauber", DATA_DIR "crams_inelastic_glauber.csv", kInelasticTmin, kInelasticTmax, kInelasticTsize) {}
+    : InXsecFromTable("Glauber", DATA_DIR "crams_inelastic_glauber.csv", kInelasticTmin, kInelasticTmax,
+                      kInelasticTsize) {}
 
 InXsecCrosec::InXsecCrosec()
-    : InXsecFromTable("CROSEC", DATA_DIR "crams_inelastic_crosec.csv", kInelasticTmin, kInelasticTmax, kInelasticTsize) {}
+    : InXsecFromTable("CROSEC", DATA_DIR "crams_inelastic_crosec.csv", kInelasticTmin, kInelasticTmax,
+                      kInelasticTsize) {}
 
 double InelasticXsecST98::getXsecOnHtarget(const PID& projectile, const double& T) const {
   if (projectile.getZ() == 1 && projectile.getA() == 1) return sigma_pp(T);

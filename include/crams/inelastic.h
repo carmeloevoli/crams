@@ -28,6 +28,7 @@ class InelasticXsec {
 class InXsecFromTable : public InelasticXsec {
  public:
   double getXsecOnHtarget(const PID& projectile, const double& T) const override;
+  bool extrapolateToHighEnergies = true;
 
  protected:
   InXsecFromTable(std::string modelName, std::string tableFilename, double T_min, double T_max, size_t T_size);
@@ -43,6 +44,7 @@ class InXsecFromTable : public InelasticXsec {
   const size_t m_T_size;
   std::map<PID, std::vector<double>> m_table;
   std::vector<double> m_T;
+  std::vector<double> m_logT;
 };
 
 class InXsecTripathi99 : public InXsecFromTable {
