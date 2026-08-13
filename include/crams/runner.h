@@ -14,6 +14,12 @@
 
 namespace CRAMS {
 
+struct Result {
+  RigiditySpectra spectra;
+  bool is_error;
+  std::string error;
+};
+
 class Runner {
  private:
   InelasticModel inelasticModel;
@@ -28,7 +34,10 @@ class Runner {
   Runner(InelasticModel inelasticModel, FragmentationModel fragmentationModel, ParticleList injection);
   ~Runner() = default;
   void setInjectionParams(std::vector<double> abundances, std::vector<double> slopes);
-  RigiditySpectra compute(Input input, bool dumpToFile = false, bool verbose = false, bool ignoreInputInitParams = false);
+  RigiditySpectra compute(Input input, bool dumpToFile = false, bool verbose = false,
+                          bool ignoreInputInitParams = false);
+  Result computeSafe(Input input, bool dumpToFile = false, bool verbose = false,
+                           bool ignoreInputInitParams = false) noexcept;
 };
 
 }  // namespace CRAMS

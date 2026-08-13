@@ -128,6 +128,10 @@ void Particle::buildGrammage(const Input& input) {
 
 void Particle::buildPrimarySource(const Input& input) {
   m_Q_p = std::make_unique<PrimarySource>(m_pid, m_abundance, m_slope, input.mu());
+  double featureR = input.sourceSpectrumFeatureR();
+  if (featureR > 0) {
+    m_Q_p->setSpectralBreak(featureR, input.sourceSpectrumBreakDeltaSlope(), input.sourceSpectrumBreakOmega());
+  }
 }
 
 void Particle::buildLosses(const Input& input) { m_dEdX = std::make_unique<Losses>(m_pid, input); }

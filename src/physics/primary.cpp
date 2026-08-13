@@ -23,10 +23,22 @@ PrimarySource::PrimarySource(const PID& pid, double abundance, double slope, dou
 
 PrimarySource::~PrimarySource() { LOGD << "deleted PrimarySource for particle " << m_pid; }
 
+void PrimarySource::setSpectralBreak(double R, double deltaSlope, double omega) {
+  m_featureT = Utilities::R2T(R, m_pid);
+  m_breakDeltaSlope = deltaSlope;
+  m_breakOmega = omega;
+};
+
 double PrimarySource::get(double T) const {
   if (m_norm <= 0.) return 0.;
   const double pc = Utilities::T2pc(T, m_pid);
-  return m_norm / Utilities::T2beta(T) * std::pow(pc / CGS::protonMassC2, 2. - m_slope);
+
+  double spectrumModifier = 1.0;
+  if (m_featureT >= 0) {
+    spectrumModifier = std::pow(1 + std::pow(T / m_featureT, 1 / m_breakOmega), -(m_breakDeltaSlope * m_breakOmega));
+  }
+
+  return m_norm / Utilities::T2beta(T) * std::pow(pc / CGS::protonMassC2, 2. - m_slope) * spectrumModifier;
 }
 
 }  // namespace CRAMS

@@ -126,7 +126,7 @@ void Input::setParam(const std::string& KEY, double value) {
     LOGD << "changed ddelta to " << m_ddelta;
   } else if (key == "rb") {
     m_R_b = value * CGS::GeV;
-    LOGD << "changed R_b to " << m_R_b / CGS::GeV << " GeV";
+    LOGD << "changed R_b to " << m_R_b / CGS::GeV << " GV";
   } else if (key == "va") {
     m_v_A = value * CGS::km / CGS::sec;
     LOGD << "changed v_A to " << m_v_A / (CGS::km / CGS::sec) << " km/s";
@@ -142,6 +142,15 @@ void Input::setParam(const std::string& KEY, double value) {
   } else if (key == "fudgebe10") {
     m_fudgeBe10 = value;
     LOGD << "changed fudge_Be10 to " << m_fudgeBe10;
+  } else if (key == "sourcefeaturer") {
+    m_sourceSpectrumFeatureR = value * CGS::GeV;
+    LOGD << "changed source feature R to " << value << " GV";
+  } else if (key == "sourcebreakdslope") {
+    m_sourceSpectrumBreakDeltaSlope = value;
+    LOGD << "changed source break delta slope to " << value;
+  } else if (key == "sourcebreakomega") {
+    m_sourceSpectrumBreakOmega = value;
+    LOGD << "changed source break omega to " << value;
   } else if (key == "id") {
     m_id = static_cast<size_t>(value);
   }

@@ -48,6 +48,8 @@ class ParticleList {
     m_rebuildChargeIndexBeforeUpdate = true;
     return m_list;
   }
+
+  // NOTE: these are guaranteed to work because List is actually a map, an ordered container
   const PID lightest() const { return m_list.begin()->first; }
   const PID heaviest() const { return m_list.rbegin()->first; }
 

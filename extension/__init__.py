@@ -1,3 +1,12 @@
+"""
+Python interface for CRAMS code.
+
+This __init__.py is actually a pythonic wrapper over a SWIG-generated interface.
+It provides high-level access and type hints, as well as a cleanly separated
+parametrization separated into injection (per-element abundance and slope,
+common R-scaled features) and propagation parameters.
+"""
+
 import argparse
 import pprint
 from collections.abc import Sequence
@@ -5,10 +14,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
-from crams.crams import (
+
+from .crams import (
     FluxSolver_CrankNicolson,
     Input,
     ParticleList,
+    Result,
     Runner,
     get_version,
     git_sha1,
@@ -17,15 +28,21 @@ from crams.crams import (
     parseInelasticModel,
 )
 
+__version__ = get_version()
+
 
 @dataclass
 class PropagationParams:
     H_kpc: float = 7.0
     v_A_km_sec: float = 4.40940
+
+    # D coefficient params
+    D_0_cm2_sec: float = 2.48255e28
     R_b_GV: float = 290.0
     delta: float = 0.56132
     ddelta: float = 0.22
-    D_0_cm2_sec: float = 2.48255e28
+    smoothness: float = 0.1
+
     X_src: float = -1.0
     phi: float = 4.87754e-01
 
@@ -51,6 +68,7 @@ class PropagationParams:
             ddelta=self.ddelta,
             D_0_cm2_sec=self.D_0_cm2_sec,
             X_s=self.X_src,
+            smoothness=self.smoothness,
             modulationPotential=self.phi,
         )
 
@@ -90,9 +108,18 @@ ABUNDANCE_INI_KEYS = ("q" + element.lower() for element in ELEMENT_NAMES)
 
 
 @dataclass
+class InjectionBreak:
+    R_GV: float
+    delta_slope: float
+    omega: float
+
+
+@dataclass
 class InjectionParams:
     abundances: Sequence[float]
     slopes: Sequence[float]
+
+    feature: InjectionBreak | None = None
 
     def __post_init__(self) -> None:
         if len(self.abundances) > len(ELEMENT_NAMES):
@@ -106,36 +133,36 @@ class InjectionParams:
     def default() -> "InjectionParams":
         return InjectionParams(
             abundances=[
-                5.06605e-02,
-                2.54369e-02,
-                0.0,
-                0.0,
-                0.0,
-                3.98879e-03,
-                3.36117e-04,
-                7.15129e-03,
-                0.0,
-                1.34031e-03,
-                0.5e-04,
-                2.38948e-03,
-                2.7e-04,
-                2.77911e-03,
-                1.0e-04,
-                4.87000e-04,
-                0.0,
-                3.0e-04,
-                0.0,
-                4.0e-04,
-                0.0,
-                0.0,
-                0.0,
-                2.5e-04,
-                0.0,
-                6.80000e-03,
-                0.0,
-                4.0e-04,
+                5.06605e-02,  # H
+                2.54369e-02,  # He
+                0.0,  # Li
+                0.0,  # Be
+                0.0,  # B
+                3.98879e-03,  # C
+                3.36117e-04,  # N
+                7.15129e-03,  # O
+                0.0,  # F
+                1.34031e-03,  # Ne
+                0.5e-4,  # Na
+                2.38948e-03,  # Mg
+                2.7e-4,  # Al
+                2.77911e-03,  # Si
+                1e-4,  # P
+                4.87000e-04,  # S
+                0.0,  # Cl
+                3e-4,  # Ar
+                0.0,  # K
+                4e-4,  # Ca
+                0.0,  # Sc
+                0.0,  # Ti
+                0.0,  # V
+                2.5e-4,  # Cr
+                0.0,  # Mn
+                6.80000e-03,  # Fe
+                0.0,  # Co
+                4e-4,  # Ni
             ],
-            slopes=[4.4, 4.35, 4.3],
+            slopes=[4.37, 4.30, 4.36],
         )
 
     @staticmethod
@@ -146,13 +173,39 @@ class InjectionParams:
         )
 
 
+@dataclass
+class LogGrid:
+    min: float  # GeV / GV
+    max: float  # GeV / GV
+    size: int
+
+
+class CramsError(Exception):
+    pass
+
+
+CRAMS_DEFAULT_INPUT = Input()
+CRAMS_DEFAULT_TSIM_GRID = LogGrid(
+    min=CRAMS_DEFAULT_INPUT.TSimMin(),
+    max=CRAMS_DEFAULT_INPUT.TSimMax(),
+    size=CRAMS_DEFAULT_INPUT.TSimSize(),
+)
+CRAMS_DEFAULT_R_OUT_GRID = LogGrid(
+    min=CRAMS_DEFAULT_INPUT.ROutputMin(),
+    max=CRAMS_DEFAULT_INPUT.ROutputMax(),
+    size=CRAMS_DEFAULT_INPUT.ROutputSize(),
+)
+
+
 class CramsRunner:
     def __init__(
         self,
-        inelastic_model: str,
-        fragmentation_model: str,
+        inelastic_model: str = CRAMS_DEFAULT_INPUT.inelasticModelName(),
+        fragmentation_model: str = CRAMS_DEFAULT_INPUT.fragmentationModelName(),
         verbose: bool = False,
         file_output: bool = False,
+        T_sim_grid: LogGrid = CRAMS_DEFAULT_TSIM_GRID,
+        R_out_grid: LogGrid = CRAMS_DEFAULT_R_OUT_GRID,
         _preloaded_injection: ParticleList | None = None,  # used mainly for testing
     ):
         self._runner = Runner(
@@ -164,6 +217,8 @@ class CramsRunner:
         self._fragmentation_model = fragmentation_model
         self._verbose = verbose
         self._file_output = file_output
+        self._T_sim_grid = T_sim_grid
+        self._R_out_grid = R_out_grid
 
     def compute(
         self,
@@ -172,21 +227,34 @@ class CramsRunner:
     ) -> np.ndarray:
         """
         Main computation method. Returns table as a table of (n_points, n_elements + 1),
-        the first column gives rigidities, the last n_elements – elemental fluxes, summed
+        the first column gives rigidities, the last n_elements --- elemental fluxes, summed
         over izotopes. The rigidity is in GV, the spectra are in 1 / GeV m^2 sec
         """
         if self._file_output:
             Path("output").mkdir(exist_ok=True)  # hard-coded CRAMS output path
 
+        input = propagation.to_input() if isinstance(propagation, PropagationParams) else propagation
+        input.setTSim(self._T_sim_grid.min, self._T_sim_grid.max, self._T_sim_grid.size)
+        input.setROutput(self._R_out_grid.min, self._R_out_grid.max, self._R_out_grid.size)
         if injection is not None:
+            # per-element injection params do not live inside the "input" object, but in a ParticleList
+            # container inside the runner; here we modify them through the dedicated method
             self._runner.setInjectionParams(abundances=injection.abundances, slopes=injection.slopes)
-        R_spectra = self._runner.compute(
-            propagation.to_input() if isinstance(propagation, PropagationParams) else propagation,
+            match injection.feature:
+                case None:
+                    pass
+                case InjectionBreak() as b:
+                    input.setSourceSpectrumBreak(R_GV=b.R_GV, deltaSlope=b.delta_slope, omega=b.omega)
+        result: Result = self._runner.computeSafe(
+            input=input,
             dumpToFile=self._file_output,
             verbose=self._verbose,
+            # input object contains default values, but we need to use those already configured in the runner object
             ignoreInputInitParams=True,
         )
-        return np.array(R_spectra)
+        if result.is_error:
+            raise CramsError(result.error)
+        return np.array(result.spectra)
 
 
 def cli():

@@ -8,7 +8,6 @@
 
 namespace CRAMS {
 
-
 enum class FluxSolver {
   Analytical,
   CrankNicolson,
@@ -62,10 +61,29 @@ class Input {
   double TSimMin() const { return m_TSimMin; }
   double TSimMax() const { return m_TSimMax; }
   size_t TSimSize() const { return m_TSimSize; }
+  void setTSim(double min_GeV, double max_GeV, size_t size) {
+    m_TSimMin = min_GeV * CGS::GeV;
+    m_TSimMax = max_GeV * CGS::GeV;
+    m_TSimSize = size;
+  }
 
   double ROutputMin() const { return m_ROutputMin; }
   double ROutputMax() const { return m_ROutputMax; }
   size_t ROutputSize() const { return m_ROutputSize; }
+  void setROutput(double min_GV, double max_GV, size_t size) {
+    m_ROutputMin = min_GV * CGS::GeV;
+    m_ROutputMax = max_GV * CGS::GeV;
+    m_ROutputSize = size;
+  }
+
+  double sourceSpectrumFeatureR() const { return m_sourceSpectrumFeatureR; }
+  double sourceSpectrumBreakDeltaSlope() const { return m_sourceSpectrumBreakDeltaSlope; }
+  double sourceSpectrumBreakOmega() const { return m_sourceSpectrumBreakOmega; }
+  void setSourceSpectrumBreak(double R_GV, double deltaSlope, double omega) {
+    m_sourceSpectrumFeatureR = R_GV * CGS::GeV;
+    m_sourceSpectrumBreakDeltaSlope = deltaSlope;
+    m_sourceSpectrumBreakOmega = omega;
+  }
 
   bool doSecondary() const { return m_doSecondary; }
 
@@ -113,6 +131,12 @@ class Input {
   double m_ROutputMin = 1. * CGS::GeV;
   double m_ROutputMax = 10. * CGS::TeV;
   size_t m_ROutputSize = 100;
+
+  // source spectral features, common for all primaries
+  double m_sourceSpectrumFeatureR = -1;  // <0 = source spectrum is a featureless PL
+  // feature = smooth break
+  double m_sourceSpectrumBreakDeltaSlope = 0.0;
+  double m_sourceSpectrumBreakOmega = 0.05;
 
   bool m_doSecondary = true;
 

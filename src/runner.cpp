@@ -54,7 +54,7 @@ void CRAMS::Runner::setInjectionParams(std::vector<double> abundances, std::vect
     injection.setAbundanceChargeGroup(Zmin + abIdx, abundances[abIdx]);
   }
 
-  auto allSlopesSpecified = slopes.size() >= (Zmax - Zmin + 1);
+  auto allSlopesSpecified = slopes.size() >= (unsigned int)(Zmax - Zmin + 1);
   auto endSlopeIdx = allSlopesSpecified ? slopes.size() : slopes.size() - 1;
   for (std::size_t slopeIdx = 0; slopeIdx < endSlopeIdx; ++slopeIdx) {
     injection.setSlopeChargeGroup(Zmin + slopeIdx, slopes[slopeIdx]);
@@ -106,4 +106,13 @@ CRAMS::RigiditySpectra CRAMS::Runner::compute(Input input, bool dumpToFile, bool
   }
 
   return outputManager.rigiditySpectra();
+}
+
+CRAMS::Result CRAMS::Runner::computeSafe(Input input, bool dumpToFile, bool verbose,
+                                          bool ignoreInputInitParams) noexcept {
+  try {
+    return {compute(input, dumpToFile, verbose, ignoreInputInitParams), false, std::string()};
+  } catch (const std::exception& e) {
+    return {RigiditySpectra(), true, e.what()};
+  }
 }
