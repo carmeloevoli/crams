@@ -61,7 +61,7 @@ class Input {
   double TSimMin() const { return m_TSimMin; }
   double TSimMax() const { return m_TSimMax; }
   size_t TSimSize() const { return m_TSimSize; }
-  void setTSim(double min_GeV, double max_GeV, size_t size) {
+  void setTSim(double min_GeV, double max_GeV, int size) {
     m_TSimMin = min_GeV * CGS::GeV;
     m_TSimMax = max_GeV * CGS::GeV;
     m_TSimSize = size;
@@ -70,7 +70,7 @@ class Input {
   double ROutputMin() const { return m_ROutputMin; }
   double ROutputMax() const { return m_ROutputMax; }
   size_t ROutputSize() const { return m_ROutputSize; }
-  void setROutput(double min_GV, double max_GV, size_t size) {
+  void setROutput(double min_GV, double max_GV, int size) {
     m_ROutputMin = min_GV * CGS::GeV;
     m_ROutputMax = max_GV * CGS::GeV;
     m_ROutputSize = size;

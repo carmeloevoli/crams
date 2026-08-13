@@ -26,6 +26,7 @@ from .crams import (
     parseFluxSolver,
     parseFragmentationModel,
     parseInelasticModel,
+    GeV,
 )
 
 __version__ = get_version()
@@ -179,6 +180,10 @@ class LogGrid:
     max: float  # GeV / GV
     size: int
 
+    def __post_init__(self) -> None:
+        assert self.size >= 2, "Size must be at least 2"
+        assert self.max > self.min, "Maximum value of the grid must be greater than the minimum"
+
 
 class CramsError(Exception):
     pass
@@ -186,13 +191,13 @@ class CramsError(Exception):
 
 CRAMS_DEFAULT_INPUT = Input()
 CRAMS_DEFAULT_TSIM_GRID = LogGrid(
-    min=CRAMS_DEFAULT_INPUT.TSimMin(),
-    max=CRAMS_DEFAULT_INPUT.TSimMax(),
+    min=CRAMS_DEFAULT_INPUT.TSimMin() / GeV,
+    max=CRAMS_DEFAULT_INPUT.TSimMax() / GeV,
     size=CRAMS_DEFAULT_INPUT.TSimSize(),
 )
 CRAMS_DEFAULT_R_OUT_GRID = LogGrid(
-    min=CRAMS_DEFAULT_INPUT.ROutputMin(),
-    max=CRAMS_DEFAULT_INPUT.ROutputMax(),
+    min=CRAMS_DEFAULT_INPUT.ROutputMin() / GeV,
+    max=CRAMS_DEFAULT_INPUT.ROutputMax() / GeV,
     size=CRAMS_DEFAULT_INPUT.ROutputSize(),
 )
 

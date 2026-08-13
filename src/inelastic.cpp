@@ -107,7 +107,8 @@ double InXsecFromTable::getXsecOnHtarget(const PID& projectile, const double& T)
 
     // Small relative tolerance at the edges: the simulation energy grid can land
     // a hair outside [m_T_min, m_T_max] due to floating-point rounding in the
-    // log-spaced grids, which is not a genuine out-of-range request.
+    // log-spaced grids, which is not a genuine out-of-range request; the linear
+    // interpolator gracefully handles these values just through linear extrapolation
     constexpr double edgeTol = 1e-6;
     if (T < m_T_min * (1. - edgeTol))
       throw std::runtime_error(m_modelName + " inelastic xsec requested at T = " + std::to_string(T / CGS::GeV) +

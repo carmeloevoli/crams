@@ -12,6 +12,7 @@
 
 %include "crams/utils/git_revision.h"
 
+%include "crams/core/cgs.h"
 %include "crams/core/pid.h"
 %include "crams/particle.h"
 %include "crams/core/input.h"
