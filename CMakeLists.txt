@@ -65,6 +65,7 @@ file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/output)
 # make library
 include_directories(include ${CRAMS_EXTRA_INCLUDES})
 add_library(crams_core SHARED ${CRAMS_SRCS})
+target_link_libraries(crams_core PRIVATE GSL::gsl)
 target_compile_definitions(crams_core PRIVATE 
      DATA_DIR="${PROJECT_BINARY_DIR}/data/"
 )

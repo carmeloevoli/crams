@@ -17,6 +17,7 @@ import numpy as np
 
 from .crams import (
     FluxSolver_CrankNicolson,
+    GeV,
     Input,
     ParticleList,
     Result,
@@ -26,7 +27,6 @@ from .crams import (
     parseFluxSolver,
     parseFragmentationModel,
     parseInelasticModel,
-    GeV,
 )
 
 __version__ = get_version()
@@ -183,6 +183,12 @@ class LogGrid:
     def __post_init__(self) -> None:
         assert self.size >= 2, "Size must be at least 2"
         assert self.max > self.min, "Maximum value of the grid must be greater than the minimum"
+
+    def __str__(self) -> str:
+        return f"[{self.min:.1e}, {self.max:.1e}] GeV, {self.size} points"
+
+    def to_numpy(self) -> np.ndarray:
+        return np.geomspace(self.min, self.max, self.size)
 
 
 class CramsError(Exception):
