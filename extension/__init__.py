@@ -116,11 +116,22 @@ class InjectionBreak:
 
 
 @dataclass
+class LognormalRmaxDistribution:
+    R_mean_GV: float
+    sigma: float
+
+    # PL index in the dependence of CR accelerator luminocity on the maximum energy.
+    # when convolving the individual cut-offs with population weight, we have
+    # W(Emax) \propto Emax^beta, beta~1 for standard models of SNR acceleration
+    beta: float
+
+
+@dataclass
 class InjectionParams:
     abundances: Sequence[float]
     slopes: Sequence[float]
 
-    feature: InjectionBreak | None = None
+    feature: InjectionBreak | LognormalRmaxDistribution | None = None
 
     def __post_init__(self) -> None:
         if len(self.abundances) > len(ELEMENT_NAMES):
@@ -196,7 +207,7 @@ class CramsError(Exception):
 
 
 CRAMS_DEFAULT_INPUT = Input()
-CRAMS_DEFAULT_TSIM_GRID = LogGrid(
+CRAMS_DEFAULT_T_SIM_GRID = LogGrid(
     min=CRAMS_DEFAULT_INPUT.TSimMin() / GeV,
     max=CRAMS_DEFAULT_INPUT.TSimMax() / GeV,
     size=CRAMS_DEFAULT_INPUT.TSimSize(),
@@ -215,7 +226,7 @@ class CramsRunner:
         fragmentation_model: str = CRAMS_DEFAULT_INPUT.fragmentationModelName(),
         verbose: bool = False,
         file_output: bool = False,
-        T_sim_grid: LogGrid = CRAMS_DEFAULT_TSIM_GRID,
+        T_sim_grid: LogGrid = CRAMS_DEFAULT_T_SIM_GRID,
         R_out_grid: LogGrid = CRAMS_DEFAULT_R_OUT_GRID,
         _preloaded_injection: ParticleList | None = None,  # used mainly for testing
     ):
@@ -256,6 +267,8 @@ class CramsRunner:
                     pass
                 case InjectionBreak() as b:
                     input.setSourceSpectrumBreak(R_GV=b.R_GV, deltaSlope=b.delta_slope, omega=b.omega)
+                case LognormalRmaxDistribution() as dist:
+                    input.setSourceSpectrumLognormal(dist.R_mean_GV, dist.sigma, dist.beta)
         result: Result = self._runner.computeSafe(
             input=input,
             dumpToFile=self._file_output,

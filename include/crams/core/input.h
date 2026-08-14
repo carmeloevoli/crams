@@ -77,12 +77,21 @@ class Input {
   }
 
   double sourceSpectrumFeatureR() const { return m_sourceSpectrumFeatureR; }
+
   double sourceSpectrumBreakDeltaSlope() const { return m_sourceSpectrumBreakDeltaSlope; }
   double sourceSpectrumBreakOmega() const { return m_sourceSpectrumBreakOmega; }
   void setSourceSpectrumBreak(double R_GV, double deltaSlope, double omega) {
     m_sourceSpectrumFeatureR = R_GV * CGS::GeV;
     m_sourceSpectrumBreakDeltaSlope = deltaSlope;
     m_sourceSpectrumBreakOmega = omega;
+  }
+
+  double sourceSpectrumLognormSigma() const { return m_sourceSpectrumLognormSigma; }
+  double sourceSpectrumLognormBeta() const { return m_sourceSpectrumLognormBeta; }
+  void setSourceSpectrumLognormal(double R_GV, double sigma, double beta) {
+    m_sourceSpectrumFeatureR = R_GV * CGS::GeV;
+    m_sourceSpectrumLognormSigma = sigma;
+    m_sourceSpectrumLognormBeta = beta;
   }
 
   bool doSecondary() const { return m_doSecondary; }
@@ -136,7 +145,10 @@ class Input {
   double m_sourceSpectrumFeatureR = -1;  // <0 = source spectrum is a featureless PL
   // feature = smooth break
   double m_sourceSpectrumBreakDeltaSlope = 0.0;
-  double m_sourceSpectrumBreakOmega = 0.05;
+  double m_sourceSpectrumBreakOmega = -1;
+  // feature = lognormal distribution of max energies -> erf cutoff
+  double m_sourceSpectrumLognormSigma = -1;
+  double m_sourceSpectrumLognormBeta = 1.0;
 
   bool m_doSecondary = true;
 

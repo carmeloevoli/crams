@@ -151,6 +151,12 @@ void Input::setParam(const std::string& KEY, double value) {
   } else if (key == "sourcebreakomega") {
     m_sourceSpectrumBreakOmega = value;
     LOGD << "changed source break omega to " << value;
+  } else if (key == "sourcelognormsigma") {
+    m_sourceSpectrumLognormSigma = value;
+    LOGD << "changed source break delta slope to " << value;
+  } else if (key == "sourcelognormbeta") {
+    m_sourceSpectrumLognormBeta = value;
+    LOGD << "changed source break omega to " << value;
   } else if (key == "id") {
     m_id = static_cast<size_t>(value);
   }
