@@ -1,15 +1,15 @@
 """
 Python interface for CRAMS code.
 
-This __init__.py is actually a pythonic wrapper over a SWIG-generated interface.
-It provides high-level access and type hints, as well as a cleanly separated
-parametrization separated into injection (per-element abundance and slope,
-common R-scaled features) and propagation parameters.
+This module is a pythonic wrapper over a SWIG-generated interface.
+It provides high-level access and type hints, as well as cleanly separated
+parametrization of injection (per-element abundance and slope, common R-scaled
+features) and propagation parameters.
 """
 
 import argparse
 import pprint
-from collections.abc import Sequence
+from collections.abc import MutableSequence, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -128,7 +128,7 @@ class LognormalRmaxDistribution:
 
 @dataclass
 class InjectionParams:
-    abundances: Sequence[float]
+    abundances: MutableSequence[float]
     slopes: Sequence[float]
 
     feature: InjectionBreak | LognormalRmaxDistribution | None = None
@@ -140,6 +140,9 @@ class InjectionParams:
             raise ValueError(f"Too few abundances specified, expected exactly {len(ELEMENT_NAMES)}")
         if len(self.slopes) > len(ELEMENT_NAMES):
             raise ValueError(f"Too many slopes specified, expected at most {len(ELEMENT_NAMES)}")
+
+    def set_abundance(self, Z: int, q: float) -> None:
+        self.abundances[Z - 1] = q
 
     @staticmethod
     def default() -> "InjectionParams":
