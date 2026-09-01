@@ -5,6 +5,7 @@
 
 %{
 #include "crams/runner.h"
+#include "crams/physics/primary.h"
 %}
 
 %template(Vector) std::vector<double>;
@@ -15,6 +16,7 @@
 %include "crams/core/cgs.h"
 %include "crams/core/pid.h"
 %include "crams/particle.h"
+%include "crams/physics/primary.h"
 %include "crams/core/input.h"
 %include "crams/core/output.h"
 %include "crams/particlelist.h"

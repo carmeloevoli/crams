@@ -10,8 +10,9 @@ features) and propagation parameters.
 import argparse
 import pprint
 from collections.abc import MutableSequence, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import assert_never
 
 import numpy as np
 
@@ -22,6 +23,8 @@ from .crams import (
     ParticleList,
     Result,
     Runner,
+    SourceSpectrumBreak,
+    SourceSpectrumLognormalFeature,
     get_version,
     git_sha1,
     parseFluxSolver,
@@ -126,12 +129,14 @@ class LognormalRmaxDistribution:
     beta: float
 
 
+InjectionSpectrumFeature = InjectionBreak | LognormalRmaxDistribution
+
+
 @dataclass
 class InjectionParams:
     abundances: MutableSequence[float]
     slopes: Sequence[float]
-
-    feature: InjectionBreak | LognormalRmaxDistribution | None = None
+    features: list[InjectionSpectrumFeature] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if len(self.abundances) > len(ELEMENT_NAMES):
@@ -265,13 +270,15 @@ class CramsRunner:
             # per-element injection params do not live inside the "input" object, but in a ParticleList
             # container inside the runner; here we modify them through the dedicated method
             self._runner.setInjectionParams(abundances=injection.abundances, slopes=injection.slopes)
-            match injection.feature:
-                case None:
-                    pass
-                case InjectionBreak() as b:
-                    input.setSourceSpectrumBreak(R_GV=b.R_GV, deltaSlope=b.delta_slope, omega=b.omega)
-                case LognormalRmaxDistribution() as dist:
-                    input.setSourceSpectrumLognormal(dist.R_mean_GV, dist.sigma, dist.beta)
+            for feature in injection.features:
+                match feature:
+                    case InjectionBreak(R_GV, delta_slope, omega):
+                        feature_internal = SourceSpectrumBreak(R_GV, delta_slope, omega)
+                    case LognormalRmaxDistribution(R_mean_GV, sigma, beta):
+                        feature_internal = SourceSpectrumLognormalFeature(R_mean_GV, sigma, beta)
+                    case _:
+                        assert_never(feature)
+                input.addSourceSpectrumFeature(feature_internal)
         result: Result = self._runner.computeSafe(
             input=input,
             dumpToFile=self._file_output,
@@ -303,12 +310,29 @@ def main(ini_file: str | Path, native_parsing: bool, quiet: bool):
     ini_file = Path(ini_file)
     params: dict[str, float] = {}
     params_str: dict[str, str] = {}
+    features: list[InjectionSpectrumFeature] = []
     for line in ini_file.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        key, value = line.split()
+        tokens = line.split()
+        key = tokens[0]
         key = key.lower().replace("_", "")
+        if key == "sourcebreak" or key == "sourceerfccutoff":
+            if len(tokens) != 4:
+                raise ValueError(f"Expected three parameters for {tokens[0]}")
+            try:
+                values = [float(token) for token in tokens[1:]]
+            except ValueError as error:
+                raise ValueError(f"Expected numeric parameters for {tokens[0]}") from error
+            if key == "sourcebreak":
+                features.append(InjectionBreak(*values))
+            else:
+                features.append(LognormalRmaxDistribution(*values))
+            continue
+        if len(tokens) != 2:
+            raise ValueError(f"Expected one value for {tokens[0]}")
+        value = tokens[1]
         try:
             params[key] = float(value)
         except ValueError:
@@ -346,6 +370,7 @@ def main(ini_file: str | Path, native_parsing: bool, quiet: bool):
         propagation = PropagationParams.from_ini_params(params)
         print(propagation.to_input().describe())
         injection = InjectionParams.from_ini_params(params)
+        injection.features.extend(features)
 
     result = runner.compute(propagation, injection)
     print(len(result))

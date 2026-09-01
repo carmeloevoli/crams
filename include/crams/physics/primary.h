@@ -47,7 +47,7 @@ class PrimarySource {
   // Differential primary source at kinetic energy per nucleon T
   double get(double T) const;
 
-  void addFeature(std::unique_ptr<SpectralFeature> feature) { m_features.push_back(std::move(feature)); }
+  void addFeature(std::shared_ptr<SpectralFeature> feature) { m_features.push_back(std::move(feature)); }
 
  private:
   PID m_pid;
@@ -55,7 +55,7 @@ class PrimarySource {
   double m_norm = 0.;  // amplitude: SNR budget / (gas density × spectral integral) [/erg²]
 
   // multiplicative source spectrum features
-  std::vector<std::unique_ptr<SpectralFeature>> m_features;
+  std::vector<std::shared_ptr<SpectralFeature>> m_features;
 };
 
 }  // namespace CRAMS

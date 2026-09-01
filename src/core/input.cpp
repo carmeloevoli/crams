@@ -107,7 +107,8 @@ std::string Input::inelasticModelName() const { return ::inelasticModelName(m_in
 
 std::string Input::fragmentationModelName() const { return ::fragmentationModelName(m_fragmentationModel); }
 
-void Input::setParam(const std::string& key, double value) {
+void Input::setParam(const std::string& KEY, double value) {
+  const auto key = Utilities::simplifyKey(KEY);
   if (key == "d0") {
     m_D_0 = value * 1e28 * CGS::cm2 / CGS::sec;
     LOGD << "changed D_0 to " << m_D_0 / (CGS::cm2 / CGS::sec) << " cm2/s";
@@ -198,7 +199,7 @@ void Input::readParamsFromFile(const std::string& filename) {
     } catch (const std::exception&) {
       continue;
     }
-    setParam(simplifiedKey, value);
+    setParam(key, value);
   }
 }
 
