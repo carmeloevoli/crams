@@ -203,6 +203,33 @@ void test_readParamsFromFile_solver_invalid_throws() {
   CHECK_THROW(in.readParamsFromFile(path), std::runtime_error);
 }
 
+void test_readParamsFromFile_source_features() {
+  const std::string path = "/tmp/test_input_source_features.ini";
+  write_file(path, "sourcebreak 100.0 0.2 0.1\nsourceerfccutoff 200.0 0.3 1.0\n");
+  CRAMS::Input in;
+  in.readParamsFromFile(path);
+
+  CHECK(in.sourceSpectrumFeatures().size() == 2);
+  const auto* sourceBreak = dynamic_cast<const CRAMS::SourceSpectrumBreak*>(in.sourceSpectrumFeatures()[0].get());
+  const auto* sourceCutoff =
+      dynamic_cast<const CRAMS::SourceSpectrumLognormalFeature*>(in.sourceSpectrumFeatures()[1].get());
+  CHECK(sourceBreak != nullptr);
+  CHECK(sourceCutoff != nullptr);
+  CHECK(approx(sourceBreak->rigidity(), 100. * CRAMS::CGS::GeV));
+  CHECK(approx(sourceBreak->deltaSlope(), 0.2));
+  CHECK(approx(sourceBreak->omega(), 0.1));
+  CHECK(approx(sourceCutoff->rigidity(), 200. * CRAMS::CGS::GeV));
+  CHECK(approx(sourceCutoff->sigma(), 0.3));
+  CHECK(approx(sourceCutoff->beta(), 1.0));
+}
+
+void test_readParamsFromFile_source_feature_requires_three_parameters() {
+  const std::string path = "/tmp/test_input_invalid_source_feature.ini";
+  write_file(path, "sourcebreak 100.0 0.2\n");
+  CRAMS::Input in;
+  CHECK_THROW(in.readParamsFromFile(path), std::runtime_error);
+}
+
 // --- copyability ---
 
 void test_input_is_copyable() {
@@ -257,6 +284,8 @@ int main() {
   test_readParamsFromFile_solver_string();
   test_readParamsFromFile_solver_string_with_underscore();
   test_readParamsFromFile_solver_invalid_throws();
+  test_readParamsFromFile_source_features();
+  test_readParamsFromFile_source_feature_requires_three_parameters();
 
   test_input_is_copyable();
 

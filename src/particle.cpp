@@ -127,13 +127,9 @@ void Particle::buildGrammage(const Input& input) {
 
 void Particle::buildPrimarySource(const Input& input) {
   m_Q_p = std::make_unique<PrimarySource>(m_pid, m_abundance, m_slope, input.mu());
-  double featureR = input.sourceSpectrumFeatureR();
-  if (featureR > 0) {
-    if (input.sourceSpectrumBreakOmega() > 0.0) {
-      m_Q_p->setSpectralBreak(featureR, input.sourceSpectrumBreakDeltaSlope(), input.sourceSpectrumBreakOmega());
-    } else if (input.sourceSpectrumLognormSigma() > 0.0) {
-      m_Q_p->setErfCutoff(featureR, input.sourceSpectrumLognormSigma(), input.sourceSpectrumLognormBeta());
-    }
+
+  for (const auto& feature : input.sourceSpectrumFeatures()) {
+    m_Q_p->addFeature(feature->toPrimarySourceFeature(m_pid));
   }
 }
 

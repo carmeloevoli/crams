@@ -1,12 +1,62 @@
 #ifndef CRAMS_CORE_INPUT_H_
 #define CRAMS_CORE_INPUT_H_
 
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "crams/core/cgs.h"
+#include "crams/core/pid.h"
 #include "crams/particlelist.h"
+#include "crams/physics/primary.h"
+#include "crams/utils/utilities.h"
 
 namespace CRAMS {
+
+struct SourceSpectrumFeature {
+  virtual ~SourceSpectrumFeature() = default;
+  virtual double rigidity() const = 0;
+  virtual std::unique_ptr<SpectralFeature> toPrimarySourceFeature(const PID& pid) const = 0;
+};
+
+struct SourceSpectrumBreak : public SourceSpectrumFeature {
+  SourceSpectrumBreak(double R_GV, double deltaSlope, double omega)
+      : m_rigidity{R_GV * CGS::GeV}, m_deltaSlope{deltaSlope}, m_omega{omega} {}
+
+  double rigidity() const override { return m_rigidity; }
+  double deltaSlope() const { return m_deltaSlope; }
+  double omega() const { return m_omega; }
+
+  std::unique_ptr<SpectralFeature> toPrimarySourceFeature(const PID& pid) const override {
+    const double T = Utilities::R2T(m_rigidity, pid);
+    return std::make_unique<SpectralBreak>(T, m_deltaSlope, m_omega);
+  }
+
+ private:
+  double m_rigidity;
+  double m_deltaSlope;
+  double m_omega;
+};
+
+struct SourceSpectrumLognormalFeature : public SourceSpectrumFeature {
+  SourceSpectrumLognormalFeature(double R_GV, double sigma, double beta)
+      : m_rigidity{R_GV * CGS::GeV}, m_sigma{sigma}, m_beta{beta} {}
+
+  double rigidity() const override { return m_rigidity; }
+  double sigma() const { return m_sigma; }
+  double beta() const { return m_beta; }
+
+  std::unique_ptr<SpectralFeature> toPrimarySourceFeature(const PID& pid) const override {
+    const double T = Utilities::R2T(m_rigidity, pid);
+    return std::make_unique<ErfcCutoff>(T, m_sigma, m_beta);
+  }
+
+ private:
+  double m_rigidity;
+  double m_sigma;
+  double m_beta;
+};
 
 enum class FluxSolver {
   Analytical,
@@ -76,22 +126,31 @@ class Input {
     m_ROutputSize = size;
   }
 
-  double sourceSpectrumFeatureR() const { return m_sourceSpectrumFeatureR; }
-
-  double sourceSpectrumBreakDeltaSlope() const { return m_sourceSpectrumBreakDeltaSlope; }
-  double sourceSpectrumBreakOmega() const { return m_sourceSpectrumBreakOmega; }
-  void setSourceSpectrumBreak(double R_GV, double deltaSlope, double omega) {
-    m_sourceSpectrumFeatureR = R_GV * CGS::GeV;
-    m_sourceSpectrumBreakDeltaSlope = deltaSlope;
-    m_sourceSpectrumBreakOmega = omega;
+  void addSourceSpectrumFeature(std::shared_ptr<const SourceSpectrumFeature> feature) {
+    m_sourceSpectrumFeatures.push_back(std::move(feature));
   }
 
-  double sourceSpectrumLognormSigma() const { return m_sourceSpectrumLognormSigma; }
-  double sourceSpectrumLognormBeta() const { return m_sourceSpectrumLognormBeta; }
+  template <typename Feature, typename... Args>
+  void addSourceSpectrumFeature(Args&&... args) {
+    addSourceSpectrumFeature(std::make_shared<Feature>(std::forward<Args>(args)...));
+  }
+
+  const std::vector<std::shared_ptr<const SourceSpectrumFeature>>& sourceSpectrumFeatures() const {
+    return m_sourceSpectrumFeatures;
+  }
+
+  // legacy setters for single-feature case
+
+  void clearSourceSpectrumFeatures() { m_sourceSpectrumFeatures.clear(); }
+
+  void setSourceSpectrumBreak(double R_GV, double deltaSlope, double omega) {
+    clearSourceSpectrumFeatures();
+    addSourceSpectrumFeature<SourceSpectrumBreak>(R_GV, deltaSlope, omega);
+  }
+
   void setSourceSpectrumLognormal(double R_GV, double sigma, double beta) {
-    m_sourceSpectrumFeatureR = R_GV * CGS::GeV;
-    m_sourceSpectrumLognormSigma = sigma;
-    m_sourceSpectrumLognormBeta = beta;
+    clearSourceSpectrumFeatures();
+    addSourceSpectrumFeature<SourceSpectrumLognormalFeature>(R_GV, sigma, beta);
   }
 
   bool doSecondary() const { return m_doSecondary; }
@@ -142,13 +201,7 @@ class Input {
   size_t m_ROutputSize = 100;
 
   // source spectral features, common for all primaries
-  double m_sourceSpectrumFeatureR = -1;  // <0 = source spectrum is a featureless PL
-  // feature = smooth break
-  double m_sourceSpectrumBreakDeltaSlope = 0.0;
-  double m_sourceSpectrumBreakOmega = -1;
-  // feature = lognormal distribution of max energies -> erf cutoff
-  double m_sourceSpectrumLognormSigma = -1;
-  double m_sourceSpectrumLognormBeta = 1.0;
+  std::vector<std::shared_ptr<const SourceSpectrumFeature>> m_sourceSpectrumFeatures;
 
   bool m_doSecondary = true;
 
@@ -157,10 +210,12 @@ class Input {
   double m_fudgeBe7 = 1.;
   double m_fudgeBe9 = 1.;
   double m_fudgeBe10 = 1.;
-  size_t m_id = 0;
+
   FluxSolver m_fluxSolver = FluxSolver::CrankNicolson;
   InelasticModel m_inelasticModel = InelasticModel::Tripathi99;
   FragmentationModel m_fragmentationModel = FragmentationModel::UsineWebber03Coste12;
+
+  size_t m_id = 0;
   std::string m_simname = "test";
 };
 

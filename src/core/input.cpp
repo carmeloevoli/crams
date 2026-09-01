@@ -107,8 +107,7 @@ std::string Input::inelasticModelName() const { return ::inelasticModelName(m_in
 
 std::string Input::fragmentationModelName() const { return ::fragmentationModelName(m_fragmentationModel); }
 
-void Input::setParam(const std::string& KEY, double value) {
-  const auto key = Utilities::simplifyKey(KEY);
+void Input::setParam(const std::string& key, double value) {
   if (key == "d0") {
     m_D_0 = value * 1e28 * CGS::cm2 / CGS::sec;
     LOGD << "changed D_0 to " << m_D_0 / (CGS::cm2 / CGS::sec) << " cm2/s";
@@ -142,21 +141,6 @@ void Input::setParam(const std::string& KEY, double value) {
   } else if (key == "fudgebe10") {
     m_fudgeBe10 = value;
     LOGD << "changed fudge_Be10 to " << m_fudgeBe10;
-  } else if (key == "sourcefeaturer") {
-    m_sourceSpectrumFeatureR = value * CGS::GeV;
-    LOGD << "changed source feature R to " << value << " GV";
-  } else if (key == "sourcebreakdslope") {
-    m_sourceSpectrumBreakDeltaSlope = value;
-    LOGD << "changed source break delta slope to " << value;
-  } else if (key == "sourcebreakomega") {
-    m_sourceSpectrumBreakOmega = value;
-    LOGD << "changed source break omega to " << value;
-  } else if (key == "sourcelognormsigma") {
-    m_sourceSpectrumLognormSigma = value;
-    LOGD << "changed source break delta slope to " << value;
-  } else if (key == "sourcelognormbeta") {
-    m_sourceSpectrumLognormBeta = value;
-    LOGD << "changed source break omega to " << value;
   } else if (key == "id") {
     m_id = static_cast<size_t>(value);
   }
@@ -169,22 +153,40 @@ void Input::readParamsFromFile(const std::string& filename) {
   while (std::getline(infile, line)) {
     std::istringstream iss(line);
     std::string key;
-    std::string valueToken;
-    if (!(iss >> key >> valueToken)) continue;
+    if (!(iss >> key)) continue;
 
-    if (Utilities::simplifyKey(key) == "solver") {
+    const auto simplifiedKey = Utilities::simplifyKey(key);
+    if (simplifiedKey == "sourcebreak" || simplifiedKey == "sourceerfccutoff") {
+      double first = 0.;
+      double second = 0.;
+      double third = 0.;
+      if (!(iss >> first >> second >> third)) {
+        throw std::runtime_error("Input: expected three parameters for '" + key + "'");
+      }
+
+      if (simplifiedKey == "sourcebreak")
+        addSourceSpectrumFeature<SourceSpectrumBreak>(first, second, third);
+      else
+        addSourceSpectrumFeature<SourceSpectrumLognormalFeature>(first, second, third);
+      continue;
+    }
+
+    std::string valueToken;
+    if (!(iss >> valueToken)) continue;
+
+    if (simplifiedKey == "solver") {
       m_fluxSolver = parseFluxSolver(valueToken);
       LOGD << "changed flux solver to " << fluxSolverName();
       continue;
     }
 
-    if (Utilities::simplifyKey(key) == "inelasticmodel") {
+    if (simplifiedKey == "inelasticmodel") {
       m_inelasticModel = parseInelasticModel(valueToken);
       LOGD << "changed inelastic model to " << inelasticModelName();
       continue;
     }
 
-    if (Utilities::simplifyKey(key) == "fragmentationmodel") {
+    if (simplifiedKey == "fragmentationmodel") {
       m_fragmentationModel = parseFragmentationModel(valueToken);
       LOGD << "changed fragmentation model to " << fragmentationModelName();
       continue;
@@ -196,7 +198,7 @@ void Input::readParamsFromFile(const std::string& filename) {
     } catch (const std::exception&) {
       continue;
     }
-    setParam(key, value);
+    setParam(simplifiedKey, value);
   }
 }
 

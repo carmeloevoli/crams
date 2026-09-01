@@ -87,6 +87,18 @@ void test_injection_abundances() {
   CHECK(abundanceForZ(pl, 3) > 0.);   // qli set non-zero in the example (default 0)
 }
 
+void test_injection_break() {
+  CRAMS::Input in;
+  in.readParamsFromFile(EXAMPLE_INI);
+  const auto& features = in.sourceSpectrumFeatures();
+  CHECK(features.size() == 1);
+  const auto* sourceBreak = dynamic_cast<const CRAMS::SourceSpectrumBreak*>(features[0].get());
+  CHECK(sourceBreak != nullptr);
+  CHECK(approx(sourceBreak->rigidity(), 13. * CRAMS::CGS::TeV));
+  CHECK(approx(sourceBreak->deltaSlope(), 0.32));
+  CHECK(approx(sourceBreak->omega(), 0.1));
+}
+
 int main() {
   test_input_transport();
   test_input_numerics();
