@@ -212,7 +212,7 @@ void test_readParamsFromFile_source_features() {
   CHECK(in.sourceSpectrumFeatures().size() == 2);
   const auto* sourceBreak = dynamic_cast<const CRAMS::SourceSpectrumBreak*>(in.sourceSpectrumFeatures()[0].get());
   const auto* sourceCutoff =
-      dynamic_cast<const CRAMS::SourceSpectrumLognormalFeature*>(in.sourceSpectrumFeatures()[1].get());
+      dynamic_cast<const CRAMS::SourceSpectraLognormalDist*>(in.sourceSpectrumFeatures()[1].get());
   CHECK(sourceBreak != nullptr);
   CHECK(sourceCutoff != nullptr);
   CHECK(approx(sourceBreak->rigidity(), 100. * CRAMS::CGS::GeV));

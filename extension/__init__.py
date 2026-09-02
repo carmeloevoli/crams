@@ -7,6 +7,7 @@ parametrization of injection (per-element abundance and slope, common R-scaled
 features) and propagation parameters.
 """
 
+import abc
 import argparse
 import pprint
 from collections.abc import MutableSequence, Sequence
@@ -24,7 +25,8 @@ from .crams import (
     Result,
     Runner,
     SourceSpectrumBreak,
-    SourceSpectrumLognormalFeature,
+    SourceSpectraLognormalDist,
+    SourceSpectrumFeature,
     get_version,
     git_sha1,
     parseFluxSolver,
@@ -111,15 +113,23 @@ ELEMENT_NAMES = (
 ABUNDANCE_INI_KEYS = ("q" + element.lower() for element in ELEMENT_NAMES)
 
 
+class InjectionFeature(abc.ABC):
+    @abc.abstractmethod
+    def add_to_input(self, input: Input) -> None: ...
+
+
 @dataclass
-class InjectionBreak:
+class InjectionBreak(InjectionFeature):
     R_GV: float
     delta_slope: float
     omega: float
 
+    def add_to_input(self, input: Input) -> None:
+        input.addSourceSpectrumBreak(SourceSpectrumBreak(self.R_GV, self.delta_slope, self.omega))
+
 
 @dataclass
-class LognormalRmaxDistribution:
+class InjectionLognormalDist(InjectionFeature):
     R_mean_GV: float
     sigma: float
 
@@ -128,15 +138,15 @@ class LognormalRmaxDistribution:
     # W(Emax) \propto Emax^beta, beta~1 for standard models of SNR acceleration
     beta: float
 
-
-InjectionSpectrumFeature = InjectionBreak | LognormalRmaxDistribution
+    def add_to_input(self, input: Input) -> None:
+        input.addSourceSpectrumLognormal(SourceSpectraLognormalDist(self.R_mean_GV, self.sigma, self.beta))
 
 
 @dataclass
 class InjectionParams:
     abundances: MutableSequence[float]
     slopes: Sequence[float]
-    features: list[InjectionSpectrumFeature] = field(default_factory=list)
+    features: list[InjectionFeature] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if len(self.abundances) > len(ELEMENT_NAMES):
@@ -271,14 +281,7 @@ class CramsRunner:
             # container inside the runner; here we modify them through the dedicated method
             self._runner.setInjectionParams(abundances=injection.abundances, slopes=injection.slopes)
             for feature in injection.features:
-                match feature:
-                    case InjectionBreak(R_GV, delta_slope, omega):
-                        feature_internal = SourceSpectrumBreak(R_GV, delta_slope, omega)
-                    case LognormalRmaxDistribution(R_mean_GV, sigma, beta):
-                        feature_internal = SourceSpectrumLognormalFeature(R_mean_GV, sigma, beta)
-                    case _:
-                        assert_never(feature)
-                input.addSourceSpectrumFeature(feature_internal)
+                feature.add_to_input(input)
         result: Result = self._runner.computeSafe(
             input=input,
             dumpToFile=self._file_output,
@@ -310,7 +313,7 @@ def main(ini_file: str | Path, native_parsing: bool, quiet: bool):
     ini_file = Path(ini_file)
     params: dict[str, float] = {}
     params_str: dict[str, str] = {}
-    features: list[InjectionSpectrumFeature] = []
+    features: list[InjectionFeature] = []
     for line in ini_file.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
@@ -328,7 +331,7 @@ def main(ini_file: str | Path, native_parsing: bool, quiet: bool):
             if key == "sourcebreak":
                 features.append(InjectionBreak(*values))
             else:
-                features.append(LognormalRmaxDistribution(*values))
+                features.append(InjectionLognormalDist(*values))
             continue
         if len(tokens) != 2:
             raise ValueError(f"Expected one value for {tokens[0]}")

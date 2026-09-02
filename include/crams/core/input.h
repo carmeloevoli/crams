@@ -39,8 +39,8 @@ struct SourceSpectrumBreak : public SourceSpectrumFeature {
   double m_omega;
 };
 
-struct SourceSpectrumLognormalFeature : public SourceSpectrumFeature {
-  SourceSpectrumLognormalFeature(double R_GV, double sigma, double beta)
+struct SourceSpectraLognormalDist : public SourceSpectrumFeature {
+  SourceSpectraLognormalDist(double R_GV, double sigma, double beta)
       : m_rigidity{R_GV * CGS::GeV}, m_sigma{sigma}, m_beta{beta} {}
 
   double rigidity() const override { return m_rigidity; }
@@ -129,28 +129,18 @@ class Input {
   void addSourceSpectrumFeature(std::shared_ptr<const SourceSpectrumFeature> feature) {
     m_sourceSpectrumFeatures.push_back(std::move(feature));
   }
-
   template <typename Feature, typename... Args>
   void addSourceSpectrumFeature(Args&&... args) {
     addSourceSpectrumFeature(std::make_shared<Feature>(std::forward<Args>(args)...));
   }
-
   const std::vector<std::shared_ptr<const SourceSpectrumFeature>>& sourceSpectrumFeatures() const {
     return m_sourceSpectrumFeatures;
   }
 
-  // legacy setters for single-feature case
-
-  void clearSourceSpectrumFeatures() { m_sourceSpectrumFeatures.clear(); }
-
-  void setSourceSpectrumBreak(double R_GV, double deltaSlope, double omega) {
-    clearSourceSpectrumFeatures();
-    addSourceSpectrumFeature<SourceSpectrumBreak>(R_GV, deltaSlope, omega);
-  }
-
-  void setSourceSpectrumLognormal(double R_GV, double sigma, double beta) {
-    clearSourceSpectrumFeatures();
-    addSourceSpectrumFeature<SourceSpectrumLognormalFeature>(R_GV, sigma, beta);
+  // we need to actually instantiate the template for the two known types, otherwise SWIG won't see them
+  void addSourceSpectrumBreak(SourceSpectrumBreak break_) { addSourceSpectrumFeature<SourceSpectrumBreak>(break_); }
+  void addSourceSpectrumLognormal(SourceSpectraLognormalDist cutoff) {
+    addSourceSpectrumFeature<SourceSpectraLognormalDist>(cutoff);
   }
 
   bool doSecondary() const { return m_doSecondary; }

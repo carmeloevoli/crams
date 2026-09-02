@@ -168,7 +168,7 @@ void Input::readParamsFromFile(const std::string& filename) {
       if (simplifiedKey == "sourcebreak")
         addSourceSpectrumFeature<SourceSpectrumBreak>(first, second, third);
       else
-        addSourceSpectrumFeature<SourceSpectrumLognormalFeature>(first, second, third);
+        addSourceSpectrumFeature<SourceSpectraLognormalDist>(first, second, third);
       continue;
     }
 
