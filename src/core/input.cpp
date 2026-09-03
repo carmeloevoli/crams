@@ -157,18 +157,29 @@ void Input::readParamsFromFile(const std::string& filename) {
     if (!(iss >> key)) continue;
 
     const auto simplifiedKey = Utilities::simplifyKey(key);
-    if (simplifiedKey == "sourcebreak" || simplifiedKey == "sourceerfccutoff") {
+
+    if (simplifiedKey == "sourcebreak") {
       double first = 0.;
       double second = 0.;
       double third = 0.;
       if (!(iss >> first >> second >> third)) {
-        throw std::runtime_error("Input: expected three parameters for '" + key + "'");
+        throw std::runtime_error("input: expected three parameters for '" + key + "'");
       }
 
-      if (simplifiedKey == "sourcebreak")
-        addSourceSpectrumFeature<SourceSpectrumBreak>(first, second, third);
-      else
-        addSourceSpectrumFeature<SourceSpectraLognormalDist>(first, second, third);
+      addSourceSpectrumFeature(std::make_shared<SourceSpectrumBreak>(first, second, third));
+      continue;
+    }
+
+    if (simplifiedKey == "sourcelognormalrmax") {
+      double first = 0.;
+      double second = 0.;
+      double third = 0.;
+      bool isLower = false;
+      if (!(iss >> first >> second >> third >> isLower)) {
+        throw std::runtime_error("input: expected four parameters for '" + key + "'");
+      }
+
+      addSourceSpectrumFeature(std::make_shared<SourceSpectraLognormalDist>(first, second, third, isLower));
       continue;
     }
 

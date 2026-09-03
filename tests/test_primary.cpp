@@ -131,7 +131,7 @@ void test_get_combines_multiple_features() {
   const double T_cut = 100. * CRAMS::CGS::GeV;
 
   Q.addFeature(std::make_unique<CRAMS::SpectralBreak>(T_break, 1.5, 0.5));
-  Q.addFeature(std::make_unique<CRAMS::ErfcCutoff>(T_cut, 0.3, 0.7));
+  Q.addFeature(std::make_unique<CRAMS::ErfcCutoff>(T_cut, 0.3, 0.7, false));
 
   const double base = Q.get(1. * CRAMS::CGS::GeV);
   const double with_break = Q.get(10. * T_break);

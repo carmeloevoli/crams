@@ -13,7 +13,6 @@ import pprint
 from collections.abc import MutableSequence, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import assert_never
 
 import numpy as np
 
@@ -24,9 +23,9 @@ from .crams import (
     ParticleList,
     Result,
     Runner,
-    SourceSpectrumBreak,
     SourceSpectraLognormalDist,
-    SourceSpectrumFeature,
+    SourceSpectrumBreak,
+    SourceSpectrumExpCutoff,
     get_version,
     git_sha1,
     parseFluxSolver,
@@ -125,7 +124,13 @@ class InjectionBreak(InjectionFeature):
     omega: float
 
     def add_to_input(self, input: Input) -> None:
-        input.addSourceSpectrumBreak(SourceSpectrumBreak(self.R_GV, self.delta_slope, self.omega))
+        input.addSourceSpectrumBreak(
+            SourceSpectrumBreak(
+                R_GV=self.R_GV,
+                deltaSlope=self.delta_slope,
+                omega=self.omega,
+            )
+        )
 
 
 @dataclass
@@ -138,8 +143,33 @@ class InjectionLognormalDist(InjectionFeature):
     # W(Emax) \propto Emax^beta, beta~1 for standard models of SNR acceleration
     beta: float
 
+    is_lower: bool = False
+
     def add_to_input(self, input: Input) -> None:
-        input.addSourceSpectrumLognormal(SourceSpectraLognormalDist(self.R_mean_GV, self.sigma, self.beta))
+        input.addSourceSpectrumLognormal(
+            SourceSpectraLognormalDist(
+                R_GV=self.R_mean_GV,
+                sigma=self.sigma,
+                beta=self.beta,
+                isLower=self.is_lower,
+            )
+        )
+
+
+@dataclass
+class InjectionExpCutoff(InjectionFeature):
+    R_cut_GV: float
+    Delta: float
+    is_lower: bool
+
+    def add_to_input(self, input: Input) -> None:
+        input.addSourceSpectrumExpCutoff(
+            SourceSpectrumExpCutoff(
+                R_GV=self.R_cut_GV,
+                Delta=self.Delta,
+                isLower=self.is_lower,
+            )
+        )
 
 
 @dataclass
@@ -324,14 +354,12 @@ def main(ini_file: str | Path, native_parsing: bool, quiet: bool):
         if key == "sourcebreak" or key == "sourceerfccutoff":
             if len(tokens) != 4:
                 raise ValueError(f"Expected three parameters for {tokens[0]}")
-            try:
-                values = [float(token) for token in tokens[1:]]
-            except ValueError as error:
-                raise ValueError(f"Expected numeric parameters for {tokens[0]}") from error
             if key == "sourcebreak":
-                features.append(InjectionBreak(*values))
+                t1, t2, t3 = tokens[1:]
+                features.append(InjectionBreak(float(t1), float(t2), float(t3)))
             else:
-                features.append(InjectionLognormalDist(*values))
+                t1, t2, t3, t4 = tokens[1:]
+                features.append(InjectionLognormalDist(float(t1), float(t2), float(t3), bool(t4)))
             continue
         if len(tokens) != 2:
             raise ValueError(f"Expected one value for {tokens[0]}")

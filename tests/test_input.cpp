@@ -205,7 +205,7 @@ void test_readParamsFromFile_solver_invalid_throws() {
 
 void test_readParamsFromFile_source_features() {
   const std::string path = "/tmp/test_input_source_features.ini";
-  write_file(path, "sourcebreak 100.0 0.2 0.1\nsourceerfccutoff 200.0 0.3 1.0\n");
+  write_file(path, "sourcebreak 100.0 0.2 0.1\nsourcelognormalrmax 200.0 0.3 1.0 0\n");
   CRAMS::Input in;
   in.readParamsFromFile(path);
 

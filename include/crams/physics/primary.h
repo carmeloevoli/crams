@@ -14,25 +14,38 @@ struct SpectralFeature {
 };
 
 struct SpectralBreak : public SpectralFeature {
-  SpectralBreak(double T, double deltaSlope, double omega);
+  SpectralBreak(double T, double deltaSlope, double omega) : m_T(T), m_deltaSlope(deltaSlope), m_omega(omega) {};
   double computeModifier(double T) const override;
 
  private:
   double m_T;
-  double m_breakDeltaSlope;
-  double m_breakOmega;
+  double m_deltaSlope;
+  double m_omega;
 };
 
 struct ErfcCutoff : public SpectralFeature {
-  ErfcCutoff(double T, double sigma, double beta);
+  ErfcCutoff(double T, double sigma, double beta, bool isLower)
+      : m_lgT(std::log10(T)), m_sigma(sigma), m_beta_ln10(beta * std::log(10.)), m_isLower(isLower) {};
   double computeModifier(double T) const override;
 
  private:
   double m_lgT;
-  double m_sigma;  // in decades
-  double m_beta;   // PL index in the dependence of CR accelerator luminocity on the maximum energy.
-                   // when convolving the individual cut-offs with population weight, we have
-                   // W(Emax) \propto Emax^beta, beta~1 for standard models of SNR acceleration
+  double m_sigma;      // in decades
+  double m_beta_ln10;  // PL index in the dependence of CR accelerator luminocity on the maximum energy.
+                       // when convolving the individual cut-offs with population weight, we have
+                       // W(Emax) \propto Emax^beta, beta~1 for standard models of SNR acceleration
+                       // here we store beta * ln(10) to avoid recomputing it
+  bool m_isLower;
+};
+
+struct ExpCutoff : public SpectralFeature {
+  ExpCutoff(double T, double Delta, bool isLower) : m_T(T), m_Delta(Delta), m_isLower(isLower) {}
+  double computeModifier(double T) const override;
+
+ private:
+  double m_T;
+  double m_Delta;
+  bool m_isLower;
 };
 
 class PrimarySource {

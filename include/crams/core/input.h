@@ -40,22 +40,43 @@ struct SourceSpectrumBreak : public SourceSpectrumFeature {
 };
 
 struct SourceSpectraLognormalDist : public SourceSpectrumFeature {
-  SourceSpectraLognormalDist(double R_GV, double sigma, double beta)
-      : m_rigidity{R_GV * CGS::GeV}, m_sigma{sigma}, m_beta{beta} {}
+  SourceSpectraLognormalDist(double R_GV, double sigma, double beta, bool isLower)
+      : m_rigidity{R_GV * CGS::GeV}, m_sigma{sigma}, m_beta{beta}, m_isLower{isLower} {};
 
   double rigidity() const override { return m_rigidity; }
   double sigma() const { return m_sigma; }
   double beta() const { return m_beta; }
+  bool isLower() const { return m_isLower; }
 
   std::unique_ptr<SpectralFeature> toPrimarySourceFeature(const PID& pid) const override {
     const double T = Utilities::R2T(m_rigidity, pid);
-    return std::make_unique<ErfcCutoff>(T, m_sigma, m_beta);
+    return std::make_unique<ErfcCutoff>(T, m_sigma, m_beta, m_isLower);
   }
 
  private:
   double m_rigidity;
   double m_sigma;
   double m_beta;
+  bool m_isLower;
+};
+
+struct SourceSpectrumExpCutoff : public SourceSpectrumFeature {
+  SourceSpectrumExpCutoff(double R_GV, double Delta, bool isLower)
+      : m_R{R_GV * CGS::GeV}, m_Delta{Delta}, m_isLower{isLower} {};
+
+  double rigidity() const override { return m_R; }
+  double Delta() const { return m_Delta; }
+  bool isLower() const { return m_isLower; }
+
+  std::unique_ptr<SpectralFeature> toPrimarySourceFeature(const PID& pid) const override {
+    const double T = Utilities::R2T(m_R, pid);
+    return std::make_unique<ExpCutoff>(T, m_Delta, m_isLower);
+  }
+
+ private:
+  double m_R;
+  double m_Delta;
+  bool m_isLower;
 };
 
 enum class FluxSolver {
@@ -129,18 +150,19 @@ class Input {
   void addSourceSpectrumFeature(std::shared_ptr<const SourceSpectrumFeature> feature) {
     m_sourceSpectrumFeatures.push_back(std::move(feature));
   }
-  template <typename Feature, typename... Args>
-  void addSourceSpectrumFeature(Args&&... args) {
-    addSourceSpectrumFeature(std::make_shared<Feature>(std::forward<Args>(args)...));
-  }
   const std::vector<std::shared_ptr<const SourceSpectrumFeature>>& sourceSpectrumFeatures() const {
     return m_sourceSpectrumFeatures;
   }
 
   // we need to actually instantiate the template for the two known types, otherwise SWIG won't see them
-  void addSourceSpectrumBreak(SourceSpectrumBreak break_) { addSourceSpectrumFeature<SourceSpectrumBreak>(break_); }
+  void addSourceSpectrumBreak(SourceSpectrumBreak break_) {
+    addSourceSpectrumFeature(std::make_shared<SourceSpectrumBreak>(break_));
+  }
   void addSourceSpectrumLognormal(SourceSpectraLognormalDist cutoff) {
-    addSourceSpectrumFeature<SourceSpectraLognormalDist>(cutoff);
+    addSourceSpectrumFeature(std::make_shared<SourceSpectraLognormalDist>(cutoff));
+  }
+  void addSourceSpectrumExpCutoff(SourceSpectrumExpCutoff cutoff) {
+    addSourceSpectrumFeature(std::make_shared<SourceSpectrumExpCutoff>(cutoff));
   }
 
   bool doSecondary() const { return m_doSecondary; }

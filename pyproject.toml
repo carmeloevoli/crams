@@ -1,16 +1,3 @@
-# TODO: configure building with pyproject
-
-# [build-system]
-# requires = ["setuptools>=61"]
-# build-backend = "setuptools.build_meta"
-
-# [project]
-# name = "combined_ift"
-# version = "0.1.0"
-
-# [tool.setuptools]
-# packages = ["combined_ift"]
-
 [tool.ruff]
 line-length = 120
 target-version = "py312"

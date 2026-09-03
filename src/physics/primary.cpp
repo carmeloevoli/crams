@@ -12,18 +12,25 @@ namespace CRAMS {
 
 using Utilities::pow2;
 
-SpectralBreak::SpectralBreak(double T, double deltaSlope, double omega)
-    : m_T(T), m_breakDeltaSlope(deltaSlope), m_breakOmega(omega) {}
-
 double SpectralBreak::computeModifier(double T) const {
-  return std::pow(1. + std::pow(T / m_T, 1. / m_breakOmega), -(m_breakDeltaSlope * m_breakOmega));
+  return std::pow(1. + std::pow(T / m_T, 1. / m_omega), -(m_deltaSlope * m_omega));
 }
 
-ErfcCutoff::ErfcCutoff(double T, double sigma, double beta)
-    : m_lgT(std::log10(T)), m_sigma(sigma), m_beta(beta) {}
-
 double ErfcCutoff::computeModifier(double T) const {
-  return 0.5 * std::erfc((std::log10(T) - m_lgT - pow2(m_sigma) * m_beta) / (M_SQRT2 * m_sigma));
+  const double erfArg = (std::log10(T) - m_lgT - pow2(m_sigma) * m_beta_ln10) / (M_SQRT2 * m_sigma);
+  if (m_isLower) {
+    return 0.5 * (1 + std::erf(erfArg));
+  } else {
+    return 0.5 * std::erfc(erfArg);
+  }
+}
+
+double ExpCutoff::computeModifier(double T) const {
+  if (m_isLower) {
+    return std::exp(-(m_T / T) * m_Delta);
+  } else {
+    return std::exp(-(T / m_T) * m_Delta);
+  }
 }
 
 PrimarySource::PrimarySource(const PID& pid, double abundance, double slope, double surfaceDensity)
