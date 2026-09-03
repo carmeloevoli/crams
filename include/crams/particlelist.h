@@ -49,18 +49,22 @@ class ParticleList {
     return m_list;
   }
 
+  // NOTE: these are guaranteed to work because List is actually a map, an ordered container
+  const PID lightest() const { return m_list.begin()->first; }
+  const PID heaviest() const { return m_list.rbegin()->first; }
+
   bool insert(const PID& key, const NucleusParameters& params);
   void setAbundance(const PID& key, double value);
   void setSlope(const PID& key, double value);
   void print() const;
   void readParamsFromFile(const std::string& filename);
+  void setAbundanceChargeGroup(int charge, double abundance);
+  void setSlopeChargeGroup(int charge, double slope);
+  void setSlopeNuclei(int minCharge, double slope);
 
  protected:
   void setParam(const std::string& key, double value);
   void loadNucleilist(const std::string& filename);
-  void setAbundanceChargeGroup(int charge, double abundance);
-  void setSlopeChargeGroup(int charge, double slope);
-  void setSlopeNuclei(int minCharge, double slope);
 
  private:
   void applyDefaultInjectionParameters();

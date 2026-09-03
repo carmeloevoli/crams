@@ -31,11 +31,24 @@ size_t getLowerIndex(const std::vector<T>& v, T x) {
 
 // Linear interpolation in linear-linear space.
 template <typename T>
-T LinearInterpolator(const std::vector<T>& x, const std::vector<T>& y, T x_new) {
-  if (x_new < x.front() || x_new > x.back()) throw std::invalid_argument("x_new out of range in LinearInterpolator");
-  const size_t i = getLowerIndex(x, x_new);
+T LinearInterpolator(const std::vector<T>& x, const std::vector<T>& y, T x_new, bool extrapolate = false) {
+  if (!extrapolate && (x_new < x.front() || x_new > x.back()))
+    throw std::invalid_argument(
+        "x_new out of range in LinearInterpolator; pass extrapolate=true if you want to perform extrapolation for "
+        "out-of-range points");
+
+  size_t i;
+  if (x_new < x.front()) {
+    // low x -> extrapolation using the first two points
+    i = 0;
+  } else if (x_new > x.back()) {
+    // high x -> the last two
+    i = x.size() - 2;
+  } else {
+    i = getLowerIndex(x, x_new);
+  }
   const T t = (x_new - x[i]) / (x[i + 1] - x[i]);
-  return y[i] * (1. - t) + y[i + 1] * t;
+  return y[i] * (T(1) - t) + y[i + 1] * t;
 }
 
 // Linear interpolation in log-log space. Exact for power laws.
@@ -43,8 +56,16 @@ template <typename T>
 T LinearInterpolatorLog(const std::vector<T>& x, const std::vector<T>& y, T x_new) {
   if (x_new < x.front() || x_new > x.back()) throw std::invalid_argument("x_new out of range in LinearInterpolatorLog");
   const size_t i = getLowerIndex(x, x_new);
+
+  const double lgY1 = std::log(y[i]);
+  const double lgY2 = std::log(y[i + 1]);
+
+  // the code below is technically valid for interpolation between y=0.0 -> lgy = -inf points, but when x_new is on the
+  // grid, it runs into inf*0.0 and returns nan; so we explicitly check this case here
+  if (std::isinf(lgY1) || std::isinf(lgY2)) return 0.0;
+
   const double t = (std::log(x_new) - std::log(x[i])) / (std::log(x[i + 1]) - std::log(x[i]));
-  return std::exp(std::log(y[i]) * (1. - t) + std::log(y[i + 1]) * t);
+  return std::exp(lgY1 * (1. - t) + lgY2 * t);
 }
 
 // GSL adaptive integration (QAG) over a finite interval.
@@ -86,7 +107,7 @@ T QAGIUIntegration(std::function<T(T)> f, T start, size_t limit = 1000, double r
   return T(result);
 }
 
-// Dimensionless spectral integral ∫ (pc/mpc²)^(2-slope) d(pc/mpc²), slope ∈ (4, 5).
+// Dimensionless spectral integral 4 pi ∫ x^(2-slope) (sqrt(1 + x^2) - 1) dx, slope ∈ (4, 5).
 // Used to normalise the primary CR source to the SNR energy budget.
 inline double gammaIntegral(double slope) {
   if (!(slope > 4.0 && slope < 5.0)) throw std::invalid_argument("slope must be in (4, 5)");

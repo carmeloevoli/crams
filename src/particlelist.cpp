@@ -13,7 +13,8 @@
 
 namespace {
 
-const char kNucleilistFilename[] = "data/crams_nucleilist.csv";
+
+const char kNucleilistFilename[] = DATA_DIR "crams_nucleilist.csv";
 
 struct AbundanceSetting {
   const char* key;
@@ -215,6 +216,8 @@ void ParticleList::readParamsFromFile(const std::string& filename) {
     if (!(iss >> key >> value)) continue;
     setParam(key, value);
   }
+
+  infile.close();
 }
 
 void ParticleList::loadNucleilist(const std::string& filename) {

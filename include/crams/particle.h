@@ -48,7 +48,7 @@ class Particle {
   void buildInelasticXsecs(const InelasticXsec& sigmaIn);
   void buildSecondarySource(const Input& input, const std::vector<Particle>& particles, const NucFragXsec& nucfrag);
   void buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles, const NucFragXsec& nucfrag);
-  void buildTertiarySource(const std::vector<Particle>& particles);
+  void buildTertiarySource(const Input& input, const std::vector<Particle>& particles);
   void reset();
   void computeIntensity(const Input& input);
   void dump() const;
@@ -57,7 +57,7 @@ class Particle {
   double I_T_interpol(double T) const;
   // Flux interpolated on the (fixed) secondary-source energy grid, cached so it
   // is not recomputed for every fragment that uses this particle as a parent.
-  const std::vector<double>& fluxOnSourceGrid() const;
+  const std::vector<double>& fluxOnSourceGrid(const std::vector<double>& T_s) const;
   double I_T_TOA(double T, double modulationPotential) const;
   double I_R_TOA(double R, double modulationPotential) const;
 

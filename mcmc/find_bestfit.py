@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+import time
 
 import numpy as np
 
@@ -243,6 +244,9 @@ def main(argv=None) -> None:
                         "(default: baseline)")
     p.add_argument("--build-dir", default=None, help="path to crams build/")
     p.add_argument("--seed", type=int, default=0)
+    p.add_argument("--quick-profiling",
+                   action="store_true",
+                   help="Run a quick profiling before fitting and print loglike evaluation time estimate")
     args = p.parse_args(argv)
 
     _set_scenario(args.scenario)
@@ -266,6 +270,16 @@ def main(argv=None) -> None:
     cache: dict = {}
     bounded = not args.unbounded
     chi2_fn = make_chi2(runner, cache, bounded=bounded)
+
+    if args.quick_profiling:
+
+        start = time.time()
+        n_evals = 100
+        for _ in range(n_evals):
+            chi2_fn(x0)
+        total = time.time() - start
+        print(f"Chi^2 function eval: {1000 * total / n_evals:.2f} msec")
+
 
     chi2_start = chi2_fn(x0)
     print(f"Active parameters ({len(ACTIVE)}): {NAMES}")

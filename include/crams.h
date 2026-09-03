@@ -14,6 +14,7 @@
 #include "crams/fragmentation.h"
 #include "crams/inelastic.h"
 #include "crams/particle.h"
+#include "crams/runner.h"
 
 // Infrastructure
 #include "crams/utils/logging.h"

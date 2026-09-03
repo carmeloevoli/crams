@@ -1,0 +1,11 @@
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+exclude = [
+    "mcmc",  # avoid breaking changes
+    "extension/crams.py",  # SWIG-generated code
+]
+
+[tool.ruff.lint]
+extend-select = ["I"]     # check and fix imports
+ignore = ["E202", "E251"]

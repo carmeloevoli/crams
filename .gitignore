@@ -9,3 +9,18 @@ external/plog/
 mcmc/*.ini
 mcmc/figs
 mcmc/*.npz
+venv/
+crams.egg-info/
+output/
+
+# swig-generated files
+extension/crams_wrap.cxx
+extension/crams.py
+
+bestfit.ini
+mcmc/kiss_tables
+figs
+
+# debug/temp scripts and notebooks in root
+*.py
+*.ipynb

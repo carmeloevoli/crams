@@ -19,15 +19,6 @@ void eraseExtension(std::string& s, const std::string& ext) {
     throw std::runtime_error("Input filename must end with '" + ext + "'");
 }
 
-CRAMS::FluxSolver parseFluxSolver(const std::string& value) {
-  const auto solver = CRAMS::Utilities::simplifyKey(value);
-  if (solver == "analytical") return CRAMS::FluxSolver::Analytical;
-  if (solver == "cranknicolson") return CRAMS::FluxSolver::CrankNicolson;
-  if (solver == "exponential") return CRAMS::FluxSolver::Exponential;
-
-  throw std::runtime_error("Input: unknown flux solver '" + value + "'");
-}
-
 std::string fluxSolverName(CRAMS::FluxSolver solver) {
   switch (solver) {
     case CRAMS::FluxSolver::Analytical:
@@ -41,15 +32,6 @@ std::string fluxSolverName(CRAMS::FluxSolver solver) {
   return "unknown";
 }
 
-CRAMS::InelasticModel parseInelasticModel(const std::string& value) {
-  const auto model = CRAMS::Utilities::simplifyKey(value);
-  if (model == "tripathi99" || model == "tripathi1999") return CRAMS::InelasticModel::Tripathi99;
-  if (model == "glauber") return CRAMS::InelasticModel::Glauber;
-  if (model == "crosec") return CRAMS::InelasticModel::Crosec;
-
-  throw std::runtime_error("Input: unknown inelastic model '" + value + "'");
-}
-
 std::string inelasticModelName(CRAMS::InelasticModel model) {
   switch (model) {
     case CRAMS::InelasticModel::Tripathi99:
@@ -61,19 +43,6 @@ std::string inelasticModelName(CRAMS::InelasticModel model) {
   }
 
   return "unknown";
-}
-
-CRAMS::FragmentationModel parseFragmentationModel(const std::string& value) {
-  const auto model = CRAMS::Utilities::simplifyKey(value);
-  if (model == "fluka4dragon") return CRAMS::FragmentationModel::Fluka4Dragon;
-  if (model == "usinegalprop17opt12") return CRAMS::FragmentationModel::UsineGalprop17Opt12;
-  if (model == "usinegalprop17opt22") return CRAMS::FragmentationModel::UsineGalprop17Opt22;
-  if (model == "usinewebber03coste12") return CRAMS::FragmentationModel::UsineWebber03Coste12;
-  if (model == "evoli2019") return CRAMS::FragmentationModel::Evoli2019;
-  if (model == "evoli2026w93") return CRAMS::FragmentationModel::Evoli2026W93;
-  if (model == "evoli2026st99") return CRAMS::FragmentationModel::Evoli2026St99;
-
-  throw std::runtime_error("Input: unknown fragmentation model '" + value + "'");
 }
 
 std::string fragmentationModelName(CRAMS::FragmentationModel model) {
@@ -101,6 +70,37 @@ std::string fragmentationModelName(CRAMS::FragmentationModel model) {
 
 namespace CRAMS {
 
+FluxSolver parseFluxSolver(const std::string& value) {
+  const auto solver = CRAMS::Utilities::simplifyKey(value);
+  if (solver == "analytical") return CRAMS::FluxSolver::Analytical;
+  if (solver == "cranknicolson") return CRAMS::FluxSolver::CrankNicolson;
+  if (solver == "exponential") return CRAMS::FluxSolver::Exponential;
+
+  throw std::runtime_error("Input: unknown flux solver '" + value + "'");
+}
+
+InelasticModel parseInelasticModel(const std::string& value) {
+  const auto model = CRAMS::Utilities::simplifyKey(value);
+  if (model == "tripathi99" || model == "tripathi1999") return CRAMS::InelasticModel::Tripathi99;
+  if (model == "glauber") return CRAMS::InelasticModel::Glauber;
+  if (model == "crosec") return CRAMS::InelasticModel::Crosec;
+
+  throw std::runtime_error("Input: unknown inelastic model '" + value + "'");
+}
+
+FragmentationModel parseFragmentationModel(const std::string& value) {
+  const auto model = CRAMS::Utilities::simplifyKey(value);
+  if (model == "fluka4dragon") return CRAMS::FragmentationModel::Fluka4Dragon;
+  if (model == "usinegalprop17opt12") return CRAMS::FragmentationModel::UsineGalprop17Opt12;
+  if (model == "usinegalprop17opt22") return CRAMS::FragmentationModel::UsineGalprop17Opt22;
+  if (model == "usinewebber03coste12") return CRAMS::FragmentationModel::UsineWebber03Coste12;
+  if (model == "evoli2019") return CRAMS::FragmentationModel::Evoli2019;
+  if (model == "evoli2026w93") return CRAMS::FragmentationModel::Evoli2026W93;
+  if (model == "evoli2026st99") return CRAMS::FragmentationModel::Evoli2026St99;
+
+  throw std::runtime_error("Input: unknown fragmentation model '" + value + "'");
+}
+
 std::string Input::fluxSolverName() const { return ::fluxSolverName(m_fluxSolver); }
 
 std::string Input::inelasticModelName() const { return ::inelasticModelName(m_inelasticModel); }
@@ -126,7 +126,7 @@ void Input::setParam(const std::string& KEY, double value) {
     LOGD << "changed ddelta to " << m_ddelta;
   } else if (key == "rb") {
     m_R_b = value * CGS::GeV;
-    LOGD << "changed R_b to " << m_R_b / CGS::GeV << " GeV";
+    LOGD << "changed R_b to " << m_R_b / CGS::GeV << " GV";
   } else if (key == "va") {
     m_v_A = value * CGS::km / CGS::sec;
     LOGD << "changed v_A to " << m_v_A / (CGS::km / CGS::sec) << " km/s";
@@ -154,22 +154,51 @@ void Input::readParamsFromFile(const std::string& filename) {
   while (std::getline(infile, line)) {
     std::istringstream iss(line);
     std::string key;
-    std::string valueToken;
-    if (!(iss >> key >> valueToken)) continue;
+    if (!(iss >> key)) continue;
 
-    if (Utilities::simplifyKey(key) == "solver") {
+    const auto simplifiedKey = Utilities::simplifyKey(key);
+
+    if (simplifiedKey == "sourcebreak") {
+      double first = 0.;
+      double second = 0.;
+      double third = 0.;
+      if (!(iss >> first >> second >> third)) {
+        throw std::runtime_error("input: expected three parameters for '" + key + "'");
+      }
+
+      addSourceSpectrumFeature(std::make_shared<SourceSpectrumBreak>(first, second, third));
+      continue;
+    }
+
+    if (simplifiedKey == "sourcelognormalrmax") {
+      double first = 0.;
+      double second = 0.;
+      double third = 0.;
+      bool isLower = false;
+      if (!(iss >> first >> second >> third >> isLower)) {
+        throw std::runtime_error("input: expected four parameters for '" + key + "'");
+      }
+
+      addSourceSpectrumFeature(std::make_shared<SourceSpectraLognormalDist>(first, second, third, isLower));
+      continue;
+    }
+
+    std::string valueToken;
+    if (!(iss >> valueToken)) continue;
+
+    if (simplifiedKey == "solver") {
       m_fluxSolver = parseFluxSolver(valueToken);
       LOGD << "changed flux solver to " << fluxSolverName();
       continue;
     }
 
-    if (Utilities::simplifyKey(key) == "inelasticmodel") {
+    if (simplifiedKey == "inelasticmodel") {
       m_inelasticModel = parseInelasticModel(valueToken);
       LOGD << "changed inelastic model to " << inelasticModelName();
       continue;
     }
 
-    if (Utilities::simplifyKey(key) == "fragmentationmodel") {
+    if (simplifiedKey == "fragmentationmodel") {
       m_fragmentationModel = parseFragmentationModel(valueToken);
       LOGD << "changed fragmentation model to " << fragmentationModelName();
       continue;
@@ -194,29 +223,34 @@ void Input::setSimname(const std::string& inifilename) {
   eraseExtension(m_simname, ".ini");
 }
 
-void Input::print() const {
-  LOGD << "H      [kpc]        : " << std::setprecision(4) << m_H / CGS::kpc;
-  LOGD << "mu     [mg/cm2]     : " << std::setprecision(4) << m_mu / (CGS::mgram / CGS::cm2);
-  LOGD << "v_A    [km/s]       : " << std::setprecision(4) << m_v_A / (CGS::km / CGS::sec);
-  LOGD << "D_0    [1e28 cm2/s] : " << std::setprecision(4) << m_D_0 / (1e28 * CGS::cm2 / CGS::sec);
-  LOGD << "delta  []           : " << std::setprecision(4) << m_delta;
-  LOGD << "ddelta []           : " << std::setprecision(4) << m_ddelta;
+std::string Input::describe() const {
+  std::stringstream out;
+  out << "H      [kpc]        : " << std::setprecision(4) << m_H / CGS::kpc << std::endl;
+  out << "mu     [mg/cm2]     : " << std::setprecision(4) << m_mu / (CGS::mgram / CGS::cm2) << std::endl;
+  out << "v_A    [km/s]       : " << std::setprecision(4) << m_v_A / (CGS::km / CGS::sec) << std::endl;
+  out << "D_0    [1e28 cm2/s] : " << std::setprecision(4) << m_D_0 / (1e28 * CGS::cm2 / CGS::sec) << std::endl;
+  out << "delta  []           : " << std::setprecision(4) << m_delta << std::endl;
+  out << "ddelta []           : " << std::setprecision(4) << m_ddelta << std::endl;
   if (m_X_s > 0.)
-    LOGD << "X_s    [g/cm2]      : " << m_X_s / (CGS::gram / CGS::cm2);
+    out << "X_s    [g/cm2]      : " << m_X_s / (CGS::gram / CGS::cm2) << std::endl;
   else
-    LOGD << "X_s    [g/cm2]      : none";
-  LOGD << "R_b    [GV]         : " << m_R_b / CGS::GeV;
-  LOGD << "s      []           : " << m_smoothness;
-  LOGD << "phi    [GeV]        : " << m_modulationPotential / CGS::GeV;
+    out << "X_s    [g/cm2]      : none" << std::endl;
+  out << "R_b    [GV]         : " << m_R_b / CGS::GeV << std::endl;
+  out << "s      []           : " << m_smoothness << std::endl;
+  out << "phi    [GeV]        : " << m_modulationPotential / CGS::GeV << std::endl;
   if (m_fudgeBe7 != 1. || m_fudgeBe9 != 1. || m_fudgeBe10 != 1.)
-    LOGD << "fudge Be7/9/10      : " << m_fudgeBe7 << " / " << m_fudgeBe9 << " / " << m_fudgeBe10;
-  LOGD << "E_min  [GeV]        : " << m_TSimMin / CGS::GeV;
-  LOGD << "E_max  [GeV]        : " << m_TSimMax / CGS::GeV;
-  LOGD << "E_size []           : " << m_TSimSize;
-  LOGD << "doSecondary         : " << std::boolalpha << m_doSecondary;
-  LOGD << "flux solver         : " << fluxSolverName();
-  LOGD << "inelastic model     : " << inelasticModelName();
-  LOGD << "fragmentation model : " << fragmentationModelName();
+    out << "fudge Be7/9/10      : " << m_fudgeBe7 << " / " << m_fudgeBe9 << " / " << m_fudgeBe10 << std::endl;
+  out << "E_min  [GeV]        : " << m_TSimMin / CGS::GeV << std::endl;
+  out << "E_max  [GeV]        : " << m_TSimMax / CGS::GeV << std::endl;
+  out << "E_size []           : " << m_TSimSize << std::endl;
+  out << "doSecondary         : " << std::boolalpha << m_doSecondary << std::endl;
+  out << "flux solver         : " << fluxSolverName() << std::endl;
+  out << "inelastic model     : " << inelasticModelName() << std::endl;
+  out << "fragmentation model : " << fragmentationModelName() << std::endl;
+
+  return out.str();
 }
+
+void Input::print() const { LOGD << describe(); }
 
 }  // namespace CRAMS

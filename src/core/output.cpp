@@ -92,14 +92,28 @@ void OutputManager::dumpSpectraRigidity() const {
   if (!out.is_open()) throw std::runtime_error("cannot open for writing: " + filename);
   LOGW << "writing rigidity spectra to " << filename;
 
-  const double units = 1. / (CGS::GeV * pow2(CGS::meter) * CGS::sec);
   out << std::scientific;
   writeChargeGroupColumns(out, "R [GV]");
-  for (const auto& R : m_R) {
-    out << R / CGS::GeV << "\t";
-    for (int Z = 1; Z <= 28; ++Z) out << getFluxChargeGroup(Z, R) / units << "\t";
+  for (const auto& row : rigiditySpectra()) {
+    for (const auto& element : row) {
+      out << element << "\t";
+    }
     out << "\n";
   }
+}
+
+RigiditySpectra OutputManager::rigiditySpectra() const {
+  RigiditySpectra out;
+  const double units = 1. / (CGS::GeV * pow2(CGS::meter) * CGS::sec);
+  for (const auto& R : m_R) {
+    std::vector<double> row;
+    row.push_back(R / CGS::GeV);
+    for (int Z = 1; Z <= 28; ++Z) {
+      row.push_back(getFluxChargeGroup(Z, R) / units);
+    }
+    out.push_back(row);
+  }
+  return out;
 }
 
 void OutputManager::dumpIsotopes() const {

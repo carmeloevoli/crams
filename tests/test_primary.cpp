@@ -125,6 +125,23 @@ void test_get_steeper_slope_falls_faster() {
   CHECK(r_hard < r_soft);
 }
 
+void test_get_combines_multiple_features() {
+  CRAMS::PrimarySource Q(CRAMS::H1, abundance, slope, mu);
+  const double T_break = 10. * CRAMS::CGS::GeV;
+  const double T_cut = 100. * CRAMS::CGS::GeV;
+
+  Q.addFeature(std::make_unique<CRAMS::SpectralBreak>(T_break, 1.5, 0.5));
+  Q.addFeature(std::make_unique<CRAMS::ErfcCutoff>(T_cut, 0.3, 0.7, false));
+
+  const double base = Q.get(1. * CRAMS::CGS::GeV);
+  const double with_break = Q.get(10. * T_break);
+  const double with_both = Q.get(10. * T_cut);
+
+  CHECK(base > 0.);
+  CHECK(with_break < base);
+  CHECK(with_both < with_break);
+}
+
 // --- mass-number scaling ---
 
 void test_get_A_scaling() {
@@ -191,6 +208,7 @@ int main() {
   test_get_power_law_at_ultrarelativistic_energy();
   test_get_power_law_ratio_matches_momentum_ratio();
   test_get_steeper_slope_falls_faster();
+  test_get_combines_multiple_features();
 
   test_get_A_scaling();
   test_get_heavier_nucleus_lower_for_steep_slope();

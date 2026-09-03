@@ -37,6 +37,8 @@ class NucFragFromTable : public NucFragXsec {
   void getXsecOnISM(const PID& projectile, const PID& fragment, const std::vector<double>& T,
                     std::vector<double>& out) const override;
 
+  bool extrapolateToHighEnergies = true;
+
  protected:
   NucFragFromTable(std::string modelName, std::string tableFilename, double T_min, double T_max, size_t T_size);
 
@@ -51,6 +53,7 @@ class NucFragFromTable : public NucFragXsec {
   const size_t m_T_size;
   std::map<std::pair<PID, PID>, std::vector<double>> m_table;  // (projectile, fragment) -> sigma(T)
   std::vector<double> m_T;
+  std::vector<double> m_logT;
 };
 
 class NucFragFluka4Dragon : public NucFragFromTable {

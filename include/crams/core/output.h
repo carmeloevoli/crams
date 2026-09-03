@@ -9,12 +9,15 @@
 
 namespace CRAMS {
 
+using RigiditySpectra = std::vector<std::vector<double>>;
+
 class OutputManager {
  public:
   OutputManager(const Particles& particles, const Input& input);
   ~OutputManager() = default;
 
   void dumpSpectraRigidity() const;
+  RigiditySpectra rigiditySpectra() const;
   void dumpSpectraEkn() const;
   void dumpIsotopes() const;
 

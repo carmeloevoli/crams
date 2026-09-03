@@ -28,7 +28,6 @@ namespace {
 
 using Utilities::pow2;
 
-constexpr size_t kSourceGridSize = 400;
 constexpr double kUnavailable = std::numeric_limits<double>::quiet_NaN();
 const double kLn2 = std::log(2.);
 
@@ -52,8 +51,8 @@ double beProductionFudge(const Input& input, const PID& pid) {
   return 1.;
 }
 
-std::vector<double> makeSourceEnergyGrid() {
-  return Utilities::LogAxis(0.1 * CGS::GeV, 10. * CGS::TeV, kSourceGridSize);
+std::vector<double> makeSourceEnergyGrid(const Input& input) {
+  return Utilities::LogAxis(input.TSimMin(), input.TSimMax(), input.TSimSize());
 }
 
 double safeReciprocal(double value) { return (value != 0.) ? 1. / value : kUnavailable; }
@@ -128,6 +127,10 @@ void Particle::buildGrammage(const Input& input) {
 
 void Particle::buildPrimarySource(const Input& input) {
   m_Q_p = std::make_unique<PrimarySource>(m_pid, m_abundance, m_slope, input.mu());
+
+  for (const auto& feature : input.sourceSpectrumFeatures()) {
+    m_Q_p->addFeature(feature->toPrimarySourceFeature(m_pid));
+  }
 }
 
 void Particle::buildLosses(const Input& input) { m_dEdX = std::make_unique<Losses>(m_pid, input); }
@@ -147,9 +150,8 @@ double Particle::productionProfileFromUnstable(const Input& input, double T, dou
   return value * profile;
 }
 
-const std::vector<double>& Particle::fluxOnSourceGrid() const {
+const std::vector<double>& Particle::fluxOnSourceGrid(const std::vector<double>& T_s) const {
   if (m_fluxOnSourceGrid.empty()) {
-    const auto T_s = makeSourceEnergyGrid();
     m_fluxOnSourceGrid.reserve(T_s.size());
     for (const auto T : T_s) m_fluxOnSourceGrid.push_back(I_T_interpol(T));
   }
@@ -159,7 +161,7 @@ const std::vector<double>& Particle::fluxOnSourceGrid() const {
 void Particle::buildSecondarySource(const Input& input, const std::vector<Particle>& particles,
                                     const NucFragXsec& nucfrag) {
   m_doSecondary = input.doSecondary();
-  const auto T_s = makeSourceEnergyGrid();
+  const auto T_s = makeSourceEnergyGrid(input);
   std::vector<double> Q_s(T_s.size(), 0.);
   std::vector<double> sigma;  // reused per-channel buffer
 
@@ -170,7 +172,7 @@ void Particle::buildSecondarySource(const Input& input, const std::vector<Partic
     const auto& parentPid = particle.getPid();
     if (parentPid.getA() <= m_pid.getA() || !particle.isDone()) continue;
     nucfrag.getXsecOnISM(parentPid, m_pid, T_s, sigma);
-    const auto& parentFlux = particle.fluxOnSourceGrid();
+    const auto& parentFlux = particle.fluxOnSourceGrid(T_s);
     for (size_t i = 0; i < T_s.size(); ++i) Q_s[i] += sigma[i] * parentFlux[i];
   }
   for (auto& q : Q_s) q /= CGS::meanISMmass;
@@ -189,7 +191,7 @@ void Particle::buildSecondarySource(const Input& input, const std::vector<Partic
 
     const auto& parent = findParticleOrThrow(particles, contribution.parent);
     const double parentDecayTime = parent.getDecayTime();
-    const auto& parentFlux = parent.fluxOnSourceGrid();
+    const auto& parentFlux = parent.fluxOnSourceGrid(T_s);
     for (size_t i = 0; i < T_s.size(); ++i) {
       Q_s[i] += productionProfileFromUnstable(input, T_s[i], parentDecayTime) * parentFlux[i];
     }
@@ -199,8 +201,8 @@ void Particle::buildSecondarySource(const Input& input, const std::vector<Partic
   m_Q_sec = std::make_unique<SecondarySource>(m_pid, T_s, Q_s);
 }
 
-void Particle::buildTertiarySource(const std::vector<Particle>& particles) {
-  const auto T_t = makeSourceEnergyGrid();
+void Particle::buildTertiarySource(const Input& input, const std::vector<Particle>& particles) {
+  const auto T_t = makeSourceEnergyGrid(input);
   const double mp = CGS::protonMassC2;
   const auto proton = findParticle(particles, H1);
   const bool useProtonFlux = proton != nullptr && proton->isDone();
@@ -224,7 +226,7 @@ void Particle::buildTertiarySource(const std::vector<Particle>& particles) {
 void Particle::buildGrammageAtSource(const Input& input, const std::vector<Particle>& particles,
                                      const NucFragXsec& nucfrag) {
   m_doGrammageAtSource = true;
-  const auto T_X = makeSourceEnergyGrid();
+  const auto T_X = makeSourceEnergyGrid(input);
   std::vector<double> Q_X(T_X.size(), 0.);
 
   for (const auto& particle : particles) {

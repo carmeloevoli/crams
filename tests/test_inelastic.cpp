@@ -130,10 +130,10 @@ static bool throwsRuntimeError(const std::function<void()>& fn) {
   return false;
 }
 
-void test_tripathi_high_energy_throws_out_of_range() {
+void test_tripathi_high_energy_extrapolates_out_of_range() {
   // T above the table maximum (1e5 GeV) is out of range and must throw
   CRAMS::InXsecTripathi99 xsec;
-  CHECK(throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e6 * CRAMS::CGS::GeV); }));
+  CHECK(!throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e6 * CRAMS::CGS::GeV); }));
 }
 
 void test_tripathi_low_energy_throws_out_of_range() {
@@ -166,9 +166,9 @@ void test_glauber_sigma_monotonic_in_A() {
   CHECK(xsec.getXsecOnHtarget(CRAMS::Fe56, T) > xsec.getXsecOnHtarget(CRAMS::C12, T));
 }
 
-void test_glauber_out_of_range_throws() {
+void test_glauber_low_energy_throws_out_of_range() {
   CRAMS::InXsecGlauber xsec;
-  CHECK(throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e6 * CRAMS::CGS::GeV); }));
+  CHECK(!throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e6 * CRAMS::CGS::GeV); }));
   CHECK(throwsRuntimeError([&] { xsec.getXsecOnHtarget(CRAMS::C12, 1e-3 * CRAMS::CGS::GeV); }));
 }
 
@@ -206,13 +206,13 @@ int main() {
   test_tripathi_He4_value_at_10GeV();
   test_tripathi_C12_value_at_10GeV();
   test_tripathi_Fe56_value_at_10GeV();
-  test_tripathi_high_energy_throws_out_of_range();
+  test_tripathi_high_energy_extrapolates_out_of_range();
   test_tripathi_low_energy_throws_out_of_range();
   test_tripathi_at_table_bounds_does_not_throw();
 
   test_glauber_loads_and_returns_positive();
   test_glauber_sigma_monotonic_in_A();
-  test_glauber_out_of_range_throws();
+  test_glauber_low_energy_throws_out_of_range();
 
   test_tripathi_ISM_xsec_exact_factor();
   test_tripathi_ISM_greater_than_H_target();
